@@ -1,0 +1,7 @@
+{
+  "rules": {
+    "extension-field": "off",
+    "deep-reference-chain": "off",
+    "unreferenced-bundled-file": "off"
+  }
+}

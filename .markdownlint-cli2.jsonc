@@ -1,0 +1,15 @@
+{
+  "config": {
+    // Paragraphs are one line each, so line length isn't a useful rule here.
+    "MD013": false,
+    // Skills write placeholders as <run> and <xxx>.
+    "MD033": false,
+    // The platform setup docs use H1 sections.
+    "MD025": false,
+    // Bold labels introduce short per-language lists.
+    "MD036": false
+  },
+  "globs": ["**/*.md"],
+  "gitignore": true,
+  "ignores": [".claude/worktrees/**", ".jj/**", "**/node_modules/**"]
+}

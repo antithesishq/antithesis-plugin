@@ -1,0 +1,1 @@
+exclude_path = ['^\.claude/worktrees/', '^\.jj/', '(^|/)node_modules/']

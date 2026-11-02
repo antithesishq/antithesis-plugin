@@ -1,0 +1,126 @@
+# `mise run check` runs every check, and `mise run fix` applies every automatic fix.
+# Each tool also has its own `check:<tool>` and, where it can fix, `fix:<tool>`.
+# Under GitHub Actions ($GITHUB_ACTIONS), checks print findings as annotations.
+
+[tools]
+node = "24"
+uv = "0.13.6"
+jq = "1.8.2"
+typos = "1.51.1"
+lychee = "0.24.2"
+"npm:markdownlint-cli2" = "0.24.0"
+# Low npm download count, so mise asks for explicit approval. Reviewed: no install scripts.
+"npm:@sagargupta1610/skillcheck" = { version = "0.2.10", allow_low_downloads = true }
+"pipx:check-jsonschema" = "0.39.0"
+
+[settings]
+# Checks run in parallel; this keeps each tool's output together.
+task.output = "keep-order"
+
+[task_config]
+dir = "{{config_root}}"
+
+[tasks.check]
+description = "Run every check"
+# --continue-on-error so one failure doesn't hide the rest.
+run = "mise run --continue-on-error 'check:*'"
+
+[tasks.fix]
+description = "Apply every automatic fix"
+run = "mise run --continue-on-error 'fix:*'"
+
+[tasks."check:typos"]
+description = "Spell check"
+shell = "bash -euo pipefail -c"
+run = '''
+if [ -n "${GITHUB_ACTIONS:-}" ]; then
+  typos --format json | jq -r 'select(.type == "typo") |
+    "::error file=\(.path | ltrimstr("./")),line=\(.line_num),col=\(.byte_offset + 1),title=typos::`\(.typo)` should be \(.corrections | map("`\(.)`") | join(" or "))"'
+else
+  typos --format brief
+fi
+'''
+
+[tasks."fix:typos"]
+description = "Fix unambiguous typos"
+run = "typos --write-changes"
+
+[tasks."check:markdownlint"]
+description = "Lint Markdown"
+shell = "bash -euo pipefail -c"
+run = '''
+if [ -n "${GITHUB_ACTIONS:-}" ]; then
+  # path:line[:col] [error] MDxxx/alias description
+  markdownlint-cli2 2>&1 | sed -nE \
+    -e 's/^([^: ]+):([0-9]+):([0-9]+) (error |warning )?(MD[0-9]+\/[^ ]+) (.*)$/::error file=\1,line=\2,col=\3,title=\5::\6/p' \
+    -e 's/^([^: ]+):([0-9]+) (error |warning )?(MD[0-9]+\/[^ ]+) (.*)$/::error file=\1,line=\2,title=\4::\5/p' \
+    -e '/^Summary/p'
+else
+  markdownlint-cli2
+fi
+'''
+
+[tasks."fix:markdownlint"]
+description = "Fix Markdown lint that markdownlint can fix"
+run = "markdownlint-cli2 --fix"
+
+[tasks."check:skillcheck"]
+description = "Validate skills against the Agent Skills spec"
+shell = "bash -euo pipefail -c"
+run = '''
+format=pretty
+[ -n "${GITHUB_ACTIONS:-}" ] && format=github
+skillcheck lint --fail-on warning --format "$format" plugins/antithesis/skills .agents/skills
+'''
+
+[tasks."check:references"]
+description = "Every referenced skill file exists, and every skill file is reachable"
+run = "scripts/check-references"
+
+[tasks."check:tokens"]
+description = "Report skill token counts and enforce the SKILL.md budget"
+run = "scripts/token-report"
+
+[tasks."check:lychee"]
+description = "Check links"
+shell = "bash -euo pipefail -c"
+run = '''
+if [ -n "${GITHUB_ACTIONS:-}" ]; then
+  status=0
+  lychee --no-progress --format json . > lychee.json || status=$?
+  jq -r --arg root "$PWD/" '.error_map | to_entries[] | .key as $file | .value[] |
+    "::error file=\($file | ltrimstr($root) | ltrimstr("./")),line=\(.span.line // 1),col=\(.span.column // 1),title=lychee::\(.url): \(.status.text)"' lychee.json
+  rm lychee.json
+  exit $status
+else
+  lychee --no-progress .
+fi
+'''
+
+[tasks."check:versions"]
+description = "Manifest versions agree"
+run = "scripts/set-version --check"
+
+[tasks."check:changelog"]
+description = "A new version has changelog notes"
+shell = "bash -euo pipefail -c"
+run = '''
+version=$(jq -r .version plugins/antithesis/plugin.json)
+# Before the first release there is no CHANGELOG.md, and nothing to check.
+if [ -f CHANGELOG.md ] && ! gh release view "v$version" > /dev/null 2>&1; then
+  scripts/changelog-section "$version" > /dev/null
+fi
+'''
+
+[tasks."check:schema"]
+description = "The Agent Plugins manifest matches its schema"
+run = "check-jsonschema --schemafile https://agent-plugins.org/schemas/1.0.0/plugin.schema.json plugins/antithesis/plugin.json"
+
+[tasks."check:plugin"]
+description = "Claude Code validates the marketplace and plugin"
+# A task-only tool, so the repo doesn't put a second `claude` on your PATH.
+tools = { claude = "2.1.316" }
+run = [
+  "claude plugin validate --strict .",
+  "claude plugin validate --strict plugins/antithesis",
+]

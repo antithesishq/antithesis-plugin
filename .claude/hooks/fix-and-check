@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Claude Code Stop hook: apply automatic fixes, then run every check.
+#
+# A failing check blocks the stop (exit 2) and hands the output to Claude to fix. If
+# Claude is already continuing because of this hook, failures are reported to the
+# user instead (exit 1), so an unfixable failure can't loop forever.
+set -uo pipefail
+
+input=$(cat)
+cd "${CLAUDE_PROJECT_DIR:-.}" || exit 0
+command -v mise > /dev/null || exit 0
+
+mise run --quiet fix > /dev/null 2>&1
+if output=$(mise run --quiet check 2>&1); then
+  exit 0
+fi
+
+# Rerun just the failed checks, so their output isn't buried under the passing ones.
+failed=$(grep -oE '\[check:[a-z-]+\] exited with status' <<< "$output" | grep -oE 'check:[a-z-]+' | sort -u)
+{
+  echo "\`mise run check\` failed after \`mise run fix\`. Fix these, then run \`mise run check\` again."
+  for task in $failed; do
+    echo
+    echo "## mise run $task"
+    mise run --quiet "$task" 2>&1 | grep -vE '^\[check:[a-z-]+\] \$ ' | tail -n 40
+  done
+  [ -n "$failed" ] || tail -n 40 <<< "$output"
+} >&2
+
+if grep -qE '"stop_hook_active"[[:space:]]*:[[:space:]]*true' <<< "$input"; then
+  exit 1
+fi
+exit 2

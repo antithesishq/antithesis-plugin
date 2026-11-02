@@ -5,29 +5,49 @@ on:
     branches: [main, master]
   pull_request:
 
+env:
+  MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
+
 jobs:
-  check:
+  # Every `check:*` task in mise.toml becomes its own job, and so its own GitHub check.
+  tasks:
     runs-on: ubuntu-latest
+    outputs:
+      checks: ${{ steps.list.outputs.checks }}
     steps:
       - uses: actions/checkout@v7
-      - name: Manifest versions agree
-        run: scripts/set-version --check
-      - name: A new version has changelog notes
+      - uses: jdx/mise-action@v5
+        with:
+          version: 2026.10.24
+          install: false
+      - id: list
+        run: echo "checks=$(mise tasks ls --json | jq -c '[.[].name | select(startswith("check:"))]')" >> "$GITHUB_OUTPUT"
+
+  check:
+    needs: tasks
+    name: ${{ matrix.task }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        task: ${{ fromJSON(needs.tasks.outputs.checks) }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # check:tokens compares token counts with the pull request's base.
+          fetch-depth: 0
+      - uses: jdx/mise-action@v5
+        with:
+          version: 2026.10.24
+      - name: mise run ${{ matrix.task }}
+        run: mise run ${{ matrix.task }}
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          version=$(jq -r .version plugins/antithesis/plugin.json)
-          # Before the first release there is no CHANGELOG.md, and nothing to check.
-          if [ -f CHANGELOG.md ] && ! gh release view "v$version" -R "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
-            scripts/changelog-section "$version" > /dev/null
-          fi
-      - name: Agent Plugins manifest matches its schema
-        run: pipx run check-jsonschema --schemafile https://agent-plugins.org/schemas/1.0.0/plugin.schema.json plugins/antithesis/plugin.json
-      - name: Claude Code validates the marketplace and plugin
-        run: |
-          npm install -g @anthropic-ai/claude-code
-          claude plugin validate --strict .
-          claude plugin validate --strict plugins/antithesis
+          # lychee uses this to avoid GitHub's anonymous rate limit.
+          GITHUB_TOKEN: ${{ github.token }}
+          TOKEN_BASE: ${{ github.event.pull_request.base.sha }}
+          # Unprefixed output, so `::error` annotations start their lines.
+          MISE_TASK_OUTPUT: interleave
 
   # Users install from the default branch, and update when the version changes. A merged
   # release PR changes the version, so this releases it.

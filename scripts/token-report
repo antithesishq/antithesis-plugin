@@ -1,0 +1,96 @@
+#!/usr/bin/env -S uv run --quiet --script
+# /// script
+# requires-python = ">=3.11"
+# dependencies = ["tiktoken==0.12.0"]
+# ///
+"""Report how many tokens each skill file costs, and enforce the SKILL.md budget.
+
+Counts use tiktoken's o200k_base encoding. Claude's tokenizer differs, so treat them
+as estimates for comparing files and changes, not as exact Claude counts.
+
+The Agent Skills spec recommends keeping SKILL.md, which loads whenever the skill
+activates, under 5000 tokens and 500 lines. This fails when a SKILL.md exceeds either.
+
+    scripts/token-report               print the report
+    TOKEN_BASE=<git ref> scripts/token-report
+                                       also show the change from that ref
+
+Under GitHub Actions the report also goes to the job summary.
+"""
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+import tiktoken
+
+ROOT = Path(__file__).resolve().parent.parent
+SKILL_GLOBS = ["plugins/*/skills/*/SKILL.md", ".agents/skills/*/SKILL.md"]
+MAX_TOKENS = 5000
+MAX_LINES = 500
+ENCODING = tiktoken.get_encoding("o200k_base")
+
+
+def count(text: str | None) -> int | None:
+    return None if text is None else len(ENCODING.encode(text, disallowed_special=()))
+
+
+def at_base(base: str, rel: str) -> str | None:
+    result = subprocess.run(
+        ["git", "show", f"{base}:{rel}"], cwd=ROOT, capture_output=True, text=True
+    )
+    return result.stdout if result.returncode == 0 else None
+
+
+def delta(now: int, before: int | None) -> str:
+    if before is None:
+        return "new"
+    change = now - before
+    return f"{change:+d}" if change else "0"
+
+
+def main() -> int:
+    base = os.environ.get("TOKEN_BASE", "").strip()
+    errors = []
+    lines = ["## Skill token counts", "", "Estimated with tiktoken `o200k_base`.", ""]
+    for skill_md in sorted(p for g in SKILL_GLOBS for p in ROOT.glob(g)):
+        skill = skill_md.parent
+        files = [skill_md] + sorted(p for p in skill.rglob("*.md") if p != skill_md)
+        header = "| File | Tokens |" + (f" Change since `{base[:12]}` |" if base else "")
+        lines += [f"### `{skill.relative_to(ROOT)}`", "", header,
+                  "|---|---:|" + ("---:|" if base else "")]
+        total = total_before = 0
+        for path in files:
+            rel = path.relative_to(ROOT).as_posix()
+            text = path.read_text()
+            tokens = count(text)
+            total += tokens
+            row = f"| `{path.relative_to(skill)}` | {tokens} |"
+            if base:
+                before = count(at_base(base, rel))
+                total_before += before or 0
+                row += f" {delta(tokens, before)} |"
+            lines.append(row)
+            if path == skill_md:
+                line_count = len(text.splitlines())
+                if tokens > MAX_TOKENS:
+                    errors.append((rel, f"SKILL.md is {tokens} tokens; keep it under {MAX_TOKENS}"))
+                if line_count > MAX_LINES:
+                    errors.append((rel, f"SKILL.md is {line_count} lines; keep it under {MAX_LINES}"))
+        lines.append(f"| **Total** | **{total}** |" + (f" **{delta(total, total_before)}** |" if base else ""))
+        lines.append("")
+    report = "\n".join(lines)
+    print(report)
+    if summary := os.environ.get("GITHUB_STEP_SUMMARY"):
+        with open(summary, "a") as f:
+            f.write(report + "\n")
+    for rel, message in errors:
+        if os.environ.get("GITHUB_ACTIONS"):
+            print(f"::error file={rel},line=1,title=token budget::{message}")
+        else:
+            print(f"{rel}: {message}", file=sys.stderr)
+    return 1 if errors else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
