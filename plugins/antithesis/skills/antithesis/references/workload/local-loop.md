@@ -5,14 +5,17 @@
 Antithesis instrumentation records nothing outside Antithesis, so use the language's own coverage. Add a `docker-compose.coverage.yaml` that overrides each system service with a coverage Dockerfile and a shared `coverage` volume, one directory per service. Client containers count as system services: the client library is code under test.
 
 **Rust**
+
 - In the build stage, run `rustup component add llvm-tools-preview` and build with `RUSTFLAGS="-Cinstrument-coverage -Cllvm-args=-runtime-counter-relocation"`. This overrides the Antithesis flags in `.cargo/config.toml`.
 - Set `LLVM_PROFILE_FILE=/coverage/<service>/%c%m.profraw`. `%c` writes counters as they change, so the data survives a killed process. `%m` merges restarts into one file. Don't use `%p`: every container's process is PID 1, so a restart overwrites the data.
 
 **Go**
+
 - Build with `go build -cover -covermode=atomic -coverpkg=./...`. Set `GOCOVERDIR=/coverage/<service>`.
 - Go writes counters only when `main` returns or the program calls `os.Exit`.
 
 **Other languages**
+
 - Use the standard tool: clang's `-fprofile-instr-generate -fcoverage-mapping` for C and C++ (same `LLVM_PROFILE_FILE` rules as Rust), JaCoCo for Java, `c8` for Node, `coverage.py` for Python.
 - Check that the data survives `docker compose stop` and a container restart before trusting it.
 
@@ -48,12 +51,14 @@ $C stop
 
 - **Actions.** Every action reaches its intended outcome sometimes, and none is routinely slow.
 - **Assertions.** Only sometimes assertions for situations that need faults should be unmet. This lists every assertion that would fail in a run:
+
   ```bash
   jq -rs '[.[].antithesis_assert // empty] | group_by(.message)[]
     | select(if .[0].assert_type == "sometimes" then any(.hit and .condition) | not
              else any(.hit and (.condition | not)) or (.[0].must_hit and (any(.hit) | not)) end)
     | "\(.[0].display_type)\t\(.[0].message)"' sdk.jsonl
   ```
+
   An unmet sometimes assertion means the workload doesn't reach that situation: change the actions or their mix.
 - **Quiet periods.** One forced on finds the healthy system recovered.
 - **System logs.** All the logs that we expect to see, arrive.

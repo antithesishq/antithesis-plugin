@@ -6,11 +6,11 @@ Install snouty and ensure that it is configured correctly.
 
 Snouty source repo is available here:
 
-https://github.com/antithesishq/snouty
+<https://github.com/antithesishq/snouty>
 
 Snouty can be installed via a bash script installer:
 
-https://github.com/antithesishq/snouty/releases/latest/download/snouty-installer.sh
+<https://github.com/antithesishq/snouty/releases/latest/download/snouty-installer.sh>
 
 Snouty can also be installed via cargo install or binstall (preferred):
 

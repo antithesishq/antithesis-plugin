@@ -24,7 +24,7 @@ An Antithesis test run is kicked off via certain launchers like the `basic_test`
 
 A debugger run takes a source run & moment as input, and rewarms it into a deterministic virtual machine. Like any run, debugger sessions may rewarm many moments from one or more source runs. Debugger sessions live for six hours unless cancelled.
 
-## Run readyness
+## Run readiness
 
 All Antithesis runs can be used by real-time commands like `snouty runs exec`, `snouty runs search`, and `snouty runs logs` while they are running, as long as they are ready. To check if a run is ready either run `snouty runs wait --until ready <run_id>` or check that the status is `in_progress:ready` in `snouty runs show <run_id>`.
 

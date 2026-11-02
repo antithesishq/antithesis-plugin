@@ -40,7 +40,7 @@ In general, you'll want to prompt the agent with one of the following workflows:
 
 The skill is designed to be composable, so feel free to ask your agent to chain multiple things together:
 
-> /antithesis write a workload for https://github.com/etcd-io/etcd which imports properties from https://antithesis.com/docs/resources/kv_property_catalog.md. You can consume up to 200 compute hours of testing. Use short smoke tests to verify the workload before switching to soak tests to verify etcd. Triage the results, root cause high confidence failures, and file issues for anything new you discover.
+> /antithesis write a workload for <https://github.com/etcd-io/etcd> which imports properties from <https://antithesis.com/docs/resources/kv_property_catalog.md>. You can consume up to 200 compute hours of testing. Use short smoke tests to verify the workload before switching to soak tests to verify etcd. Triage the results, root cause high confidence failures, and file issues for anything new you discover.
 
 ### Key differences from Antithesis docs
 

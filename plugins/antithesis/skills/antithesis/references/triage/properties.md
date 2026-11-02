@@ -6,7 +6,7 @@ Use `snouty runs properties` to retrieve properties and `snouty runs --json logs
 
 `snouty runs properties "${RUN_ID}" --detail` lists every property for a run, failing first. Narrow with `--failing`, `--name` or `--group`:
 
-```
+```text
 Name      a query returns exactly the records that match it
 ID        0116733fdcb05189119ccc536aad4044
 Group     Always assertions

@@ -70,7 +70,7 @@ The JSON log is a stream of event objects, one per line. Every event has `source
 
 ### Event schema
 
-```
+```json
 {
   "source": {
     "name": string, // e.g. "fault_injector", "setup", the container name

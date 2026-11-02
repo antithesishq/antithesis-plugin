@@ -76,7 +76,7 @@ impl Driver {
     fn get_value(&self, tc: TestCase) {
         let (node, key) = self.draw_target(&tc);
         let start = Instant::now();
-        // `get` turns a 404 into `None`, and an unparseable body into a value no write produced.
+        // `get` turns a 404 into `None`, and an unparsable body into a value no write produced.
         let Ok(got) = self.get(node, key) else { return }; // a failed read tells us nothing
         let end = Instant::now();
         let history = self.keys[key].lock().unwrap();
@@ -117,6 +117,7 @@ With client containers (`references/workload/clients.md`), the rules above still
 - **Read-only checks may go to the servers directly**, as described in `references/workload/clients.md`. Actions never do.
 
 **Keep rules relatively fast:**
+
 - Use short timeouts. Give operations that are slow by design their own.
 - Don't sleep or poll. Record what you expect, and check it in a later rule. The one exception is a quiet period (below), which waits for recovery on purpose.
 - Keep long-lived interactions (streams, sessions, transactions) in the driver's state, across rules.
@@ -138,14 +139,14 @@ They matter for two reasons:
 The assertions:
 
 - **`assert_sometimes!`**: a situation that should happen at least once per run. Examples:
-    - A leader election is triggered
-    - A transaction aborts
-    - A rate limiter rejects a request
-    - A search returns no results
-    - A cache entry expires and is refilled
-    - A read returns a value written by another client
-    - A compaction runs while reads are in flight
-    - Two clients edit the same document at the same time
+  - A leader election is triggered
+  - A transaction aborts
+  - A rate limiter rejects a request
+  - A search returns no results
+  - A cache entry expires and is refilled
+  - A read returns a value written by another client
+  - A compaction runs while reads are in flight
+  - Two clients edit the same document at the same time
 
   If both a situation and its opposite are possible (a game is sometimes won and sometimes lost), add one for each.
 
@@ -196,4 +197,4 @@ fn quiet_period(&self, tc: TestCase) {
 
 Clock faults continue during a pause, so allow for clock jumps. To test a quiet period locally, set the probability to 1.
 
-For the rest of hegel's API, see the hegel documentation at https://hegel.dev/ (rust at https://docs.rs/hegeltest/latest/hegel/).
+For the rest of hegel's API, see the hegel documentation at <https://hegel.dev/> (rust at <https://docs.rs/hegeltest/latest/hegel/>).

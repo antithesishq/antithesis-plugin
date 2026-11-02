@@ -13,7 +13,7 @@
   * Choose to either install it on the enterprise, organization, or personal scope
 * Create an automation with a webhook trigger (Automations → New automation → Webhook), with this prompt. Save the webhook URL and secret; the secret is shown only once.
 
-   ```
+   ```text
    An Antithesis run has started. The webhook payload has this format:
 
    {

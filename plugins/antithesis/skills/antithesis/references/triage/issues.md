@@ -6,7 +6,7 @@ By default, use the following format for reporting issues. If the user has speci
 
 Write for a maintainer who knows this codebase but not Antithesis or this run. Lead with what's wrong and where. Explain one representative occurrence in the code's terms. Put supporting evidence in a collapsed `<details>` block. Don't describe how you investigated.
 
-```
+```markdown
 # <title>
 
 <antithesis property name that failed>
@@ -43,7 +43,7 @@ If the bug already exists, edit the issue to add a bullet point to its <duplicat
 
 <duplicate_details> has the following format:
 
-```
+```markdown
 ## Other Antithesis runs
 
 <details><summary>Details</summary>

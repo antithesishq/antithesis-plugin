@@ -25,7 +25,7 @@ The command runs in the workload's containers inside the run, not on your machin
 
 As part of its output, `snouty runs exec` prints an "end moment", which is the moment where the command finished executing. You can use this moment to execute follow-up commands in the same timeline.
 
-Additional moments from any run (source run or otherwise) may be loaded into an existing run via the `--source-run-id` paramater to `snouty runs exec`. Rewarming a moment takes time relative to the deepness of a moment - hence a moment at vtime 10 will be faster to rewarm than a moment at vtime 100.
+Additional moments from any run (source run or otherwise) may be loaded into an existing run via the `--source-run-id` parameter to `snouty runs exec`. Rewarming a moment takes time relative to the deepness of a moment - hence a moment at vtime 10 will be faster to rewarm than a moment at vtime 100.
 
 - Use `--container <name>` to execute the command inside that container. This does not currently support `k8s` pods, use `kubectl` for that.
 - Use `--events` to print out all events that happen in the simulation while the command executes (rather than just stdout/stderr of the command).

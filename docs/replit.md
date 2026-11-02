@@ -9,7 +9,7 @@
 * Add the skills to your Replit Workspace: Settings → Customization → Skills → Add.
   * If Add offers "Add from GitHub", use this URL and add the `antithesis` skill:
 
-     ```
+     ```text
      https://github.com/antithesishq/antithesis-plugin/tree/main/plugins/antithesis/skills
      ```
 
@@ -27,7 +27,7 @@
 
 In the App, ask Agent to triage a run, or invoke the skill directly:
 
-```
+```text
 /antithesis triage <run id>
 ```
 
