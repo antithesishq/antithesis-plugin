@@ -31,3 +31,5 @@ Additional moments from any run (source run or otherwise) may be loaded into an 
 - Use `--events` to print out all events that happen in the simulation while the command executes (rather than just stdout/stderr of the command).
 
 You can combine `--events` with eg `sleep 30`, to see what the system does in those 30 seconds. A nice trick is to do this after performing some action, like killing a container, to see the result of that action on the system.
+
+Read `references/nope.md`.

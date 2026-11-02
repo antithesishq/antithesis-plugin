@@ -50,3 +50,9 @@ The skill is designed to be composable, so feel free to ask your agent to chain 
 ## Managing compute consumption
 
 Antithesis bills by compute hours, so consider giving your agent a compute hour budget to spend, per run or overall. Keep your system's setup fast too: every run spends that time before fuzzing starts, so a faster setup makes every Antithesis run shorter. See [the Antithesis docs on usage](https://antithesis.com/docs/configuration/usage/) for details.
+
+Teh [nope](./nope.md).
+
+```
+x
+```
