@@ -18,29 +18,22 @@ argument-hint: "[triage [monitor|summary|root-cause]|debug|workload|launch|prope
 
 Every module needs:
 
-- **snouty**, installed and configured for the Antithesis tenant. If it's missing or not configured, follow `references/antithesis/snouty-setup.md`.
-- **Docker or Podman, with Docker Compose.**
-- **jq.**
+- **snouty 0.9.0 or later**, installed and configured for the Antithesis tenant. If it's missing or not configured, follow `references/antithesis/snouty-setup.md`. If it's older, run `snouty update`, or reinstall it if it wasn't installed with the installer script
+- **Docker or Podman, with Docker Compose**
+- **jq**
 
-Check them:
-
-```bash
-jq --version
-snouty doctor
-```
-
-Continue only if `jq --version` succeeds and `snouty doctor` reports that all checks passed. Otherwise report what's missing, or the failing check, and stop.
+Assume that dependencies are setup. If any command fails, check dependencies and `snouty doctor` first.
 
 ## Modules
 
 Pick the module from the first argument, then read only that module's `MODULE.md`.
 
-| Argument     | Module                            | Use when                                                                    |
-| ------------ | --------------------------------- | --------------------------------------------------------------------------- |
-| `triage`     | `references/triage/MODULE.md`     | A run has started or finished and you need to know what failed.             |
-| `debug`      | `references/debug/MODULE.md`      | A specific property failure needs investigating (multiverse debugging).     |
-| `workload`   | `references/workload/MODULE.md`   | Building or iterating on a workload.                                        |
-| `launch`     | `references/launch/MODULE.md`     | Launching a new run of a workload with `snouty launch`.                     |
-| `properties` | `references/properties/MODULE.md` | Importing the SUT's guarantees (`import`) or defining a new one (`define`). |
+| Argument     | Module                            | Use when                                                      |
+| ------------ | --------------------------------- | ------------------------------------------------------------- |
+| `triage`     | `references/triage/MODULE.md`     | Analyze a run for failures, monitor an in progress run.       |
+| `debug`      | `references/debug/MODULE.md`      | Execute commands in Antithesis to debug a moment or property. |
+| `workload`   | `references/workload/MODULE.md`   | Building or iterating on a workload.                          |
+| `launch`     | `references/launch/MODULE.md`     | Launching a new run of a workload with `snouty launch`.       |
+| `properties` | `references/properties/MODULE.md` | Importing the SUT's guarantees or defining a new one.         |
 
 If there is no argument, infer the module from the request. If it is still ambiguous, ask.
