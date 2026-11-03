@@ -1,6 +1,6 @@
 # Assertions
 
-An assertion is an Antithesis SDK call in the driver or the SUT's code. Each assertion, identified by its message, becomes one property in the run, judged by the default property for its type (`references/antithesis/explainer.md`). A failing assertion doesn't stop the program. For the full API in each language, see `snouty docs tree sdk`.
+An assertion is an Antithesis SDK call in the driver or the SUT's code. Each assertion, identified by its message, becomes one property in the run, judged by the default property for its type (`references/antithesis/explainer.md`). A failing assertion doesn't stop the program. For how each language's SDK works, see `snouty docs tree sdk`; for its exact API, at the latest version, see `references/workload/sdk.md`.
 
 ## Types
 
@@ -51,7 +51,7 @@ An exploration assertion marks a state worth reaching: an `assert_sometimes!`, `
 
 ## Assertions in the SUT's code
 
-Add them with the Antithesis SDK for the SUT's language, in the code that runs in its containers, including the client library. They change the user's code, so tell the user, and keep them in a change of their own that the Antithesis build applies. The SDK must register them in the assertion catalog, so that one that's never reached still fails: follow the language's page in the SDK docs and `snouty docs show /docs/reference/sdk/assertion_cataloging/`.
+Add them with the Antithesis SDK for the SUT's language (its API is in `references/workload/sdk.md`), in the code that runs in its containers, including the client library. They change the user's code, so tell the user, and keep them in a change of their own that the Antithesis build applies. The SDK must register them in the assertion catalog, so that one that's never reached still fails: follow the language's page in the SDK docs and `snouty docs show /docs/reference/sdk/assertion_cataloging/`.
 
 ## Reading them
 

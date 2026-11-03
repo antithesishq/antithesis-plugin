@@ -2,7 +2,7 @@
 
 The driver is a hegel concurrent state machine run from `#[hegel::main]`. Each `#[rule]` is one action: it draws its inputs, sends a request, and records the outcome in the model. Hegel runs the rules on several worker threads, in rounds. The next round starts only when every worker is done, so one slow rule stalls them all.
 
-Dependencies: `hegeltest` with `features = ["static-engine"]`, and `antithesis_sdk`.
+Dependencies: `hegeltest` with `features = ["static-engine"]`, and the latest `antithesis_sdk`. Read its API following `references/workload/sdk.md`.
 
 ## Starting up
 

@@ -26,7 +26,7 @@ Put the check where it can see the condition, following `references/properties/c
 - **A driver rule**, for what clients see. See "Responses, against the model".
 - **The log thread**, for a node's internal state. See "Node state, from the logs".
 - **A quiet period**, for what must hold once faults stop. See "After faults stop".
-- **The system's code**, only when nothing outside it can see the condition. Tell the user, since it changes their code.
+- **The system's code**, only when nothing outside it can see the condition. Tell the user, since it changes their code. Read the SDK's API for the system's language in `references/workload/sdk.md`.
 
 Then add exploration assertions on the situations that lead up to the guarantee being tested, such as an account balance reaching zero ("Exploration assertions" in `references/properties/assertions.md`). Don't add one just to show the guarantee's check ran: its assertion already fails if it's never reached.
 
