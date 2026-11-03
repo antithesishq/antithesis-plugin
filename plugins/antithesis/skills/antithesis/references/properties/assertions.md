@@ -41,7 +41,7 @@ An exploration assertion marks a state worth reaching: an `assert_sometimes!`, `
 - **On the rare outcome of every action** in the surface you mapped (`references/workload/surface.md`), and on both sides of every option. If a situation and its opposite are both possible, add one for each.
 - **On situations that need faults,** as clients see them: a request that times out, then succeeds on retry; a read served by a new leader.
 - **On combinations no single request shows,** from the model or from the nodes' state in the logs (`references/workload/system-logs.md`).
-- **On the situations that lead up to a guarantee being tested.** For example, `assert_sometimes!(balance < 0, "an account balance goes negative", ...)` tells Antithesis the system reached an interesting state to explore from, and shows that the workload explores well.
+- **On the situations that lead up to a guarantee being tested.** For example, `assert_sometimes_less_than_or_equal_to!(balance, 0, "an account balance reaches zero", ...)` steers Antithesis toward drained accounts, where a transfer can overdraw one or must be rejected, and shows that the workload gets there. Mark only states the system allows: a sometimes assertion on a state it forbids fails every run.
 
 **In the SUT's code,** for what no response or log line shows:
 

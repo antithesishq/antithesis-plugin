@@ -136,6 +136,10 @@ def docs() -> int:
         if run("snouty", "docs", "show", *flags, path, capture_output=True).returncode == 0:
             if VERBOSE:
                 print(f"[ok] {path}")
+        elif OFFLINE:
+            # The local copy may predate the page, so only an online run can tell.
+            where = f"{Path(file).relative_to(ROOT)}:{number}"
+            print(f"warning: {where}: the local docs copy has no {path}; an online run checks it")
         else:
             error("snouty docs", f"`snouty docs show {path}` finds no page", file, number)
             status = 1

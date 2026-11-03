@@ -28,7 +28,7 @@ Put the check where it can see the condition, following `references/properties/c
 - **A quiet period**, for what must hold once faults stop. See "After faults stop".
 - **The system's code**, only when nothing outside it can see the condition. Tell the user, since it changes their code.
 
-Then add exploration assertions on the situations that lead up to the guarantee being tested, such as an account balance going negative ("Exploration assertions" in `references/properties/assertions.md`). Don't add one just to show the guarantee's check ran: its assertion already fails if it's never reached.
+Then add exploration assertions on the situations that lead up to the guarantee being tested, such as an account balance reaching zero ("Exploration assertions" in `references/properties/assertions.md`). Don't add one just to show the guarantee's check ran: its assertion already fails if it's never reached.
 
 ### 3. Check it locally
 

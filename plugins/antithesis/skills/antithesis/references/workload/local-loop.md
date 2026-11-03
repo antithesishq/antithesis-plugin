@@ -42,6 +42,8 @@ docker compose exec -T driver /opt/antithesis/test/v1/main/first_start_workload 
 timeout 600 sh -c 'until docker compose exec -T driver grep -qs antithesis_setup /tmp/sdk.jsonl; do sleep 5; done' &&
 sleep 300
 docker compose cp driver:/tmp/sdk.jsonl .
+# For each SUT service with assertions:
+docker compose cp <service>:/coverage/<service>/sdk.jsonl sdk-<service>.jsonl
 docker compose stop
 ```
 
@@ -51,7 +53,7 @@ If setup complete never arrives, the driver stopped in its startup. `docker comp
 
 - **Startup.** `the workload starts` was reached.
 - **Actions.** Every action reaches its intended outcome sometimes, and none is routinely slow.
-- **Assertions.** Only sometimes assertions for situations that need faults are unmet. This lists every assertion that would fail in a run:
+- **Assertions.** Only sometimes and reachable assertions on situations or code that need faults are unmet, which is expected without faults. This lists every assertion that would fail in a run:
 
   ```bash
   jq -rs '[.[].antithesis_assert // empty] | group_by(.message)[]
@@ -60,7 +62,7 @@ If setup complete never arrives, the driver stopped in its startup. `docker comp
     | "\(.[0].display_type)\t\(.[0].message)"' sdk*.jsonl
   ```
 
-  An unmet sometimes assertion means the workload doesn't reach that situation: change the actions or their mix.
+  Any other unmet sometimes or reachable assertion means the workload doesn't reach that situation or code: change the actions or their mix.
 - **Quiet periods.** One forced on finds the healthy system recovered.
 - **System logs.** Every kind of log line you expect arrives.
 - **Shutdown.** `docker stop` on a system container shuts its process down cleanly, without a kill.
