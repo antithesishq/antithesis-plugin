@@ -2,7 +2,7 @@
 
 The driver is a hegel concurrent state machine run from `#[hegel::main]`. Each `#[rule]` is one action: it draws its inputs, sends a request, and records the outcome in the model. Hegel runs the rules on several worker threads, in rounds. The next round starts only when every worker is done, so one slow rule stalls them all.
 
-Dependencies: `hegeltest` with `features = ["static-engine"]`, and `antithesis_sdk`.
+Dependencies: `hegeltest` with `features = ["static-engine"]`, and the latest `antithesis_sdk`. Read its API following `references/workload/sdk.md`.
 
 ## Starting up
 
@@ -170,19 +170,7 @@ With client containers (`references/workload/clients.md`), also:
 
 ## Guiding exploration
 
-The workload's own assertions mark states worth reaching. They show which situations happened, where coverage shows only which code ran, and Antithesis explores from them. Their failure means the workload never reached that state, not that the system broke a guarantee. Assertions for the system's guarantees come from the properties module (`references/properties/MODULE.md`).
-
-- **`assert_sometimes!`**: a situation that should happen at least once per run, such as a leader election, a transaction abort, a read returning another client's write, or two clients editing the same document at once. If a situation and its opposite are both possible, add one for each.
-- **`assert_reachable!`**: code that should run at least once.
-- **Numeric and boolean forms** (`assert_sometimes_greater_than!`, `assert_sometimes_all!`, and so on): a situation that's a comparison or a combination, like a follower falling more than 10 entries behind. They tell Antithesis how close each moment came, which guides its search better than true or false.
-
-Put them:
-
-- **On the rare outcome of every action** in the surface you mapped, and on both sides of every option.
-- **On situations that need faults,** so a run shows whether faults reached them.
-- **On combinations no single request shows,** from the model or from the nodes' state in the logs (`references/workload/system-logs.md`).
-
-Each message is one assertion in Antithesis, and assertions that share a message merge into it. Keep messages fixed, and put changing values in the details.
+Add exploration assertions to the driver, following "Exploration assertions" in `references/properties/assertions.md`.
 
 ## Choosing how often things happen
 
@@ -194,7 +182,7 @@ Put a rare action in the main group behind a rare draw. A group of its own would
 
 ## Quiet periods
 
-A quiet period pauses faults so the system can recover. Properties that hold only once faults stop, like every node serving again or acknowledged writes being readable, are checked there.
+A quiet period pauses faults so the system can recover. Guarantees that hold only once faults stop, like every node serving again or acknowledged writes being readable, are checked there.
 
 Run the whole quiet period inside one call of an `#[invariant(always_run)]`. No rule runs until it returns, so the checks see a quiet system, and it can wait for recovery. A per-round `weighted_booleans` draw starts quiet periods at a rate you choose. Pause faults with `ANTITHESIS_STOP_FAULTS <seconds>` for longer than the whole check takes; faults resume on their own afterwards. For the example above:
 

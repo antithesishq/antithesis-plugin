@@ -1,6 +1,6 @@
 # Instrument the SUT
 
-Build every SUT binary with Antithesis coverage instrumentation. It's required: without it, Antithesis can't guide exploration or pause threads, and the run has no coverage data.
+Build every SUT binary with Antithesis coverage instrumentation. It's required: without it, Antithesis can't guide exploration by coverage or pause threads.
 
 ## Rules
 

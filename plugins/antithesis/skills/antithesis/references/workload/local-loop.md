@@ -29,7 +29,7 @@ In `docker-compose.coverage.yaml`, also set `ANTITHESIS_SDK_LOCAL_OUTPUT` on the
       ANTITHESIS_SDK_LOCAL_OUTPUT: /tmp/sdk.jsonl
 ```
 
-The driver's SDK then writes its assertions and its setup-complete event, `{"antithesis_setup": {"status": "complete", ...}}`, to that file.
+The driver's SDK then writes its assertions and its setup-complete event, `{"antithesis_setup": {"status": "complete", ...}}`, to that file. If the SUT's code has assertions (`references/properties/assertions.md`), set it on each of those services too, as `/coverage/<service>/sdk.jsonl`, and copy each file out as `sdk-<service>.jsonl` next to the driver's.
 
 Nothing runs test commands locally, so run the driver's first command yourself right after `up`, which also checks it. Running it before setup complete is fine.
 
@@ -42,6 +42,8 @@ docker compose exec -T driver /opt/antithesis/test/v1/main/first_start_workload 
 timeout 600 sh -c 'until docker compose exec -T driver grep -qs antithesis_setup /tmp/sdk.jsonl; do sleep 5; done' &&
 sleep 300
 docker compose cp driver:/tmp/sdk.jsonl .
+# For each SUT service with assertions:
+docker compose cp <service>:/coverage/<service>/sdk.jsonl sdk-<service>.jsonl
 docker compose stop
 ```
 
@@ -51,16 +53,16 @@ If setup complete never arrives, the driver stopped in its startup. `docker comp
 
 - **Startup.** `the workload starts` was reached.
 - **Actions.** Every action reaches its intended outcome sometimes, and none is routinely slow.
-- **Assertions.** Only sometimes assertions for situations that need faults are unmet. This lists every assertion that would fail in a run:
+- **Assertions.** Only sometimes and reachable assertions on situations or code that need faults are unmet, which is expected without faults. This lists every assertion that would fail in a run:
 
   ```bash
   jq -rs '[.[].antithesis_assert // empty] | group_by(.message)[]
     | select(if .[0].assert_type == "sometimes" then any(.hit and .condition) | not
              else any(.hit and (.condition | not)) or (.[0].must_hit and (any(.hit) | not)) end)
-    | "\(.[0].display_type)\t\(.[0].message)"' sdk.jsonl
+    | "\(.[0].display_type)\t\(.[0].message)"' sdk*.jsonl
   ```
 
-  An unmet sometimes assertion means the workload doesn't reach that situation: change the actions or their mix.
+  Any other unmet sometimes or reachable assertion means the workload doesn't reach that situation or code: change the actions or their mix.
 - **Quiet periods.** One forced on finds the healthy system recovered.
 - **System logs.** Every kind of log line you expect arrives.
 - **Shutdown.** `docker stop` on a system container shuts its process down cleanly, without a kill.
@@ -69,7 +71,7 @@ If setup complete never arrives, the driver stopped in its startup. `docker comp
 
 After the system stops, run the language's coverage tool on the `coverage` volume, and list the functions in the system's own source that never ran: `llvm-cov` for Rust, C and C++, and `go tool cover` for Go.
 
-Error-handling and recovery code looks unreached without faults. Leave it to the Antithesis runs.
+Error-handling and recovery code looks unreached without faults. Don't chase it locally: put exploration assertions on it ("Exploration assertions" in `references/properties/assertions.md`), and check them in the Antithesis runs (`references/workload/run-loop.md`).
 
 ## 5. Close the gaps
 

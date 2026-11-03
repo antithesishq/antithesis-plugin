@@ -41,6 +41,10 @@ jobs:
       - uses: jdx/mise-action@v5
         with:
           version: 2026.10.24
+      - name: Install the latest snouty
+        if: matrix.task == 'check:docs'
+        # The installer adds snouty to GITHUB_PATH for the next steps.
+        run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/antithesishq/snouty/releases/latest/download/snouty-installer.sh | sh
       - name: mise run ${{ matrix.task }}
         run: mise run ${{ matrix.task }}
         env:
