@@ -76,8 +76,7 @@ run = "{{vars.check}} lychee"
 
 [tasks."check:docs"]
 description = "Every docs path the plugin names resolves with snouty"
-# A task-only tool, so the repo doesn't put a second `snouty` on your PATH.
-tools = { "github:antithesishq/snouty" = "0.8.0" }
+# Uses the snouty on your PATH, so it checks against the snouty you use.
 run = "{{vars.check}} docs"
 
 [tasks."check:versions"]

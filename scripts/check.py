@@ -119,8 +119,8 @@ DOCS_PATH = re.compile(r"(?<![\w.])/docs/[\w./-]*\w/?")
 def docs() -> int:
     """Every docs path the plugin names resolves with `snouty docs show`."""
     if shutil.which("snouty") is None:
-        print("Skipped: snouty isn't installed. CI checks the docs paths.")
-        return 0
+        error("snouty docs", "snouty isn't on PATH; install it to check the docs paths", "mise.toml")
+        return 1
     if OFFLINE and run("snouty", "docs", "sqlite", "--offline", capture_output=True).returncode != 0:
         print("Skipped offline: there is no local copy of the docs. CI checks the docs paths.")
         return 0
