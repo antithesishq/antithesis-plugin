@@ -4,6 +4,10 @@ on:
   push:
     branches: [main, master]
   pull_request:
+  # Nightly, to catch what changes outside the repo: links, the docs, the latest snouty.
+  schedule:
+    - cron: "17 7 * * *"
+  workflow_dispatch:
 
 env:
   MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
