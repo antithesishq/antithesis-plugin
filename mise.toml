@@ -74,6 +74,12 @@ env.TIKTOKEN_CACHE_DIR = "{{ get_env(name='XDG_CACHE_HOME', default=env.HOME ~ '
 description = "Check links (only local ones when CHECK_OFFLINE is set)"
 run = "{{vars.check}} lychee"
 
+[tasks."check:docs"]
+description = "Every docs path the plugin names resolves with snouty"
+# A task-only tool, so the repo doesn't put a second `snouty` on your PATH.
+tools = { "github:antithesishq/snouty" = "0.8.0" }
+run = "{{vars.check}} docs"
+
 [tasks."check:versions"]
 description = "Manifest versions agree"
 run = "{{vars.check}} versions"

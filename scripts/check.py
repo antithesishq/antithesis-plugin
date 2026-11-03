@@ -111,6 +111,38 @@ def lychee() -> int:
     return status
 
 
+# A snouty docs path, such as `/docs/reference/sdk/`, not the path part of a URL.
+DOCS_PATH = re.compile(r"(?<![\w.])/docs/[\w./-]*\w/?")
+
+
+@check
+def docs() -> int:
+    """Every docs path the plugin names resolves with `snouty docs show`."""
+    if shutil.which("snouty") is None:
+        print("Skipped: snouty isn't installed. CI checks the docs paths.")
+        return 0
+    if OFFLINE and run("snouty", "docs", "sqlite", "--offline", capture_output=True).returncode != 0:
+        print("Skipped offline: there is no local copy of the docs. CI checks the docs paths.")
+        return 0
+    found: dict[str, tuple[Path, int]] = {}
+    for file in sorted((ROOT / "plugins").rglob("*.md")):
+        for number, line in enumerate(file.read_text().splitlines(), 1):
+            for match in DOCS_PATH.finditer(line):
+                found.setdefault(match.group(), (file, number))
+    status = 0
+    # The first lookup refreshes the local copy, unless offline; the rest read it.
+    for index, (path, (file, number)) in enumerate(sorted(found.items())):
+        flags = [] if index == 0 and not OFFLINE else ["--offline"]
+        if run("snouty", "docs", "show", *flags, path, capture_output=True).returncode == 0:
+            if VERBOSE:
+                print(f"[ok] {path}")
+        else:
+            error("snouty docs", f"`snouty docs show {path}` finds no page", file, number)
+            status = 1
+    say(f"Checked {len(found)} docs paths with snouty")
+    return status
+
+
 @check
 def versions() -> int:
     status = run(sys.executable, "scripts/set-version.py", "--check").returncode
