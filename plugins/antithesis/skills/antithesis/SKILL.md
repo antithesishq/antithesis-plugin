@@ -35,12 +35,12 @@ Continue only if `jq --version` succeeds and `snouty doctor` reports that all ch
 
 Pick the module from the first argument, then read only that module's `MODULE.md`.
 
-| Argument     | Module                            | Use when                                                                   |
-| ------------ | --------------------------------- | -------------------------------------------------------------------------- |
-| `triage`     | `references/triage/MODULE.md`     | A run has started or finished and you need to know what failed.            |
-| `debug`      | `references/debug/MODULE.md`      | A specific property failure needs investigating (multiverse debugging).    |
-| `workload`   | `references/workload/MODULE.md`   | Building or iterating on a workload.                                       |
-| `launch`     | `references/launch/MODULE.md`     | Launching a new run of a workload with `snouty launch`.                    |
-| `properties` | `references/properties/MODULE.md` | Importing existing properties (`import`) or defining a new one (`define`). |
+| Argument     | Module                            | Use when                                                                    |
+| ------------ | --------------------------------- | --------------------------------------------------------------------------- |
+| `triage`     | `references/triage/MODULE.md`     | A run has started or finished and you need to know what failed.             |
+| `debug`      | `references/debug/MODULE.md`      | A specific property failure needs investigating (multiverse debugging).     |
+| `workload`   | `references/workload/MODULE.md`   | Building or iterating on a workload.                                        |
+| `launch`     | `references/launch/MODULE.md`     | Launching a new run of a workload with `snouty launch`.                     |
+| `properties` | `references/properties/MODULE.md` | Importing the SUT's guarantees (`import`) or defining a new one (`define`). |
 
 If there is no argument, infer the module from the request. If it is still ambiguous, ask.

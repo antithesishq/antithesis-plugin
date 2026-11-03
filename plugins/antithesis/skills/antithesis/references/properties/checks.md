@@ -1,16 +1,6 @@
 # Writing the check
 
-For the full assertion API in each language, and the assertion catalog the SDK needs, see `snouty docs tree sdk`.
-
-## Choosing the assertion
-
-- **`assert_always!`**: true every time it's checked.
-- **`assert_always_or_unreachable!`**: the same, on a path rare enough that it may never run. Use it only where `assert_always!` would fail just because the check wasn't reached.
-- **`assert_unreachable!`**: something that must never happen.
-- **`assert_sometimes!`**: something that must happen at least once per run, such as a leader being elected.
-- **Numeric and boolean forms** (`assert_always_some!` and the comparison forms): a condition that's a comparison or a combination. They tell Antithesis how close each check came to failing.
-
-Keep each message fixed ("Guiding exploration" in `references/workload/driver.md`), and put what you'd need to debug a failure in the details.
+Choose each assertion, and write its message and details, following `references/properties/assertions.md`.
 
 ## Responses, against the model
 
@@ -71,7 +61,7 @@ Check against `next_value`, not the key histories, which forget old writes that 
 
 ## After faults stop
 
-Properties that hold only once faults stop fail falsely during faults. Check them in the quiet period (`references/workload/driver.md`), after it waits for the nodes:
+Guarantees that hold only once faults stop fail falsely during faults. Check them in the quiet period (`references/workload/driver.md`), after it waits for the nodes. The recovery check below replaces the quiet period's `assert_sometimes!` on recovery: when it passes, the system recovered at least once.
 
 ```rust
 let recovered = !healthy.contains(&false);

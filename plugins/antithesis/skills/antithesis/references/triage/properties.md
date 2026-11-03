@@ -17,7 +17,7 @@ Use the counts on the `Examples` line to prioritize:
 
 ## Assertion types
 
-Every property that isn't a default property comes from an assertion, and its type determines what a failure tells you:
+An assertion's type determines what a failure tells you:
 
 - **`Always`**: fails if the condition is false at least once, or the assertion is never reached.
 - **`AlwaysOrUnreachable`**: fails if reached and false at least once. A rare or optional path was exercised and the invariant didn't hold; that the path was reached is itself informative.
@@ -25,8 +25,8 @@ Every property that isn't a default property comes from an assertion, and its ty
 - **`Reachable`**: fails if never reached.
 - **`Unreachable`**: fails if reached at least once. A forbidden path was entered.
 
+Every type except `AlwaysOrUnreachable` and `Unreachable` fails if never reached, so a pass also means the assertion was reached. Rich assertions, the numeric and boolean variants (e.g. `AlwaysGreaterThan`, `SometimesAll`), follow their base type and attach the compared values to the details.
+
 On an `in_progress` run, only these results are final: `Always`, `AlwaysOrUnreachable` or `Unreachable` failing, and `Sometimes` or `Reachable` passing. The rest settle when the run completes.
 
 A failing assertion with no examples and no counterexamples was never reached (on an `in_progress` run, not yet reached): the run may have been too short, the workload may not trigger the state, or a SUT bug may block it (ideally another property catches that bug).
-
-Numeric and boolean variants (e.g. `AlwaysGreaterThan`, `SometimesAll`) follow their base type's semantics and attach the compared operands to the assertion details.
