@@ -5,7 +5,7 @@ Build every SUT binary with Antithesis coverage instrumentation. It's required: 
 ## Rules
 
 - Instrument the binaries that run in the SUT's containers, and make sure the runtime image runs the instrumented build.
-- The client library is code under test too. Instrument the client program (`references/workload/clients.md`) with it.
+- The client library is code under test too. If the workload runs it in client containers (the stateful-clients pattern, `references/patterns/stateful-clients.md`), instrument the client program with it.
 - Put symbol files in `/symbols` of the runtime image where the language needs them, or artifacts in `/opt/antithesis/catalog/` for languages Antithesis instruments itself.
 - Add instrumentation tools and flags in the Antithesis Dockerfiles, not the project's own build.
 - If a component can't be instrumented, instrument the rest.

@@ -40,10 +40,10 @@ An exploration assertion marks a state worth reaching: an `assert_sometimes!`, `
 
 - **On the rare outcome of every action** in the surface you mapped (`references/workload/surface.md`), and on both sides of every option. If a situation and its opposite are both possible, add one for each.
 - **On situations that need faults,** as clients see them: a request that times out, then succeeds on retry; a read served by a new leader.
-- **On combinations no single request shows,** from the model or from the nodes' state in the logs (`references/workload/system-logs.md`).
+- **On combinations no single request shows,** from the model. Combinations across several nodes' internal state need the log-forwarding pattern (`references/patterns/MODULE.md`).
 - **On the situations that lead up to a guarantee being tested.** For example, `assert_sometimes_less_than_or_equal_to!(balance, 0, "an account balance reaches zero", ...)` steers Antithesis toward drained accounts, where a transfer can overdraw one or must be rejected, and shows that the workload gets there. Mark only states the system allows: a sometimes assertion on a state it forbids fails every run.
 
-**In the SUT's code,** for what no response or log line shows:
+**In the SUT's code,** for what no response shows. This is the default way to see a node's internal state:
 
 - **`assert_reachable!` on each branch that matters and that only faults or rare timing reach:** error handling, retries, timeouts, recovery, rollback, a snapshot install, a node rejoining with a stale term.
 - **`assert_sometimes!` on internal states,** such as a queue filling up, a lease expiring while held, or a write racing a compaction.
@@ -51,7 +51,7 @@ An exploration assertion marks a state worth reaching: an `assert_sometimes!`, `
 
 ## Assertions in the SUT's code
 
-Add them with the Antithesis SDK for the SUT's language (its API is in `references/workload/sdk.md`), in the code that runs in its containers, including the client library. They change the user's code, so tell the user, and keep them in a change of their own that the Antithesis build applies. The SDK must register them in the assertion catalog, so that one that's never reached still fails: follow the language's page in the SDK docs and `snouty docs show /docs/reference/sdk/assertion_cataloging/`.
+Add them with the Antithesis SDK for the SUT's language (its API is in `references/workload/sdk.md`), in the code that runs in its containers, including the client library if a pattern runs it in client containers. They change the user's code, so tell the user, and keep them in a change of their own that the Antithesis build applies. The SDK must register them in the assertion catalog, so that one that's never reached still fails: follow the language's page in the SDK docs and `snouty docs show /docs/reference/sdk/assertion_cataloging/`.
 
 ## Reading them
 

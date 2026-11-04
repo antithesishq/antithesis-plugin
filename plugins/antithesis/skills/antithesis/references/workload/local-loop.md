@@ -2,7 +2,7 @@
 
 ## 1. Build the system for coverage
 
-Antithesis instrumentation records nothing locally, so measure local coverage with the language's own tool. Add a `docker-compose.coverage.yaml` that overrides each system service with a coverage Dockerfile and a shared `coverage` volume, one directory per service. Client containers count as system services: the client library is code under test.
+Antithesis instrumentation records nothing locally, so measure local coverage with the language's own tool. Add a `docker-compose.coverage.yaml` that overrides each system service with a coverage Dockerfile and a shared `coverage` volume, one directory per service. Client containers, if a pattern adds them, count as system services: the client library is code under test.
 
 ### Rust
 
@@ -64,8 +64,8 @@ If setup complete never arrives, the driver stopped in its startup. `docker comp
 
   Any other unmet sometimes or reachable assertion means the workload doesn't reach that situation or code: change the actions or their mix.
 - **Quiet periods.** One forced on finds the healthy system recovered.
-- **System logs.** Every kind of log line you expect arrives.
 - **Shutdown.** `docker stop` on a system container shuts its process down cleanly, without a kill.
+- **Patterns.** Each pattern you adopted passes its own local checks.
 
 ## 4. Read the coverage
 

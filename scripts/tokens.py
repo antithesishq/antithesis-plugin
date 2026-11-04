@@ -8,6 +8,7 @@ environment, and mise.toml sets both:
 
     SKILL_TOKEN_BUDGET   (default 2500)
     MODULE_TOKEN_BUDGET  (default 15000)
+    MODULE_TOKEN_BUDGETS overrides for named modules, as `name=tokens,...`
     TOKEN_BASE           a git ref: also show the change since it
 
 Counts use tiktoken's o200k_base encoding. Claude's tokenizer differs, so treat them
@@ -24,6 +25,16 @@ from pathlib import Path
 import tiktoken
 from report import ROOT, error
 from skills import references, skills
+
+# Matches "Token budgets" in AGENTS.md.
+BUDGET_NOTE = (
+    "Budgets are soft guidance. Look for a shorter way to say the same thing: cut statements "
+    "and words that aren't needed, and rely more on `snouty --help` and `snouty docs`. Never "
+    "trade the design for the budget: don't change how pages reference each other, move content "
+    "to another module, or leave out something important just to fit. If the right version is "
+    "over budget, raise that module's budget in mise.toml (MODULE_TOKEN_BUDGETS), and say so in "
+    "the change."
+)
 
 
 def is_module(rel: str) -> bool:
@@ -110,6 +121,14 @@ def table(headers: list[str], rows: list[list[str]]) -> list[str]:
 def main() -> int:
     skill_budget = int(os.environ.get("SKILL_TOKEN_BUDGET", "2500"))
     module_budget = int(os.environ.get("MODULE_TOKEN_BUDGET", "15000"))
+    overrides = {
+        name.strip(): int(tokens)
+        for name, tokens in (
+            item.split("=", 1)
+            for item in os.environ.get("MODULE_TOKEN_BUDGETS", "").split(",")
+            if item.strip()
+        )
+    }
     encoding = tiktoken.get_encoding("o200k_base")
     now = Tree(encoding)
     base = Tree(encoding, os.environ.get("TOKEN_BASE", "").strip() or None)
@@ -126,7 +145,7 @@ def main() -> int:
         (
             f"Estimated with tiktoken `o200k_base`. Budgets: top level {skill_budget} "
             f"(SKILL.md and the files it names outside any module), each module {module_budget} "
-            "(what its MODULE.md adds)."
+            "(what its MODULE.md adds), unless the table shows another."
         ),
         "",
     ]
@@ -150,11 +169,10 @@ def main() -> int:
             cost = now.module_cost(skill, module_md) or 0
             cost_before = base.module_cost(skill, module_md) if base.ref else None
             name = Path(module_md).parent.name
-            rows.append([f"`{name}` module", str(cost), str(module_budget), *compare(cost, cost_before)])
-            if cost > module_budget:
-                errors.append(
-                    (module_md, f"module `{name}` adds {cost} tokens; the budget is {module_budget}")
-                )
+            budget = overrides.get(name, module_budget)
+            rows.append([f"`{name}` module", str(cost), str(budget), *compare(cost, cost_before)])
+            if cost > budget:
+                errors.append((module_md, f"module `{name}` adds {cost} tokens; the budget is {budget}"))
         lines += table(["Loads", "Tokens", "Budget", *since], rows)
 
         files = now.markdown(skill)
@@ -177,5 +195,5 @@ def main() -> int:
         with open(summary, "a") as f:
             f.write(report + "\n")
     for rel, message in errors:
-        error("token budget", message, rel, 1)
+        error("token budget", f"{message}. {BUDGET_NOTE}", rel, 1)
     return 1 if errors else 0

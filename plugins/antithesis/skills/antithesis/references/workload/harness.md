@@ -49,29 +49,7 @@ Antithesis runs the first command once at the start of every timeline, after set
 
 Test commands must be executable, which the Dockerfile's `chmod` ensures. `snouty validate` reports any that aren't.
 
-## 3. Client containers
-
-Add one service per client container (`references/workload/clients.md`), built from the client program:
-
-```yaml
-client1:
-  container_name: client1
-  hostname: client1
-  platform: linux/amd64
-  build:
-    context: .
-    dockerfile: client/Dockerfile
-  image: client:latest
-  restart: on-failure
-  environment:
-    KV_URLS: http://kv1:8000,http://kv2:8000
-    LOG_FORWARD_ADDR: driver:7777
-    OUTCOME_ADDR: driver:7778
-```
-
-`OUTCOME_ADDR` is where the client program sends its completion events. Point the driver at the clients, for example with `CLIENT_URLS: http://client1:8080,http://client2:8080` on the driver. The driver keeps `KV_URLS` for readiness, admin setup and quiet-period reads.
-
-## 4. Shared volumes
+## 3. Shared volumes
 
 For out-of-band facts ("Shared volumes for out-of-band facts" in `references/workload/driver.md`), mount one named volume in the node that writes and in the driver:
 
@@ -86,7 +64,7 @@ volumes:
 
 A new volume takes the ownership of its mount point in the image. If the node runs as a non-root user, create the mount point owned by that user in its Dockerfile, for example `RUN mkdir /shared && chown 999:999 /shared`; otherwise Docker creates it owned by root, and the node can't write there.
 
-## 5. Pick the faults, and exclude the driver
+## 4. Pick the faults, and exclude the driver
 
 Launch every run of the workload with the `basic_test` launcher, following `references/launch/MODULE.md`, and these flags:
 
@@ -95,6 +73,8 @@ Launch every run of the workload with the `basic_test` launcher, following `refe
 --fault-exclusions '^driver$'
 ```
 
-`--fault-tolerance` picks the fault profile. `high_availability` kills, stops and partitions containers, which the client handling in `references/workload/driver.md` expects. Use `resilient` only for a system that isn't meant to survive losing a node or a partition, such as a single-node system; it pauses containers and degrades the network, but never kills or partitions them.
+`--fault-tolerance` picks the fault profile. `high_availability` kills, stops and partitions containers. Use `resilient` only for a system that isn't meant to survive losing a node or a partition, such as a single-node system; it pauses containers and degrades the network, but never kills or partitions them.
 
-`--fault-exclusions` is a regex matched against container names, so `^driver$` relies on the driver's `container_name: driver` (section 1); without it, Compose names the container `<project>-driver-1` and the regex matches nothing. Exclude only the driver: client containers are there to be faulted.
+`--fault-exclusions` is a regex matched against container names, so `^driver$` relies on the driver's `container_name: driver` (section 1); without it, Compose names the container `<project>-driver-1` and the regex matches nothing. Exclude only the driver.
+
+A pattern you adopted (`references/patterns/MODULE.md`) may add services, volumes and environment variables.
