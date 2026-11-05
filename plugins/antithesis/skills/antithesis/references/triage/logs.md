@@ -85,7 +85,7 @@ Events with a `fault` field come from `fault_injector`. Its fields: `name`, `typ
 
 ### Active faults
 
-Snouty adds `active_faults` to every event, a dictionary of the fault windows open at that event:
+Snouty adds `active_faults` to every event, a dictionary of the fault windows open at that event. `references/antithesis/faults.md` describes what each fault does:
 
 ```json
 {
