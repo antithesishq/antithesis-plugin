@@ -109,8 +109,13 @@ The script reads the files at the commit, and checks that it is on the default b
 
 ## 7. Watch the release
 
-Find the Release run for the tag with `gh run list --workflow release.yml --commit <merge commit> --json databaseId,headBranch,status`. It can take a few seconds to appear. Then watch it with `gh run watch <id> --exit-status`.
+Find the Release run for the tag with `gh run list --workflow release.yml --commit <merge commit> --json databaseId,headBranch,status`. It can take a few seconds to appear.
+
+Watch it with `gh api`, not `gh run watch` or `gh run view`. They fetch jobs from GitHub's absolute `jobs_url`, which bypasses a proxy set as gh's host. Every 30 seconds or so, check:
+
+- the run: `gh api repos/{owner}/{repo}/actions/runs/<id> --jq '.status, .conclusion'`, until `status` is `completed`
+- its jobs: `gh api --paginate repos/{owner}/{repo}/actions/runs/<id>/jobs --jq '.jobs[] | [.name, .status, .conclusion] | @tsv'`
 
 When it passes, check that `targetCommitish` from `gh release view vX.Y.Z --json url,targetCommitish,isPrerelease` is the merge commit, and that it's a pre-release exactly when the version is a candidate. Give the user the release's URL.
 
-If it fails, read the failed job's log with `gh run view <id> --log-failed`, and tell the user what failed. A check that failed for a transient reason, like a link that was briefly down, can be rerun with `gh run rerun <id> --failed`. Never move or delete a pushed tag without asking the user.
+If its conclusion isn't `success`, read each failed job's log with `gh api --allow-escape-sequences repos/{owner}/{repo}/actions/jobs/<job id>/logs | sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | tail -100` (gh refuses to print the log's color codes without the flag, and `sed` strips them), and tell the user what failed. A check that failed for a transient reason, like a link that was briefly down, can be rerun with `gh api -X POST repos/{owner}/{repo}/actions/runs/<id>/rerun-failed-jobs`. Then watch the run again. Never move or delete a pushed tag without asking the user.
