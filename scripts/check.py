@@ -9,13 +9,13 @@ import argparse
 import json
 import re
 import shutil
-import subprocess
 import sys
 import tempfile
 from collections.abc import Callable
 from pathlib import Path
 
 import references
+import release
 import tokens
 from report import ANNOTATE, OFFLINE, ROOT, VERBOSE, error, run, say
 
@@ -157,22 +157,37 @@ def versions() -> int:
 
 @check
 def changelog() -> int:
-    version = json.loads(PLUGIN_JSON.read_text())["version"]
+    version = json.loads(release.CANONICAL.read_text())["version"]
     # Before the first release there is no CHANGELOG.md, and nothing to check.
-    if not (ROOT / "CHANGELOG.md").exists():
+    if not release.CHANGELOG.exists():
         say("No CHANGELOG.md yet, so there is nothing to check")
         return 0
+    text = release.CHANGELOG.read_text()
+    # At most one release candidate's section floats, at the top, while the version is
+    # that candidate's. The next candidate replaces it, and the release replaces it with
+    # the release's own notes.
+    sections = release.versions(text)
+    candidates = [v for v in sections if release.VERSION.fullmatch(v) and "-rc." in v]
+    if candidates and (len(candidates) > 1 or sections[0] != version):
+        error(
+            "changelog",
+            f"release candidate sections for {', '.join(candidates)}, and the"
+            f" version is {version}. Keep one, the top section, for the current release"
+            " candidate only: the next candidate replaces it, and the release replaces it"
+            " with its own notes",
+            release.CHANGELOG,
+        )
+        return 1
     # Without gh, or when gh can't tell, treat the version as unreleased and check its notes.
     has_gh = shutil.which("gh") is not None
     if has_gh and run("gh", "release", "view", f"v{version}", capture_output=True).returncode == 0:
         say(f"v{version} is already released")
         return 0
-    status = run(
-        sys.executable, "scripts/changelog-section.py", version, stdout=subprocess.DEVNULL
-    ).returncode
-    if status == 0:
-        say(f"CHANGELOG.md has notes for the unreleased v{version}")
-    return status
+    if not release.section(text, version):
+        error("changelog", f"no notes for the unreleased {version}", release.CHANGELOG)
+        return 1
+    say(f"CHANGELOG.md has notes for the unreleased v{version}")
+    return 0
 
 
 @check
