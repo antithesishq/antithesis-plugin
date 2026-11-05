@@ -27,10 +27,26 @@ def versions(changelog: str) -> list[str]:
 
 
 def section(changelog: str, version: str) -> str:
-    """The notes for `version` in a CHANGELOG.md's text, or "" when it has none."""
+    """The notes for `version` in a CHANGELOG.md's text, or "" when it has none.
+
+    A section ends at the next top-level heading. HTML comments are left out of the notes.
+    """
     match = re.search(
         rf"^# Version {re.escape(version)}(?: \([^\n]*\))?\n(.*?)(?=^# |\Z)",
         changelog,
         re.MULTILINE | re.DOTALL,
     )
-    return match.group(1).strip() if match else ""
+    return re.sub(r"<!--.*?-->", "", match.group(1), flags=re.DOTALL).strip() if match else ""
+
+
+def stray_headings(changelog: str) -> list[tuple[int, str]]:
+    """Each top-level heading that isn't `# Version X (date)`, with its line number.
+
+    One would end the section above it early, and cut that version's notes short.
+    """
+    heading = re.compile(rf"# Version {VERSION.pattern}(?: \([^\n]*\))?")
+    return [
+        (number, line)
+        for number, line in enumerate(changelog.splitlines(), 1)
+        if line.startswith("# ") and not heading.fullmatch(line)
+    ]

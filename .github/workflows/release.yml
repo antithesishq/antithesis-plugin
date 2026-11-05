@@ -54,5 +54,6 @@ jobs:
           PRERELEASE: ${{ needs.verify.outputs.prerelease }}
         run: |
           scripts/changelog-section.py "$VERSION" > notes.md
-          gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" \
-            --notes-file notes.md --prerelease="$PRERELEASE"
+          # --target only records the commit: without it, GitHub records the default branch.
+          gh release create "$GITHUB_REF_NAME" --verify-tag --target "$GITHUB_SHA" \
+            --title "$GITHUB_REF_NAME" --notes-file notes.md --prerelease="$PRERELEASE"

@@ -163,6 +163,18 @@ def changelog() -> int:
         say("No CHANGELOG.md yet, so there is nothing to check")
         return 0
     text = release.CHANGELOG.read_text()
+    # MD025 is off for CHANGELOG.md, so this catches a stray top-level heading instead.
+    stray = release.stray_headings(text)
+    for number, line in stray:
+        error(
+            "changelog",
+            f"`{line}` would end the section above it: top-level headings are only"
+            " `# Version X.Y.Z (YYYY-MM-DD)`",
+            release.CHANGELOG,
+            number,
+        )
+    if stray:
+        return 1
     # At most one release candidate's section floats, at the top, while the version is
     # that candidate's. The next candidate replaces it, and the release replaces it with
     # the release's own notes.
