@@ -3,23 +3,19 @@
 
 `plugins/antithesis/plugin.json` holds the canonical version.
 
-    scripts/set-version.py 1.2.3    write 1.2.3 into every manifest
-    scripts/set-version.py --check  exit 1 if a manifest disagrees with the canonical version
+    scripts/set-version.py 1.2.3       write 1.2.3 into every manifest
+    scripts/set-version.py 1.2.3-rc.1  write a release candidate's version
+    scripts/set-version.py --check     exit 1 if a manifest disagrees with the canonical version
 """
 
 import json
 import re
 import sys
-from pathlib import Path
 
-PLUGIN = Path(__file__).resolve().parent.parent / "plugins" / "antithesis"
-CANONICAL = PLUGIN / "plugin.json"
-MANIFESTS = [
-    CANONICAL,
-    PLUGIN / ".claude-plugin" / "plugin.json",
-    PLUGIN / ".devin-plugin" / "plugin.json",
-]
-VERSION = re.compile(r'("version":\s*")[^"]*(")')
+from release import CANONICAL, MANIFESTS, VERSION
+from report import ROOT
+
+FIELD = re.compile(r'("version":\s*")[^"]*(")')
 
 
 def main() -> int:
@@ -27,13 +23,13 @@ def main() -> int:
         expected = json.loads(CANONICAL.read_text())["version"]
         wrong = [p for p in MANIFESTS if json.loads(p.read_text()).get("version") != expected]
         for path in wrong:
-            print(f"{path.relative_to(PLUGIN.parent.parent)}: version is not {expected}")
+            print(f"{path.relative_to(ROOT)}: version is not {expected}")
         return 1 if wrong else 0
-    if len(sys.argv) != 2 or not re.fullmatch(r"\d+\.\d+\.\d+", sys.argv[1]):
+    if len(sys.argv) != 2 or not VERSION.fullmatch(sys.argv[1]):
         print((__doc__ or "").strip(), file=sys.stderr)
         return 2
     for path in MANIFESTS:
-        text, count = VERSION.subn(rf"\g<1>{sys.argv[1]}\g<2>", path.read_text(), count=1)
+        text, count = FIELD.subn(rf"\g<1>{sys.argv[1]}\g<2>", path.read_text(), count=1)
         if count != 1:
             print(f"{path}: no version field", file=sys.stderr)
             return 1

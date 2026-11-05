@@ -9,55 +9,10 @@ on:
     - cron: "17 7 * * *"
   workflow_dispatch:
 
-env:
-  MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
-
+# CI never releases, whatever version main is at. Pushing a `v*` tag runs release.yml.
 jobs:
-  # Every `check:*` task in mise.toml becomes its own job, and so its own GitHub check.
-  tasks:
-    runs-on: ubuntu-latest
-    outputs:
-      checks: ${{ steps.list.outputs.checks }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: jdx/mise-action@v5
-        with:
-          version: 2026.10.24
-          install: false
-      - id: list
-        run: echo "checks=$(mise tasks ls --json | jq -c '[.[].name | select(startswith("check:"))]')" >> "$GITHUB_OUTPUT"
-
   checks:
-    needs: tasks
-    name: ${{ matrix.task }}
-    runs-on: ubuntu-latest
-    # On main, an external link that's briefly down shouldn't block the release.
-    continue-on-error: ${{ github.event_name == 'push' && matrix.task == 'check:lychee' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        task: ${{ fromJSON(needs.tasks.outputs.checks) }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          # check:tokens compares token counts with the pull request's base.
-          fetch-depth: 0
-      - uses: jdx/mise-action@v5
-        with:
-          version: 2026.10.24
-      - name: Install the latest snouty
-        if: matrix.task == 'check:docs'
-        # The installer adds snouty to GITHUB_PATH for the next steps.
-        run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/antithesishq/snouty/releases/latest/download/snouty-installer.sh | sh
-      - name: mise run ${{ matrix.task }}
-        run: mise run ${{ matrix.task }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-          # lychee uses this to avoid GitHub's anonymous rate limit.
-          GITHUB_TOKEN: ${{ github.token }}
-          TOKEN_BASE: ${{ github.event.pull_request.base.sha }}
-          # Unprefixed output, so `::error` annotations start their lines.
-          MISE_TASK_OUTPUT: interleave
+    uses: ./.github/workflows/checks.yml
 
   # One stable check name for branch protection to require, whatever tasks exist.
   check:
@@ -69,31 +24,3 @@ jobs:
         run: |
           echo "checks: ${{ needs.checks.result }}"
           [ "${{ needs.checks.result }}" = success ]
-
-  # Users install from the default branch, and update when the version changes. A merged
-  # release PR changes the version, so this releases it.
-  release:
-    needs: check
-    if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v7
-      - uses: jdx/mise-action@v5
-        with:
-          version: 2026.10.24
-          install_args: uv
-      - name: Release the version if it is new
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          version=$(jq -r .version plugins/antithesis/plugin.json)
-          if gh release view "v$version" > /dev/null 2>&1; then
-            echo "v$version is already released"
-          elif [ ! -f CHANGELOG.md ]; then
-            echo "No CHANGELOG.md yet: the first release PR adds it"
-          else
-            scripts/changelog-section.py "$version" > notes.md
-            gh release create "v$version" --target "$GITHUB_SHA" --title "v$version" --notes-file notes.md
-          fi
