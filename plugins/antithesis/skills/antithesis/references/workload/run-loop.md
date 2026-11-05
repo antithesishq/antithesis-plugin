@@ -17,6 +17,10 @@ If a run fails because the driver didn't report setup complete within `--setup-t
 - **Behavior that needs faults.** The exploration assertions on situations and code that need faults, in the driver and in the SUT ("Exploration assertions" in `references/properties/assertions.md`), are reached, and quiet periods start and recover.
 - **Patterns.** Each pattern you adopted passes its own run checks.
 
-## 4. Fix and repeat
+## 4. Conclude before the next run
 
-Run the local loop (`references/workload/local-loop.md`) again after every change, then launch the next run. A few runs are usually enough. Expect a short run to miss sometimes assertions for rare conditions, but not common ones.
+Classify each failing property as a SUT bug, a workload bug or expected, with the evidence for each, before you change anything or launch again. Follow the triage module. Fix workload bugs first. Tell the user about SUT bugs, and keep their assertions. Never relaunch an unchanged workload to see whether a failure repeats.
+
+## 5. Fix and repeat
+
+Launch one run at a time, unless the user asks for more. If the previous run you launched is still going, cancel it with `snouty runs cancel <run_id>` before you launch the next: it tests the old workload. Run the local loop (`references/workload/local-loop.md`) again after every change, then launch the next run. A few runs are usually enough. Expect a short run to miss sometimes assertions for rare conditions, but not common ones.

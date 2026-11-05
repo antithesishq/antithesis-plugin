@@ -25,3 +25,7 @@ Run a bash command at a moment with `snouty runs exec`.
 - If a tool is missing in either place, process the output on your machine.
 - Rewarming a deep moment takes longer: a moment at vtime 10 rewarms faster than one at vtime 100.
 - To see how the system reacts to an action, such as killing a container, run `sleep 30` with `--events` from the action's end moment.
+
+## When you're done
+
+A debug run started with `snouty debug` bills compute for as long as it stays available, up to its `--duration`. As soon as you have what you need, cancel each debug run you started with `snouty runs cancel <run_id>`. A subagent reports the debug runs it started and leaves them running, because another subagent may be using them. The agent that launched the subagents cancels those runs once they have all finished. Never cancel a run that you or your subagents didn't start.
