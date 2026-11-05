@@ -1,3 +1,7 @@
+# Version 0.0.9-rc.1 (2026-11-04)
+
+No changes to the plugin since 0.0.8. This candidate tests the new release process, which releases from a pushed tag.
+
 # Version 0.0.8 (2026-11-04)
 
 The first tagged release of the Antithesis plugin. It gives a coding agent one skill, `antithesis`, as the entry point to any task that involves Antithesis. The skill picks one of its modules from the request:
