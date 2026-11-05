@@ -13,6 +13,16 @@ Always run `snouty launch` with `SNOUTY_UNSTABLE_FEATURES=teams` set, including 
 5. **Pick the flags.** Use the flags from context, such as the workload's harness. Pick the faults with `--fault-tolerance`, and keep containers out of them with `--fault-exclusions`, rather than with `--param`. For the faults, compute budget and tier, see `--fault-tolerance`, `--fault-exclusions`, `--max-compute-hours` and `--performance-tier` in `snouty launch --help`.
 6. **Launch it** with `snouty launch`, and report the run ID from its output to the user. To follow the run, use the triage module.
 
+## Compute budget
+
+If the user gave a compute budget, it covers every run and debug run you start for the task. Before each launch, add up:
+
+- the compute hours of your runs that have ended, from `snouty runs usage --after <when the task started>`. It lists every run on the tenant, so count only your run IDs;
+- the `--max-compute-hours` of your runs still going, which `runs usage` doesn't list until they end;
+- the new run's `--max-compute-hours`, or the server's default of 48 if you don't pass one.
+
+Launch only if the total stays within the budget. Otherwise, stop and tell the user what you've spent and what you'd run next.
+
 ## Setup timeout
 
 Fuzzing starts only once the workload reports setup complete, so keep setup fast. Raise `--setup-timeout` only if setup genuinely can't finish within the default.
