@@ -24,6 +24,6 @@ The SUT itself is built with Antithesis coverage instrumentation.
 8. **Iterate locally** on coverage and the exploration assertions (`references/properties/assertions.md`). Follow `references/workload/local-loop.md`.
 9. **Iterate on short Antithesis runs.** Follow `references/workload/run-loop.md`.
 10. **Launch the final run** with `--max-compute-hours 24` on the standard tier. Follow `references/launch/MODULE.md` with the launcher and fault flags in `references/workload/harness.md`, and read the run with the triage module.
-11. **Report to the user,** including which patterns you adopted and why.
+11. **Report to the user,** including which patterns you adopted and why, and any step you skipped or changed, and why.
 
 Each pattern you adopt adds to steps 4 to 9. Its page says what.
