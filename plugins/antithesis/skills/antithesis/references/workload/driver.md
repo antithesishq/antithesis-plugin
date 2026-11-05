@@ -65,11 +65,11 @@ Exploration assertions on the rules mark what's worth reaching, such as a read t
 ## Keep rules fast
 
 - Use short timeouts. Give operations that are slow by design their own.
-- Don't sleep or poll in a rule. Record what you expect, and check it in a later rule. The one exception is a quiet period, which waits for recovery on purpose.
+- Don't sleep or poll in a rule. Record what you expect, and check it in a later rule. The one exception is an eventually, which waits for recovery on purpose.
 - Keep long-lived interactions (streams, sessions, transactions) in the driver's state, across rules.
 - Run blocking operations (watches, long-polls, blocking pops) on a background thread. Record the result in the driver's state, and check it in a later rule. Bounded retries that mirror a real client's are fine inside a rule.
 
-**Weight actions toward what's hard to reach,** so options and rare interactions happen many times in every timeline.
+**Weight actions toward what's hard to reach,** so options and rare interactions happen many times across timelines.
 
 **Use `#[invariant(always_run)]`.** With `.steps(i64::MAX)`, a plain `#[invariant]` effectively never runs. An `always_run` invariant runs after every round, while no rules run, and every round waits for it.
 
@@ -80,21 +80,30 @@ Add exploration assertions to the driver, following "Exploration assertions" in 
 ## Choosing how often things happen
 
 - **Groups control overlap, not frequency.** Each round hegel picks one group, and every worker runs only its rules. Use separate groups only for rules that must never overlap. Groups can't be weighted.
-- **Weights are a hint** for the mix within a group, not a guarantee.
-- **Explicit draws set exact probabilities.** Use `tc.draw(gs::weighted_booleans(p))`, or a phase in the driver's state, when a rate matters.
+- **Each timeline runs a random subset of the rules.** hegel's swarm testing disables a random subset of each worker's rules for the whole test case, keeping at least one rule per group. Some timelines never run a given rule. In others, it's one of a few enabled rules, and runs far more often than its weight suggests. This is how swarm testing finds bugs that need an action to be absent.
+- **Weights are a hint** for the mix among a worker's enabled rules, not a guarantee.
+- **Explicit draws set exact probabilities per call.** Use `tc.draw(gs::weighted_booleans(p))` when a rate matters.
+- **The driver's state sets timing.** When an action must wait for something, or must not repeat too soon, record what it needs in the driver's state, such as a counter or the time it last ran, and check that before it acts.
+- **Pace disruptive actions by time, not weight.** An action that disrupts the system, such as a leader stepdown, a membership change or a forced snapshot, can run every round in a timeline where it's the only enabled rule. Give it a cooldown in the driver's state, and skip it until enough time has passed since it last ran.
 
-Put a rare action in the main group behind a rare draw. A group of its own would get as many rounds as any other. If it must not overlap other operations, run it from an `always_run` invariant behind a rare draw, as the quiet period does.
+Put a rare action in the main group behind a rare draw. A group of its own would get as many rounds as any other.
 
-## Quiet periods
+## Eventually
 
-A quiet period pauses faults so the system can recover. Guarantees that hold only once faults stop, like every node serving again or acknowledged writes being readable, are checked there.
+An eventually stops faults for good, waits for the system to recover, asserts the guarantees that must hold once faults stop, like every node serving again or acknowledged writes being readable, and then ends its timeline. It is the driver's version of an Antithesis `eventually_` test command.
 
-Run the whole quiet period inside one call of an `#[invariant(always_run)]`. No rule runs until it returns, so the checks see a quiet system, and it can wait for recovery. Each round, a `weighted_booleans` draw starts one at a rate you choose: measure rounds per second locally, and aim for about one every few minutes of a timeline. Then:
+Write it as a normal rule, so swarm testing leaves it out of some timelines. Leave its weight at the default: the draw below sets how often it fires. Consider adding it to other groups too, so it can also fire while other actions run. The rule returns at once unless a rare `tc.draw(gs::weighted_booleans(p))` passes, then calls an `eventually` method. The draw starts eventuallys at varied depths, from right after `/workload-active` to deep into the timeline. The method:
 
-1. Pause faults by running `$ANTITHESIS_STOP_FAULTS <seconds>`, for longer than the whole check takes. Faults resume on their own afterwards.
-2. Wait, up to a deadline, until every node serves requests again. Restarted containers take a while to come back. Step 2 of "Starting up" can share this per-node check.
-3. Check what must hold once faults stop. At least, assert that the system recovered.
+1. Takes a global lock, so no other eventually can start.
+2. Stops faults for good, by running `$ANTITHESIS_STOP_FAULTS <seconds>` for far longer than the rest of the timeline can take, such as an hour.
+3. Waits, up to a deadline, until every node serves requests again. Restarted containers take a while to come back. Step 2 of "Starting up" can share this per-node check.
+4. Logs that its assertions start, then asserts that the system recovered, and asserts each guarantee that must hold once faults stop ("After faults stop" in `references/properties/checks.md`). Each assertion becomes a property in the run.
+5. Logs that it's ending the timeline, then exits the driver with status 0. Antithesis can't end a timeline explicitly. Once the driver exits, the timeline goes idle, and Antithesis stops spending fuzzing effort on it.
 
-Clock faults continue during a pause, so allow for clock jumps. To test a quiet period locally, set its probability to 1.
+Decide how an eventually treats the other actions from what it asserts. Some assertions hold while actions continue. Others need a quiet system: the eventually can wait for actions in flight to finish, for example with a lock that every other rule holds while it acts, or interrupt them by cancelling them.
+
+A pause stops new clock faults, but it doesn't undo a clock shift that already happened. A node whose clock a fault moved back 5 seconds is still 5 seconds behind during the checks.
+
+For the local loop, give the driver two environment variables: one that turns the eventually rule off, and one that calls the `eventually` method directly after a given number of seconds of workload, whatever swarm testing and the draw decide.
 
 For the rest of hegel's API, see <https://hegel.dev/> (Rust: <https://docs.rs/hegeltest/latest/hegel/>).

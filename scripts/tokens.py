@@ -7,7 +7,7 @@ MODULE.md, that the top level doesn't already load. Each budget comes from the
 environment, and mise.toml sets both:
 
     SKILL_TOKEN_BUDGET   (default 2500)
-    MODULE_TOKEN_BUDGET  (default 15000)
+    MODULE_TOKEN_BUDGET  (default 20000)
     MODULE_TOKEN_BUDGETS overrides for named modules, as `name=tokens,...`
     TOKEN_BASE           a git ref: also show the change since it
 
@@ -120,7 +120,7 @@ def table(headers: list[str], rows: list[list[str]]) -> list[str]:
 
 def main() -> int:
     skill_budget = int(os.environ.get("SKILL_TOKEN_BUDGET", "2500"))
-    module_budget = int(os.environ.get("MODULE_TOKEN_BUDGET", "15000"))
+    module_budget = int(os.environ.get("MODULE_TOKEN_BUDGET", "20000"))
     overrides = {
         name.strip(): int(tokens)
         for name, tokens in (

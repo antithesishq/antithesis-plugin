@@ -65,7 +65,7 @@ run = "{{vars.check}} tokens"
 # small. A module is what its MODULE.md adds on demand, up to another module.
 # Change the defaults here, or override one run: MODULE_TOKEN_BUDGET=20000 mise run check.
 env.SKILL_TOKEN_BUDGET = "{{ get_env(name='SKILL_TOKEN_BUDGET', default='2500') }}"
-env.MODULE_TOKEN_BUDGET = "{{ get_env(name='MODULE_TOKEN_BUDGET', default='15000') }}"
+env.MODULE_TOKEN_BUDGET = "{{ get_env(name='MODULE_TOKEN_BUDGET', default='20000') }}"
 # Per-module budgets that differ from MODULE_TOKEN_BUDGET, as `name=tokens,...`.
 env.MODULE_TOKEN_BUDGETS = "{{ get_env(name='MODULE_TOKEN_BUDGETS', default='') }}"
 # tiktoken downloads its encoding once. Keep it out of $TMPDIR, so it survives a
