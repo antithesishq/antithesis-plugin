@@ -4,7 +4,9 @@ A version is `MAJOR.MINOR.PATCH` for a release, or `MAJOR.MINOR.PATCH-rc.N` for 
 candidate of it. `plugins/antithesis/plugin.json` holds the canonical version.
 """
 
+import json
 import re
+from pathlib import Path
 
 from report import ROOT
 
@@ -15,10 +17,30 @@ MANIFESTS = [
     PLUGIN / ".claude-plugin" / "plugin.json",
     PLUGIN / ".devin-plugin" / "plugin.json",
 ]
+# SKILL.md states the version too, for agents that can't see the manifests, such as
+# the launch module, which records it on every run.
+SKILL = PLUGIN / "skills" / "antithesis" / "SKILL.md"
+VERSIONED = [*MANIFESTS, SKILL]
 CHANGELOG = ROOT / "CHANGELOG.md"
 
 # Group 1 is MAJOR.MINOR.PATCH, and group 2 is N for a release candidate.
 VERSION = re.compile(r"(\d+\.\d+\.\d+)(?:-rc\.(\d+))?")
+
+# Where each file of VERSIONED holds the version: group 2, between groups 1 and 3.
+JSON_FIELD = re.compile(r'("version":\s*")([^"]*)(")')
+SKILL_LINE = re.compile(r"^(Plugin version: `)([^`]*)(`)$", re.MULTILINE)
+
+
+def field(path: Path) -> re.Pattern[str]:
+    return JSON_FIELD if path.suffix == ".json" else SKILL_LINE
+
+
+def version_in(path: Path, text: str) -> str | None:
+    """The version in the text of a file of VERSIONED, or None when it has none."""
+    if path.suffix == ".json":
+        return json.loads(text).get("version")
+    match = SKILL_LINE.search(text)
+    return match.group(2) if match else None
 
 
 def versions(changelog: str) -> list[str]:

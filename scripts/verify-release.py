@@ -10,7 +10,7 @@ pushes the tag, and the release workflow runs it again on the pushed tag. It che
 - the tag is `vMAJOR.MINOR.PATCH` or `vMAJOR.MINOR.PATCH-rc.N`, and if it already exists,
   it points at COMMIT
 - COMMIT is on BRANCH, such as `origin/main`
-- every manifest at COMMIT has the tag's version
+- every manifest at COMMIT, and the skill's SKILL.md, has the tag's version
 - CHANGELOG.md at COMMIT has notes for that version
 - the version has no GitHub release yet
 
@@ -18,7 +18,6 @@ Exits 1 if a check fails. Under GitHub Actions, writes the version, and whether 
 release candidate (`prerelease=true` or `false`), to GITHUB_OUTPUT.
 """
 
-import json
 import os
 import sys
 from pathlib import Path
@@ -63,9 +62,9 @@ def main() -> int:
     if run("git", "merge-base", "--is-ancestor", sha, branch).returncode != 0:
         failures.append(f"{sha} is not on {branch}")
 
-    for path in release.MANIFESTS:
+    for path in release.VERSIONED:
         text = show(sha, path)
-        found = json.loads(text).get("version") if text else None
+        found = release.version_in(path, text) if text else None
         if found != version:
             failures.append(f"{path.relative_to(ROOT)} at {sha[:12]} is at {found}, not {version}")
 

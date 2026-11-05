@@ -151,7 +151,7 @@ def docs() -> int:
 def versions() -> int:
     status = run(sys.executable, "scripts/set-version.py", "--check").returncode
     if status == 0:
-        say(f"Every manifest is at version {json.loads(PLUGIN_JSON.read_text())['version']}")
+        say(f"Every manifest and SKILL.md are at version {json.loads(PLUGIN_JSON.read_text())['version']}")
     return status
 
 

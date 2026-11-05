@@ -11,7 +11,7 @@ Always run `snouty launch` with `SNOUTY_UNSTABLE_FEATURES=teams` set, including 
 3. **Validate it.** Run `snouty validate <config_dir>` and continue only once it passes.
 4. **Pick the launcher.** Use `basic_test` for Docker Compose and `basic_k8s_test` for Kubernetes, unless the user names another.
 5. **Pick the flags.** Use the flags from context, such as the workload's harness. Pick the faults with `--fault-tolerance`, and keep containers out of them with `--fault-exclusions`, rather than with `--param`. For the faults, compute budget and tier, see `--fault-tolerance`, `--fault-exclusions`, `--max-compute-hours` and `--performance-tier` in `snouty launch --help`.
-6. **Launch it** with `snouty launch`, and report the run ID from its output to the user. To follow the run, use the triage module.
+6. **Launch it** with `snouty launch`, and add `--param attrs.plugin_version=<version>` with the plugin version from `SKILL.md`, so the run records which plugin version launched it. Report the run ID from its output to the user. To follow the run, use the triage module.
 
 ## Compute budget
 

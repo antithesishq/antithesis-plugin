@@ -57,13 +57,13 @@ Put the notes in `CHANGELOG.md` under `# Version X.Y.Z (YYYY-MM-DD)` with today'
 
 ## 3. Bump the version
 
-Run `scripts/set-version.py X.Y.Z`, then `scripts/set-version.py --check`. This sets the version in every manifest.
+Run `scripts/set-version.py X.Y.Z`, then `scripts/set-version.py --check`. This sets the version in every manifest, and in the skill's `SKILL.md`, where agents read it.
 
 ## 4. Open the PR
 
 ```bash
 git switch -c release/vX.Y.Z
-git add CHANGELOG.md plugins/antithesis/plugin.json plugins/antithesis/.claude-plugin/plugin.json plugins/antithesis/.devin-plugin/plugin.json
+git add CHANGELOG.md plugins/antithesis/plugin.json plugins/antithesis/.claude-plugin/plugin.json plugins/antithesis/.devin-plugin/plugin.json plugins/antithesis/skills/antithesis/SKILL.md
 git commit -m "Release antithesis plugin X.Y.Z"
 git push -u origin release/vX.Y.Z
 gh pr create --title "Release antithesis plugin X.Y.Z" --body "<body>"
