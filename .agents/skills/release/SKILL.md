@@ -114,7 +114,7 @@ Find the Release run for the tag with `gh run list --workflow release.yml --comm
 Watch it with `gh api`, not `gh run watch` or `gh run view`. They fetch jobs from GitHub's absolute `jobs_url`, which bypasses a proxy set as gh's host. Every 30 seconds or so, check:
 
 - the run: `gh api repos/{owner}/{repo}/actions/runs/<id> --jq '.status, .conclusion'`, until `status` is `completed`
-- its jobs: `gh api --paginate repos/{owner}/{repo}/actions/runs/<id>/jobs --jq '.jobs[] | [.name, .status, .conclusion] | @tsv'`
+- its jobs: `gh api --paginate repos/{owner}/{repo}/actions/runs/<id>/jobs --jq '.jobs[] | [.id, .name, .status, .conclusion] | @tsv'`
 
 When it passes, check that `targetCommitish` from `gh release view vX.Y.Z --json url,targetCommitish,isPrerelease` is the merge commit, and that it's a pre-release exactly when the version is a candidate. Give the user the release's URL.
 
