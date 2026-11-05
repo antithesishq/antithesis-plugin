@@ -4,7 +4,7 @@ Input: an optional mode, then an Antithesis run ID. If you were given something 
 
 Work through the run without asking the user for input unless you are blocked.
 
-The `references/triage/` directory has detailed guides. Read each one only when a step points to it.
+Don't read the other pages in `references/triage/` up front. Read each one only when you reach the step that points to it. For example, you need `issues.md` only to report.
 
 ## Find the run
 
@@ -36,7 +36,7 @@ Also check the instrumentation properties, and include their status in your repo
 
 ## Investigate a failing property
 
-Read `references/triage/logs.md` before downloading any logs. Then:
+Whoever downloads a log reads `references/triage/logs.md` first. In `monitor` and `summary` modes, the subagents download the logs for failing properties: tell each one to read it, and don't read it yourself unless you download a log too, as for an incomplete run. Then:
 
 1. Pick the first failing example and find its moment. If the counterexample has no `moment` (properties that report a value, see `references/triage/properties.md`), the counterexample value is the evidence; skip to step 4.
 2. Download the log for that moment and analyze it locally.
