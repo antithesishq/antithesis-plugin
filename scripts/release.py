@@ -27,9 +27,13 @@ def versions(changelog: str) -> list[str]:
 
 
 def section(changelog: str, version: str) -> str:
-    """The notes for `version` in a CHANGELOG.md's text, or "" when it has none."""
+    """The notes for `version` in a CHANGELOG.md's text, or "" when it has none.
+
+    A section ends at the next heading, or at an HTML comment that starts a line, so the
+    file's own comments never become a release's notes.
+    """
     match = re.search(
-        rf"^# Version {re.escape(version)}(?: \([^\n]*\))?\n(.*?)(?=^# |\Z)",
+        rf"^# Version {re.escape(version)}(?: \([^\n]*\))?\n(.*?)(?=^# |^<!--|\Z)",
         changelog,
         re.MULTILINE | re.DOTALL,
     )

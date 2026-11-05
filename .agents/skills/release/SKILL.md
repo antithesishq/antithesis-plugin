@@ -51,7 +51,7 @@ Write the notes at the level of modules and what the agent does differently:
 - Put breaking changes first, then the rest, largest first. A change is breaking if something that worked with the previous release now fails or needs the user to act: a renamed module or command, a new requirement on the user's setup, a changed harness layout that existing workloads need to adopt. Start each with `**Breaking**:` and say what to do instead.
 - Link every PR that contributes to an entry, under the repository's URL from `gh repo view --json url -q .url`, e.g. `([#7](https://github.com/antithesishq/antithesis-plugin/pull/7))`.
 
-Put the notes at the top of `CHANGELOG.md`, under `# Version X.Y.Z (YYYY-MM-DD)` with today's date. Create the file if it doesn't exist.
+Put the notes in `CHANGELOG.md` under `# Version X.Y.Z (YYYY-MM-DD)` with today's date, above every other version, and below the HTML comments at the top of the file.
 
 `CHANGELOG.md` holds at most one candidate's section, at the top. A new candidate replaces the previous candidate's section, heading and notes, with its own. A release replaces it with the release's section. `check:changelog` fails otherwise. Then check that `scripts/changelog-section.py X.Y.Z` prints them: the release workflow uses the same script.
 
@@ -75,11 +75,22 @@ In the body, say which version this releases and which release the notes start f
 
 Don't merge the PR yourself. Give the user the PR's URL.
 
-## 5. Watch the checks, and wait for the merge
+## 5. Watch the PR until it merges
 
-Watch the PR's checks with `gh pr checks N --watch`. If one fails, fix it on the branch, push, and watch again. Tell the user once they pass.
+Until the PR merges, watch its checks and its comments. The user asks for changes in comments, and review bots comment too.
 
-Then wait for the user to merge. Check `gh pr view N --json state,mergeCommit` every few minutes, until `state` is `MERGED`. When the user asks for changes, push them to the same branch, and watch the checks again. If the PR is closed without merging, stop. If you can't keep waiting, say that the release isn't done, and ask the user to tell you when they've merged, so you can tag it.
+Every few minutes, check:
+
+- The state: `gh pr view N --json state,mergeCommit`. Go on to step 6 once it's `MERGED`. If it's `CLOSED`, stop.
+- The checks: `gh pr checks N`. If one fails, fix it.
+- New comments, in all three places GitHub keeps them:
+  - reviews: `gh api repos/{owner}/{repo}/pulls/N/reviews`
+  - inline comments on the diff: `gh api repos/{owner}/{repo}/pulls/N/comments`
+  - comments on the PR itself: `gh api repos/{owner}/{repo}/issues/N/comments`
+
+For each new comment, decide whether it's valid. A bot's comment can be wrong. Fix what's valid on the branch, and reply to each comment with what you changed, or why you didn't. A fix that isn't the notes or the version, like a lint rule or a script, goes in its own commit, and the PR body says why. If a comment asks to abort the release, close the PR and stop. After every push, watch the checks again.
+
+Tell the user when the checks pass, and when you've answered comments. If you can't keep watching, say that the release isn't done, and ask the user to tell you when they've merged or commented.
 
 ## 6. Tag the merge commit
 
@@ -98,6 +109,6 @@ The script reads the files at the commit, and checks that it is on the default b
 
 Find the Release run for the tag with `gh run list --workflow release.yml --commit <merge commit> --json databaseId,headBranch,status`. It can take a few seconds to appear. Then watch it with `gh run watch <id> --exit-status`.
 
-When it passes, check that `gh release view vX.Y.Z --json url,targetCommitish,isPrerelease` names the merge commit, and that it's a pre-release exactly when the version is a candidate. Give the user the release's URL.
+When it passes, check that `targetCommitish` from `gh release view vX.Y.Z --json url,targetCommitish,isPrerelease` is the merge commit, and that it's a pre-release exactly when the version is a candidate. Give the user the release's URL.
 
 If it fails, read the failed job's log with `gh run view <id> --log-failed`, and tell the user what failed. A check that failed for a transient reason, like a link that was briefly down, can be rerun with `gh run rerun <id> --failed`. Never move or delete a pushed tag without asking the user.
