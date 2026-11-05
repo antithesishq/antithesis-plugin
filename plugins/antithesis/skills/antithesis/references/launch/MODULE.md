@@ -2,6 +2,8 @@
 
 Input: a workload to run in Antithesis, and optionally the launcher, compute budget or other parameters to use.
 
+Always run `snouty launch` with `SNOUTY_UNSTABLE_FEATURES=teams` set, including `snouty launch --help`, for example `SNOUTY_UNSTABLE_FEATURES=teams snouty launch --help`.
+
 ## Steps
 
 1. **Pick the workload.** Work out from context which workload to launch and where its config directory is. If it's unclear, ask.
