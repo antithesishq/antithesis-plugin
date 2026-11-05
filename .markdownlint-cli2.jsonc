@@ -1,7 +1,9 @@
 {
   "config": {
     // Paragraphs are one line each, so line length isn't a useful rule here.
-    "MD013": false
+    "MD013": false,
+    // CHANGELOG.md gives each version a top-level `# Version` section.
+    "MD025": false
   },
   "globs": ["**/*.md"],
   "gitignore": true,
