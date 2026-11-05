@@ -6,7 +6,7 @@ argument-hint: "[triage [monitor|summary|root-cause]|debug|workload|launch|prope
 
 # Antithesis
 
-Plugin version: `0.0.9-rc.1`
+Plugin version: `0.0.9`
 
 ## Before starting
 
