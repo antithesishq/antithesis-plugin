@@ -29,7 +29,7 @@ In `docker-compose.coverage.yaml`, also set `ANTITHESIS_SDK_LOCAL_OUTPUT` on the
       ANTITHESIS_SDK_LOCAL_OUTPUT: /tmp/sdk.jsonl
 ```
 
-The driver's SDK then writes its assertions and its setup-complete event, `{"antithesis_setup": {"status": "complete", ...}}`, to that file. If the SUT's code has assertions (`references/properties/assertions.md`), set it on each of those services too, as `/coverage/<service>/sdk.jsonl`, and copy each file out as `sdk-<service>.jsonl` next to the driver's.
+Also set the driver's variable that turns the eventually off there ("Eventually" in `references/workload/driver.md`), so the driver doesn't exit partway through the run. The driver's SDK then writes its assertions and its setup-complete event, `{"antithesis_setup": {"status": "complete", ...}}`, to that file. If the SUT's code has assertions (`references/properties/assertions.md`), set it on each of those services too, as `/coverage/<service>/sdk.jsonl`, and copy each file out as `sdk-<service>.jsonl` next to the driver's.
 
 Nothing runs test commands locally, so run the driver's first command yourself right after `up`, which also checks it. Running it before setup complete is fine.
 
@@ -63,7 +63,7 @@ If setup complete never arrives, the driver stopped in its startup. `docker comp
   ```
 
   Any other unmet sometimes or reachable assertion means the workload doesn't reach that situation or code: change the actions or their mix.
-- **Quiet periods.** One forced on finds the healthy system recovered.
+- **Eventually.** Run once more with the eventually on and its direct call set to a minute or two of workload. The driver logs that its assertions start and that it's ending the timeline, then exits with status 0 (`docker compose ps -a`), and the eventually's assertions pass. `docker compose cp` still copies `sdk.jsonl` from the stopped container.
 - **Shutdown.** `docker stop` on a system container shuts its process down cleanly, without a kill.
 - **Patterns.** Each pattern you adopted passes its own local checks.
 

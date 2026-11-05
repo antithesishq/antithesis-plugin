@@ -87,11 +87,11 @@ Never hold a model lock while sending or waiting.
 - **An outstanding read stops pinning the model after `ABANDON`,** for example 30 s. Pruning must not forget what an outstanding read may still return, so a hung read would keep the whole history forever. Once a read is older than `ABANDON`, prune past it, and when its answer arrives, skip the checks that need the pruned history.
 - **A closed connection means the client restarted.** In `lost`, everything outstanding on it gets an unknown outcome, and the model forgets that client's sessions, locks, open transactions and handles. A write lost this way may still land soon, from a request already on the wire, so start its `AMBIGUITY_WINDOW` at the restart. A paused client, not restarted, may still think it holds a lock that has since expired.
 - **Under `high_availability`, mark restarts:** `assert_reachable!("a client restarts", ...)` in `lost`, once the workload is active, so restarts during setup don't count. Under `resilient`, nothing kills a client, so leave it out.
-- **Actions always go through the clients.** A direct connection to the servers is a client that never fails. Use one only for the startup waits, admin setup, and read-only checks in quiet periods.
+- **Actions always go through the clients.** A direct connection to the servers is a client that never fails. Use one only for the startup waits, admin setup, and read-only checks in an eventually.
 
 **Startup.** In step 2 of "Starting up" in `references/workload/driver.md`, also wait until every client answers `health`, so a client that can't start fails setup loudly.
 
-**Quiet periods.** A hang that outlasts the faults is a bug, in the library or the system. Once faults stop and the servers recover, wait, up to the quiet period's deadline, until every client has nothing outstanding and answers a real request. Assert it: `every client answers once faults stop`, with each client's outstanding operations and their ages in the details.
+**Eventually.** A hang that outlasts the faults is a bug, in the library or the system. Once faults stop and the servers recover, wait, up to the eventually's deadline, until every client has nothing outstanding and answers a real request. Assert it: `every client answers once faults stop`, with each client's outstanding operations and their ages in the details.
 
 ## The harness
 
@@ -117,7 +117,7 @@ volumes:
   clients:
 ```
 
-The driver keeps `KV_URLS` for its readiness checks, admin setup and quiet-period reads. If a client program runs as a non-root user, create `/clients` owned by that user in its Dockerfile, as for any shared volume. Exclude only the driver from faults: the client containers are there to be faulted.
+The driver keeps `KV_URLS` for its readiness checks, admin setup and eventually reads. If a client program runs as a non-root user, create `/clients` owned by that user in its Dockerfile, as for any shared volume. Exclude only the driver from faults: the client containers are there to be faulted.
 
 ## Checking it
 
