@@ -45,6 +45,6 @@ Snouty is the official Antithesis CLI. When using it:
 
 1. Discover commands via `snouty --help`.
 2. Read a subcommand's `snouty <cmd...> --help` before using it. When you hand work to a subagent, tell it to read the `--help` of the snouty commands it will use.
-3. Pass `--detail` to every command that takes it. Pass `--json` instead only when you pipe the output into `jq` or another program. JSON costs several times as many tokens and carries mostly fields you don't need, while `--detail` keeps what the default output leaves out, such as assertion details.
+3. Pass `--detail` where the command's `--help` lists it. Pass `--json` instead only when you pipe the output into `jq` or another program. JSON costs several times as many tokens and carries mostly fields you don't need, while `--detail` keeps what the default output leaves out, such as assertion details.
 
 Read Antithesis documentation with `snouty docs search <terms>`, then `snouty docs show <path>`.
