@@ -24,6 +24,6 @@ The SUT itself is built with Antithesis coverage instrumentation.
 8. **Iterate locally** on coverage and the exploration assertions (`references/properties/assertions.md`). Follow `references/workload/local-loop.md`.
 9. **Iterate on short Antithesis runs.** Follow `references/workload/run-loop.md`.
 10. **Launch the final run** with `--max-compute-hours 24` on the standard tier. Follow `references/launch/MODULE.md` with the launcher and fault flags in `references/workload/harness.md`, and read the run with the triage module.
-11. **Report to the user,** including which patterns you adopted and why, and any step you skipped or changed, and why.
+11. **Report, or keep going.** If the user asked only for a workload, report to the user, including which patterns you adopted and why, and any step you skipped or changed, and why, then stop. If they asked you to find bugs, or gave a budget for testing, keep going until the goal is met or the budget runs out. Triage each run, and confirm each finding with evidence before you report it, following the triage module and, to check the system's state at the failing moment, `references/debug/MODULE.md`. Keep each confirmed bug from hiding others, for example by having the driver avoid its trigger, while keeping its assertion. Widen what the workload exercises, and launch again. When you stop, report the same things, and each bug you confirmed.
 
 Each pattern you adopt adds to steps 4 to 9. Its page says what.
