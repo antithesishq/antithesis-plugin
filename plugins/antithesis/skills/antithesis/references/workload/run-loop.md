@@ -1,8 +1,8 @@
-# Iterate on short runs
+# Iterate on Antithesis runs
 
-## 1. Launch a short run
+## 1. Launch a run
 
-Launch with the smallest compute budget, `--max-compute-hours 12` on the standard tier. Follow `references/launch/MODULE.md` with the launcher and fault flags in `references/workload/harness.md`, and read the run with the triage module.
+Start with a short run, `--max-compute-hours 12` on the standard tier. As the workload passes the checks below and you trust it more, raise it toward 24. A longer run shows whether the workload holds up with more compute. You're done iterating when a 24-hour run passes these checks. Follow `references/launch/MODULE.md` with the launcher and fault flags in `references/workload/harness.md`, and read the run with the triage module.
 
 ## 2. Keep setup fast
 

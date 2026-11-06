@@ -22,8 +22,16 @@ The SUT itself is built with Antithesis coverage instrumentation.
 6. **Wire up the harness:** the `driver` container with its `first_` test command, any shared volumes, and the fault flags. Follow `references/workload/harness.md`.
 7. **Build and validate.** Build the images, run the instrumentation checks, then run `snouty validate <config_dir>`. Commit every file the images build from, and check `git status --ignored`, since ignore rules can drop harness files.
 8. **Iterate locally** on coverage and the exploration assertions (`references/properties/assertions.md`). Follow `references/workload/local-loop.md`.
-9. **Iterate on short Antithesis runs.** Follow `references/workload/run-loop.md`.
-10. **Launch the final run** with `--max-compute-hours 24` on the standard tier. Follow `references/launch/MODULE.md` with the launcher and fault flags in `references/workload/harness.md`, and read the run with the triage module.
-11. **Report, or keep going.** Go by what the user asked for. A compute budget is a ceiling, not a request to spend it. If they asked only for a workload, report to the user, including which patterns you adopted and why, and any step you skipped or changed, and why, then stop. If they asked you to find bugs, keep going until the goal is met or their compute budget runs out. If they gave no budget, don't launch past step 10: report, and ask for one. Triage each run, and confirm each finding with evidence before you report it, following the triage module and, to check the system's state at the failing moment, `references/debug/MODULE.md`. Keep each confirmed bug from hiding others, for example by having the driver avoid its trigger, while keeping its assertion. Widen what the workload exercises, and launch again. When you stop, report the same things, and each bug you confirmed.
+9. **Iterate on Antithesis runs** until a 24-hour run passes its checks. Follow `references/workload/run-loop.md`.
 
 Each pattern you adopt adds to steps 4 to 9. Its page says what.
+
+## Compute budget
+
+Ask for a compute budget up front. If the user gives none, use 60 compute hours, which is enough to qualify a workload. Either is the budget `references/launch/MODULE.md` checks.
+
+## Finish
+
+Report which patterns you adopted and why, and any step you skipped or changed, and why. If the user asked only for a workload, that ends the task.
+
+If they asked you to find bugs, keep going within the budget. Triage each run, and confirm each finding with evidence before you report it, using the triage module and, to check the system's state at the failing moment, `references/debug/MODULE.md`. Keep each confirmed bug from hiding others, for example by having the driver avoid its trigger, while keeping its assertion. Widen what the workload exercises, and launch again. Report each bug you confirmed.

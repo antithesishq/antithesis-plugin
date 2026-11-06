@@ -42,4 +42,6 @@ If there is no argument, infer the module from the request. If it is still ambig
 
 Once you've read the module's `MODULE.md`, if the task will run unattended for a long time, such as building a workload or launching and following runs, ask the user up front, in one message, for anything you can foresee needing: a compute budget, permission to change their code, the scope, where to report issues, and any choice the module leaves to the user. Then work to the end without stopping, unless you are blocked.
 
-The task ends when the user's goal is met, when the budget they gave runs out, or when you are blocked on something only the user can decide. Finishing a module's steps doesn't end it. While budget and work that doesn't depend on the answer remain, never end your turn on a question: write the question in a file the user will see, tell them where, and keep working.
+## When you think you're done
+
+The task ends when the user's goal is met, when the compute budget runs out, or when you are blocked on something only the user can decide. Finishing a module's steps doesn't end it. The budget is a ceiling, not a target: spend it only on the goal. While budget and work that doesn't depend on the answer remain, never end your turn on a question: write the question in a file the user will see, tell them where, and keep working.
