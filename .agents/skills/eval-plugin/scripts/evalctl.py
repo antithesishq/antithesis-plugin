@@ -19,6 +19,7 @@ import time
 import uuid
 from collections import deque
 from collections.abc import Iterator
+from datetime import datetime
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -71,6 +72,8 @@ def log_files(data: Path, name: str) -> list[Path]:
 def cmd_preflight(a) -> None:
     """Check, without changing anything, that the sandbox is ready for an eval."""
     checks = {
+        # First, because the harness auth check below writes a session of its own.
+        "prior agent memory": "ls ~/.claude/projects 2>/dev/null | head",
         "harness": "claude --version",
         "harness auth": "claude -p 'Reply with the single word ok.' --output-format json | jq -r .result",
         "snouty": "snouty --version",
@@ -80,7 +83,6 @@ def cmd_preflight(a) -> None:
         "plugin version": f"grep -m1 'Plugin version' {a.plugin_dir}/plugins/antithesis/skills/antithesis/SKILL.md",
         "plugin checkout": f"git -C {a.plugin_dir} log --oneline -1 && git -C {a.plugin_dir} status --short | head",
         "skill installed": "ls -la ~/.claude/skills/ 2>/dev/null; claude plugin list 2>/dev/null | grep -i antithesis",
-        "prior agent memory": "ls ~/.claude/projects 2>/dev/null | head",
         "hostname": "hostname",
     }
     # One connection for every check.
@@ -88,7 +90,13 @@ def cmd_preflight(a) -> None:
 
 
 def cmd_push(a) -> None:
-    ssh(a.host, f"sudo mkdir -p {REMOTE}/logs && sudo chown -R $(id -un) {REMOTE}")
+    # Set aside an earlier eval's logs, so `sync` and `watch` see only this eval's.
+    old = f"{REMOTE}/logs.$(date +%Y%m%d-%H%M%S)"
+    ssh(
+        a.host,
+        f"sudo mkdir -p {REMOTE} && sudo chown -R $(id -un) {REMOTE} && "
+        f'{{ [ -z "$(ls -A {REMOTE}/logs 2>/dev/null)" ] || mv {REMOTE}/logs {old}; }} && mkdir -p {REMOTE}/logs',
+    )
     subprocess.run(["scp", "-q", str(HERE / "sandbox_session.py"), f"{a.host}:{REMOTE}/"], check=True)
     print(f"pushed sandbox_session.py to {a.host}:{REMOTE}/")
 
@@ -116,6 +124,9 @@ def cmd_start(a) -> None:
 
 
 def cmd_resume(a) -> None:
+    # Two harness processes on one session would write the same transcript.
+    if ssh(a.host, f"test -f {REMOTE}/logs/{a.name}.done && echo done", check=False).strip() != "done":
+        sys.exit(f"session {a.name} is still running; wait for it to finish before you resume it")
     invoke(a, "resume", load_sessions(a.data)[a.name])
 
 
@@ -163,7 +174,10 @@ def cmd_result(a) -> None:
         with open(f) as lines:
             results = [e for e in read_jsonl(lines) if e.get("type") == "result"]
         if results:
-            print(results[-1]["result"])
+            last = results[-1]
+            print(
+                last.get("result") or f"(the last turn ended with {last.get('subtype')}, and no result text)"
+            )
             return
     print("(no result yet)")
 
@@ -179,7 +193,7 @@ def poll(a) -> tuple[set[str], set[str]]:
     runs_part, _, done_part = raw.partition("--DONE--\n")
     runs = set()
     for r in read_jsonl(runs_part.splitlines()):
-        if r.get("created_at", "") < a.since:
+        if "created_at" not in r or datetime.fromisoformat(r["created_at"]) < a.since:
             continue
         p = r.get("parameters", {})
         desc = (r.get("description") or p.get("antithesis.test_name") or "").splitlines()
@@ -243,7 +257,12 @@ def main() -> None:
     r.add_argument("name")
     r.set_defaults(func=cmd_result)
     w = sub.add_parser("watch", help="print new runs and finished sessions, every minute")
-    w.add_argument("--since", required=True, help="RFC 3339 time; older runs are ignored")
+    w.add_argument(
+        "--since",
+        required=True,
+        type=datetime.fromisoformat,
+        help="RFC 3339 time with a zone; older runs are ignored",
+    )
     w.add_argument(
         "--match",
         type=lambda x: re.compile(x, re.IGNORECASE),

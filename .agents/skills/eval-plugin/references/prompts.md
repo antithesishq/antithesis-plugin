@@ -8,13 +8,13 @@ For a 300 compute-hour eval of one target on the standard tier:
 
 | Task | Compute hours | Notes |
 | --- | --- | --- |
-| Workload | 100 | |
-| Triage root-cause | 20 | Often uses one short run, or nothing. |
+| Workload | 90 | Eval 2's workload billed 96 against a 100 budget. |
+| Triage root-cause | 15 | Often uses one short run, or nothing. |
 | Debug | 10 | Often uses nothing, by borrowing a ready run. |
-| Properties | 35 | |
-| Patterns | 125–145 | The long run alone needs about 100: 2 hours of fuzzing on 48 cores is 96, plus setup. |
+| Properties | 30 | |
+| Patterns | 130 | The long run alone needs about 100: 2 hours of fuzzing on 48 cores is 96, plus setup. |
 
-Summary, monitor and the plain-language triage launch nothing. Scale the split to the user's budget and the target's setup time, and leave slack for billing over each cap (see **Budget** in `SKILL.md`).
+These caps add up to 275, which leaves 25 for billing over each cap (see **Budget** in `SKILL.md`). Summary, monitor and the plain-language triage launch nothing. Scale the split to the user's budget and the target's setup time.
 
 ## Templates
 

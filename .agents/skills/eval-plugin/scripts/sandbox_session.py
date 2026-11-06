@@ -15,6 +15,7 @@ Invocation N of session NAME writes, in the logs/ directory next to this script:
 """
 
 import argparse
+import os
 import shlex
 import subprocess
 import sys
@@ -61,7 +62,8 @@ def main() -> None:
     done = LOGS / f"{a.name}.done"
     done.unlink(missing_ok=True)
     exports = "".join(f"export {shlex.quote(kv)}; " for kv in a.env)
-    cmd = f"cd {shlex.quote(a.cwd)} && {exports}{harness_cmd(a.mode, a.session_id, Path(a.prompt_file).read_text())}"
+    cwd = shlex.quote(os.path.expanduser(a.cwd))
+    cmd = f"cd {cwd} && {exports}{harness_cmd(a.mode, a.session_id, Path(a.prompt_file).read_text())}"
     with open(LOGS / f"{a.name}.{a.n}.jsonl", "w") as out, open(LOGS / f"{a.name}.{a.n}.err", "w") as err:
         # A login shell, so the session sees the same environment a user's terminal does.
         shell = "zsh" if Path("/bin/zsh").exists() or Path("/usr/bin/zsh").exists() else "bash"
