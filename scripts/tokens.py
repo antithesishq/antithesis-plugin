@@ -1,4 +1,6 @@
-"""Report how many tokens each skill file and module costs, and enforce two budgets.
+"""Report how many tokens each plugin skill file and module costs, and enforce two budgets.
+
+Skills under .agents/ are the repo's own tooling, so they have no budget and aren't reported.
 
 The top level is SKILL.md and the files it names outside any module. It loads in
 every context that uses the skill, so it gets a small budget. A module is what its
@@ -24,7 +26,7 @@ from pathlib import Path
 
 import tiktoken
 from report import ROOT, error
-from skills import references, skills
+from skills import is_internal, references, skills
 
 # Matches "Token budgets" in AGENTS.md.
 BUDGET_NOTE = (
@@ -149,7 +151,7 @@ def main() -> int:
         ),
         "",
     ]
-    for skill_md in skills():
+    for skill_md in (p for p in skills() if not is_internal(p.parent)):
         skill = skill_md.parent.relative_to(ROOT).as_posix()
         lines += [f"### `{skill}`", ""]
 

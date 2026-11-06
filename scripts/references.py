@@ -9,14 +9,14 @@ from SKILL.md by following references, at any depth.
 from pathlib import Path
 
 from report import ROOT, error, say
-from skills import BUNDLED_DIRS, references, skills
+from skills import BUNDLED_DIRS, is_internal, references, skills
 
 
 def check_skill(skill_md: Path) -> int:
     skill = skill_md.parent
     # A repo-internal skill may name the repo's own files, such as `scripts/set-version.py`.
     # A shipped skill may not: its install has only what the skill bundles.
-    internal = skill.relative_to(ROOT).parts[0] == ".agents"
+    internal = is_internal(skill)
     bundled = {p for d in BUNDLED_DIRS for p in (skill / d).rglob("*") if p.is_file()}
     problems = 0
     reached: set[Path] = set()

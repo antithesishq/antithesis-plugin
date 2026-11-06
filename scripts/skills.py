@@ -18,6 +18,11 @@ def skills() -> list[Path]:
     return sorted(p for g in SKILL_GLOBS for p in ROOT.glob(g))
 
 
+def is_internal(skill: Path) -> bool:
+    """Whether a skill directory is the repo's own tooling, under .agents/, not part of a plugin."""
+    return skill.relative_to(ROOT).parts[0] == ".agents"
+
+
 def references(text: str) -> Iterator[tuple[int, str]]:
     """Yield (line number, path from the skill root) for each file the text names."""
     for number, line in enumerate(text.splitlines(), 1):
