@@ -1,4 +1,4 @@
-# Setup
+# Devin setup
 
 * Add organization secrets (Settings → Secrets)
   * `ANTITHESIS_API_KEY`

@@ -14,6 +14,7 @@ Generally, you'll want to include a prompt of the form "Use Antithesis to test t
   - `codex plugin add antithesis@antithesis`
 - Devin: [docs/devin.md](docs/devin.md)
 - Replit: [docs/replit.md](docs/replit.md)
+- Cursor: [docs/cursor.md](docs/cursor.md)
 
 ## Prerequisites
 
