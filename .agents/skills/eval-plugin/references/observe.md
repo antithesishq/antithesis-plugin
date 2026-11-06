@@ -34,7 +34,9 @@ Earlier evals found these. Check whether each still happens.
 - Summary mode skips the duplicates check with "I don't know where issues are reported", even when the git remote names the upstream repository.
 - Debug execs in another session's run in progress, because the debug module says to reuse any ready run.
 - Workload agents triage their own runs in parallel with the triage sessions, and reach different conclusions.
-- Quiet periods start from a per-round draw that grows more frequent as faults stop, so a timeline can end up with no faults.
+- Quiet periods start from a per-round draw that grows more frequent as faults stop, so a timeline can end up with no faults. Since 0.0.9 an eventually ends the timeline instead, but its per-round draw fired before 30 s of vtime in 37–52% of cases in eval 2: check its vtimes with `snouty runs search`.
+- About half of token spend re-writes the cache after waits longer than 5 minutes.
+- `snouty runs show --detail` doesn't exist, and agents keep trying it.
 - A properties agent launched runs from uncommitted changes, so the run's recorded commit didn't match the code.
 - Two sessions on one machine that build the same image tags launch each other's images. Workload docs don't suggest tagging images per checkout.
 - In `claude -p`, a session's turn ends while it waits on background work, and it resumes on the notification. One session can log many `result` lines.
