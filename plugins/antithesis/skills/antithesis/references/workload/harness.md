@@ -81,6 +81,6 @@ Launch every run of the workload with the `basic_test` launcher, following `refe
 
 To debug a failure, you run commands at a moment in a container with `snouty runs exec` (`references/debug/MODULE.md`). They can use only the tools in its image, and a run's images can't change once it exists. So before the first launch, put in every image the workload builds a shell, `curl`, `jq`, and the SUT's admin or inspection CLI, such as `fdbcli`, `etcdctl` or `psql`.
 
-If the workload has client containers, make sure a shell command in each can send its client the same requests the driver sends, for example `socat` for a Unix socket. Then `runs exec` can repeat any operation at a moment.
+If the workload has client containers, make sure a shell command in each can send its client the same requests the driver sends, for example `socat` for a Unix socket. Then `runs exec` can repeat any operation at a moment. A shell command opens a new connection, and handles are per connection, so create any handle an operation takes in the same command first. A `failed` for an unknown handle says nothing about the SUT.
 
 A pattern you adopted (`references/patterns/MODULE.md`) may add services, volumes and environment variables.
