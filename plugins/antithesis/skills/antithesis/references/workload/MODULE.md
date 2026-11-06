@@ -4,7 +4,7 @@ Input: a system to test in Antithesis, and optionally the behaviors to focus on.
 
 ## Compute budget
 
-Ask for a compute budget up front. If the user gives none, use 60 compute hours as your budget for runs launched while working on the workload.
+Ask for a compute budget up front. If the user gives none, use 60 compute hours as your budget for runs launched while working on the workload. Launch nothing beyond the workload without a budget from the user.
 
 ## What a workload is
 
