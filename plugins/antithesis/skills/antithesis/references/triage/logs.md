@@ -10,7 +10,9 @@ LOG=/tmp/triage/${INPUT_HASH}.ndjson
 snouty runs --json logs "$RUN_ID" "$INPUT_HASH" > "$LOG.$$.part" && mv "$LOG.$$.part" "$LOG"
 ```
 
-Pass `INPUT_HASH` verbatim. Every moment on the branch is in the file, including the failure moment, so reuse `$LOG` for any moment with the same input hash. Other agents may be downloading the same timeline, so download to a path of your own and rename it only when complete; `$LOG` exists only once a download has finished. Find a moment in it by its `moment.vtime`.
+Pass `INPUT_HASH` verbatim, even when it is negative. Put every option before `RUN_ID` and never use `--`, which makes every later option positional. Don't start a file name with the hash: `mv` and other commands read a name like `-123.ndjson` as options. `$LOG` is safe because it starts with `/tmp/triage/`.
+
+Every moment on the branch is in the file, including the failure moment, so reuse `$LOG` for any moment with the same input hash. Other agents may be downloading the same timeline, so download to a path of your own and rename it only when complete; `$LOG` exists only once a download has finished. Find a moment in it by its `moment.vtime`.
 
 Snouty strips ANSI escape codes from `output_text` and adds an `active_faults` field to every event (see "Active faults" below).
 
@@ -33,7 +35,7 @@ Keep the incomplete `.part` file if you cancel; it never takes the final name, s
 
 ```bash
 SLICE=/tmp/triage/${INPUT_HASH}_from_${BEGIN_VTIME}.ndjson
-snouty runs --json logs "$RUN_ID" "$INPUT_HASH" --begin-vtime "$BEGIN_VTIME" \
+snouty runs --json logs --begin-vtime "$BEGIN_VTIME" "$RUN_ID" "$INPUT_HASH" \
   > "$SLICE.$$.part" && mv "$SLICE.$$.part" "$SLICE"
 ```
 

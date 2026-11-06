@@ -18,7 +18,11 @@ Executing commands doesn't keep a run alive. If the run exits while you debug, p
 
 ## Executing commands
 
-Run a bash command at a moment with `snouty runs exec`.
+Run a bash command at a moment with `snouty runs exec`. Put every option before `RUN_ID`, and pass a negative input hash as it is. Never use `--`: everything after it is positional, so a later `--container client1` fails with `unexpected argument 'client1'`.
+
+```bash
+snouty runs exec --container client1 --timeout 5m "$RUN_ID" -1469731053185852001 38.52 'ps aux'
+```
 
 - **With `--container <name>`,** the command runs in that container and can use the tools in its image. The workload's images are under your control, so add any tool you need there.
 - **Without `--container`,** it runs in the guest: the virtual machine in Antithesis's deterministic hypervisor that runs every container or Kubernetes manifest. You can't change its tools, but it has the basics, such as bash and the usual shell commands, `podman` and `kubectl`. Use it for Kubernetes pods, which `--container` doesn't support.
