@@ -4,9 +4,10 @@
 Run `evalctl.py --host HOST --data DIR --help` for the commands. `start` records each
 session in DIR/notes/sessions.json, and `start` and `resume` keep each prompt they send
 in DIR/notes/prompt-NAME.N.txt. `sync` copies the session logs to DIR/logs/ and the raw
-Claude transcripts to DIR/transcripts/. `watch` prints a line for each new or changed
-run whose description, test name or launcher matches --match, and for each session that
-finishes, so it can feed a Monitor.
+Claude transcripts to DIR/transcripts/. `runlog` finds every run the sessions launched in
+their transcripts, and records it in DIR/runs/runs.json, so runs that others launch on a
+shared tenant never count. `watch` keeps the run log current and prints a line for each
+new or changed run in it, and for each session that finishes, so it can feed a Monitor.
 """
 
 import argparse
@@ -19,7 +20,6 @@ import time
 import uuid
 from collections import deque
 from collections.abc import Iterator
-from datetime import datetime
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -182,24 +182,74 @@ def cmd_result(a) -> None:
     print("(no result yet)")
 
 
+RUN_ID = re.compile(r"\b[0-9a-f]{32}-\d+-\d+\b")
+LAUNCH = re.compile(r"\bsnouty\s+(?:launch|debug)\b(?![^\n]*--help)")
+
+
+def runlog(data: Path) -> dict:
+    """Add every run that a session launched to runs/runs.json, from the synced transcripts.
+
+    A launch is a Bash call that runs `snouty launch` or `snouty debug`; its run ID is the
+    one that first appears in the call's output. Existing entries keep any fields you added.
+    """
+    path = data / "runs" / "runs.json"
+    log = json.loads(path.read_text()) if path.exists() else {}
+    for name, s in load_sessions(data).items():
+        files = list((data / "transcripts").glob(f"*/{s['id']}.jsonl"))
+        files += list((data / "transcripts").glob(f"*/{s['id']}/subagents/*.jsonl"))
+        for f in files:
+            launches: dict[str, str] = {}
+            with open(f) as lines:
+                for e in read_jsonl(lines):
+                    content = (e.get("message") or {}).get("content")
+                    for c in content if isinstance(content, list) else []:
+                        if c.get("type") == "tool_use" and LAUNCH.search(str(c["input"].get("command", ""))):
+                            launches[c["id"]] = c["input"]["command"]
+                        elif c.get("type") == "tool_result" and c.get("tool_use_id") in launches:
+                            cmd = launches.pop(c["tool_use_id"])
+                            ids = [i for i in RUN_ID.findall(json.dumps(c.get("content"))) if i not in cmd]
+                            if not ids or ids[0] in log:
+                                continue
+                            cap = re.search(r"--max-compute-hours[ =](\d+)", cmd)
+                            desc = re.search(r"--description[ =](?:\"([^\"]*)\"|'([^']*)')", cmd)
+                            log[ids[0]] = {
+                                "session": name,
+                                "launched": e.get("timestamp"),
+                                "purpose": next((g for g in desc.groups() if g), "")
+                                if desc
+                                else "debug run"
+                                if "snouty debug" in cmd
+                                else "",
+                                "cap": int(cap.group(1)) if cap else 0,
+                            }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(log, indent=2) + "\n")
+    return log
+
+
+def cmd_runlog(a) -> None:
+    cmd_sync(a)
+    for rid, r in runlog(a.data).items():
+        print(f"{rid}  {r.get('session', '')}  cap={r.get('cap', '?')}  {r.get('purpose', '')}")
+
+
 def poll(a) -> tuple[set[str], set[str]]:
-    """The matching runs, and the finished sessions, in one ssh round trip."""
+    """The eval's runs, from its run log, and the finished sessions."""
+    cmd_sync(a)
+    ids = set(runlog(a.data))
     raw = ssh(
         a.host,
-        f"snouty runs list -n 60 --json 2>/dev/null; echo '--DONE--'; "
+        f"snouty runs list -n 200 --json 2>/dev/null; echo '--DONE--'; "
         f"cd {REMOTE}/logs && for f in *.done; do [ -f $f ] && echo $f $(cat $f); done",
         check=False,
     )
     runs_part, _, done_part = raw.partition("--DONE--\n")
     runs = set()
     for r in read_jsonl(runs_part.splitlines()):
-        if "created_at" not in r or datetime.fromisoformat(r["created_at"]) < a.since:
+        if r.get("run_id") not in ids:
             continue
         p = r.get("parameters", {})
         desc = (r.get("description") or p.get("antithesis.test_name") or "").splitlines()
-        text = " ".join([*desc[:1], p.get("antithesis.test_name", ""), r.get("launcher", "")])
-        if a.match and not a.match.search(text):
-            continue
         cap = p.get("antithesis.max_compute_hours", "?")
         runs.add(f"{r['run_id']} {r['status']} {r.get('launcher')} mch={cap} {desc[0] if desc else ''}")
     return runs, set(done_part.splitlines()) - {""}
@@ -256,19 +306,10 @@ def main() -> None:
     r = sub.add_parser("result", help="print a session's final answer")
     r.add_argument("name")
     r.set_defaults(func=cmd_result)
-    w = sub.add_parser("watch", help="print new runs and finished sessions, every minute")
-    w.add_argument(
-        "--since",
-        required=True,
-        type=datetime.fromisoformat,
-        help="RFC 3339 time with a zone; older runs are ignored",
+    sub.add_parser("runlog", help="record the runs the sessions launched").set_defaults(func=cmd_runlog)
+    sub.add_parser("watch", help="print the eval's run changes and finished sessions").set_defaults(
+        func=cmd_watch
     )
-    w.add_argument(
-        "--match",
-        type=lambda x: re.compile(x, re.IGNORECASE),
-        help="regex on the description, test name or launcher",
-    )
-    w.set_defaults(func=cmd_watch)
     u = sub.add_parser("usage", help="save billed compute hours per run")
     u.add_argument("--since", required=True)
     u.set_defaults(func=cmd_usage)

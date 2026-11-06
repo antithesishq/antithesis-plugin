@@ -7,7 +7,7 @@ Reads, under DATA_DIR:
     notes/sessions.json   NAME -> {"id": session id, "target": profile, ...}, from `evalctl.py start`
     transcripts/          raw Claude transcripts (`evalctl.py sync`), subagents included
     runs/usage.json       billed compute hours per run (`evalctl.py usage`)
-    runs/runs.json        {run_id: {"session": NAME, "task": TASK_ID, "purpose": "...", "cap": 12}}
+    runs/runs.json        the run log (`evalctl.py runlog`): {run_id: {"session", "purpose", "cap", "task"}}
     notes/tasks.json      optional: [{"id", "session", "label", "start", "end"}], RFC 3339 times.
                           An API call belongs to the task of its session whose window holds
                           its timestamp; calls outside every window go to "<session>:other".

@@ -47,22 +47,26 @@ The agents must not know that they're being evaluated, and must attempt each tas
 
 ## 3. Run the experiments
 
-`references/prompts.md` holds the template for each task and the budget split. Test each target's latest release unless the user names a commit, and record the commit you test. Write each prompt to a file, and start its session with `scripts/evalctl.py ... start NAME CWD FILE --target NAME`. Answer a question, or nudge a session that stopped early, with `resume`. For each target, at minimum:
+`references/prompts.md` holds the template for each task and the budget split. Test each target's latest release unless the user names a commit, and record the commit you test. Write each prompt to a file, and start its session with `scripts/evalctl.py ... start NAME CWD FILE --target NAME`. Answer a question, or nudge a session that stopped early, with `resume`.
 
-1. **Workload:** build a workload for the target project end to end with the workload module, validated and with smoke runs, from a fresh clone.
-2. **Triage:** each entry point on runs from (1): `summary` on a completed run, `root-cause` on one failing property, `monitor` on a run in progress, and a plain-language "how's the latest run?" with no mode, during a long run.
-3. **Debug:** the debug module on a failing moment from (1), asked to prove or disprove a specific theory.
-4. **Properties:** import properties from a catalog and define a new one, then launch runs to validate them.
-5. **Iterate with patterns:** improve the workload from (1) with the patterns module, in a separate clone at the workload's last commit, including one run of at least 2 hours of fuzzing.
+**Run one session at a time,** and start the next only when the last has finished. Sessions at the same time clash on one machine: they share Docker's image store and container names, so one can launch another's images, and Claude Code sessions can find each other with `ListAgents` and talk with `SendMessage`. An agent that notices works around it, which pollutes the eval. For each target, in this order:
 
-Schedule them so the wall time stays reasonable:
+1. **Workload:** build a workload for the target end to end with the workload module, validated and with smoke runs, from a fresh clone.
+2. **Triage summary:** `summary` on a completed run from (1).
+3. **Triage root-cause:** `root-cause` on one failing property from (1).
+4. **Debug:** the debug module on a failing moment from (1), asked to prove or disprove a specific theory.
+5. **Triage monitor:** `monitor` needs a run in progress, and no session is running one now. Launch one yourself from the workload's last commit, with the launch command the workload session last used (find it in its transcript) and the monitor budget in `references/prompts.md`. Add it to the run log with `"session": "evaluator"`, and start the monitor session as soon as it launches.
+6. **Triage, plain language:** "how's the latest run?" with no mode, while the run from (5) is still going if you can, in the workload's checkout.
+7. **Properties:** import properties from a catalog and define a new one, then launch runs to validate them, in the workload's checkout.
+8. **Iterate with patterns:** improve the workload with the patterns module, in a new clone at the latest commit of the workload branch, including one run of at least 2 hours of fuzzing.
+9. **Triage summary, round 2:** `summary` on the long run from (8), in the patterns clone.
+10. **Triage root-cause, round 2:** `root-cause` on a failing property that (7) or (8) added, or one that fails differently since then.
 
-- **Triage and debug** can run while the workload session is still going, as soon as it has launched a run. `monitor` needs a run in progress: start it right after a smoke run launches.
-- **Run every task that uses Docker one at a time:** the workload, properties and patterns all build images and run the local loop. On one machine they share the image store and the container names, so two at once can launch each other's images or tear down each other's containers. An agent that notices works around it, which pollutes the eval. To save wall time, start the next Docker task while the current one only waits on a long Antithesis run, or use a second sandbox.
-- **With several targets,** run each target's tasks as one track, in its own clones, and split the budget between tracks. Tracks share the Docker rule above, so on one sandbox, interleave them only where a task is waiting on Antithesis. Separate sandboxes, one per target, avoid the problem entirely.
-- Sessions in parallel share the tenant, so an agent may notice another's runs in `snouty runs list`. Claude Code sessions on one machine can also find each other with `ListAgents` and talk with `SendMessage`. Record it when it happens.
+The second round of triage tests whether properties and patterns lead to more and better findings than the first workload did. Compare the two rounds in the report.
 
-Run `scripts/evalctl.py ... watch --since START --match 'PROJECT|debugging'` in the background and feed it to a Monitor. It prints a line for each new or changed run, and for each session that finishes. Track every run in `DATA/runs/runs.json`, with its session, task, purpose and cap.
+With several targets, run each target's tasks as one track, one track after another, in its own clones, and split the budget between tracks. Separate sandboxes, one per target, can run tracks at the same time.
+
+**Keep a run log.** The tenant is almost always shared, so other people's runs show up in `snouty runs list`, sometimes on the same project. Never decide which runs belong to the eval by their name. `scripts/evalctl.py ... runlog` finds every `snouty launch` and `snouty debug` in the sessions' transcripts, subagents included, and records each run's ID, session, launch time, purpose and cap in `DATA/runs/runs.json`. Fill in each run's `task` there for the cost report. Run `scripts/evalctl.py ... watch` in the background and feed it to a Monitor: it keeps the run log current, and prints a line for each new or changed run in it, and for each session that finishes. When a session's answer mentions a run that isn't in the run log, note it: the agent has looked at someone else's run.
 
 **Budget.** Billing runs over the `--max-compute-hours` cap, by about 2.5 compute hours per run, and `snouty runs usage` lists a run an hour or more after it ends. Track your spend from `runs usage` plus the caps of runs not yet listed, and leave slack. If the eval would go over the budget, stop launching sessions and tell the user.
 
@@ -78,7 +82,7 @@ Bring everything back to `DATA`:
 
 - `logs/` and `transcripts/` from `evalctl.py ... sync`, which holds the raw Claude transcripts, subagents included;
 - `notes/`: the prompts and `sessions.json` that `evalctl.py` keeps, `observations.md`, each session's final answer, and `tasks.json`;
-- `runs/`: `runs.json`, `usage.json` (from `evalctl.py ... usage --since START`, once every run is listed), and each run's `snouty runs show` and `snouty runs properties --failing` output;
+- `runs/`: the run log `runs.json`, `usage.json` (from `evalctl.py ... usage --since START`, once every run is listed), and each run's `snouty runs show` and `snouty runs properties --failing` output;
 - `repos/`: the branches, diffs and reproducers that the agents produced, such as `git format-patch` of each workload branch and any memory files they wrote.
 
 ## 6. Report cost
@@ -91,7 +95,7 @@ Build a single HTML page, and publish it where the user asked, at a new path tha
 
 - **Setup:** plugin and snouty versions, the sandbox, the project, the budget, and any confounds.
 - **Per target and task:** what the agent did, how well it followed the plugin's guidance, what it found, wall time, runs and cost, with evidence from the transcripts.
-- **Findings about each system under test**, and whether each was confirmed (a reproducer, a debugging session, a log trail) or inferred. Score them against the expected findings in the target's profile: which known bugs each task found again, which it missed, and what's new.
+- **Findings about each system under test**, and whether each was confirmed (a reproducer, a debugging session, a log trail) or inferred. Compare the two triage rounds: what the properties and patterns work found that the first workload didn't, and whether the evidence got stronger. Score them against the expected findings in the target's profile: which known bugs each task found again, which it missed, and what's new.
 - **Plugin issues**, each with the evidence and a concrete proposed change: the file to edit and what to say.
 - **Cost**, from `report/cost.md`.
 - **Across targets**, when there are several: which plugin issues show up on every project, and which are project-specific.

@@ -8,13 +8,14 @@ For a 300 compute-hour eval of one target on the standard tier:
 
 | Task | Compute hours | Notes |
 | --- | --- | --- |
-| Workload | 90 | Eval 2's workload billed 96 against a 100 budget. |
-| Triage root-cause | 15 | Often uses one short run, or nothing. |
-| Debug | 10 | Often uses nothing, by borrowing a ready run. |
+| Workload | 80 | Eval 2's workload billed 96 against a 100 budget. |
+| Triage root-cause, each round | 10 | Often uses one short run, or nothing. Eval 2's used 6.1. |
+| Debug | 10 | With one session at a time there's no other ready run to borrow, so expect a debug run of about 4. |
+| Monitor run | 24 | You launch it for the monitor task; plain-language triage uses it too. |
 | Properties | 30 | |
-| Patterns | 130 | The long run alone needs about 100: 2 hours of fuzzing on 48 cores is 96, plus setup. |
+| Patterns | 125 | The long run alone needs about 100: 2 hours of fuzzing on 48 cores is 96, plus setup. |
 
-These caps add up to 275, which leaves 25 for billing over each cap (see **Budget** in `SKILL.md`). Summary, monitor and the plain-language triage launch nothing. Scale the split to the user's budget and the target's setup time.
+These caps add up to 289, counting root-cause twice, which leaves 11 for billing over each cap (see **Budget** in `SKILL.md`), so ask each session to count that overrun against its budget. Summary, monitor and the plain-language triage launch nothing themselves. Scale the split to the user's budget and the target's setup time.
 
 ## Templates
 
@@ -34,7 +35,7 @@ I'm going to step away for a while, so work autonomously and make reasonable cal
 
 ### triage-summary
 
-Run the triage tasks in the workload's checkout, on runs the workload session launched.
+Run the first round of triage in the workload's checkout, on runs the workload session launched, and the second round in the patterns clone, on its long run.
 
 ```text
 /antithesis triage summary [run id]
@@ -56,7 +57,7 @@ If you need follow-up runs, keep them to [root-cause budget] compute hours total
 
 ### triage-nl
 
-Send during the long run in the patterns task, with no mode, to test how the skill picks one.
+Send while the monitor run is still going, with no mode, to test how the skill picks one.
 
 ```text
 how's the latest antithesis run looking? anything failing yet? we're out of compute budget, so don't launch anything new.
