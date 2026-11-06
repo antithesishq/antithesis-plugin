@@ -130,14 +130,21 @@ def cmd_resume(a) -> None:
     invoke(a, "resume", load_sessions(a.data)[a.name])
 
 
-def cmd_sync(a) -> None:
+def sync(a) -> bool:
+    """Copy the session logs and transcripts to DATA; whether both copies succeeded."""
     for sub in ("logs", "transcripts"):
         (a.data / sub).mkdir(parents=True, exist_ok=True)
     jobs = [
         subprocess.Popen(["rsync", "-az", f"{a.host}:{REMOTE}/logs/", f"{a.data}/logs/"]),
         subprocess.Popen(["rsync", "-az", f"{a.host}:.claude/projects/", f"{a.data}/transcripts/"]),
     ]
-    if any(j.wait() for j in jobs):
+    # Wait for both, even when the first fails.
+    codes = [j.wait() for j in jobs]
+    return not any(codes)
+
+
+def cmd_sync(a) -> None:
+    if not sync(a):
         sys.exit("rsync failed")
 
 
@@ -234,8 +241,11 @@ def cmd_runlog(a) -> None:
 
 
 def poll(a) -> tuple[set[str], set[str]]:
-    """The eval's runs, from its run log, and the finished sessions."""
-    cmd_sync(a)
+    """The eval's runs, from its run log, and the finished sessions; nothing if the sync fails."""
+    # Transcripts change while sessions run, so a sync can fail now and then. Skip this
+    # poll rather than exit, so the watch keeps going.
+    if not sync(a):
+        return set(), set()
     ids = set(runlog(a.data))
     raw = ssh(
         a.host,
