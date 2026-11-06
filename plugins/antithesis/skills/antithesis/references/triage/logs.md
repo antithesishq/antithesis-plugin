@@ -6,11 +6,14 @@ Read `snouty runs logs --help` first. Download the whole timeline, from the root
 
 ```bash
 mkdir -p /tmp/triage
-LOG=/tmp/triage/${INPUT_HASH}.ndjson
-snouty runs --json logs "$RUN_ID" "$INPUT_HASH" > "$LOG.$$.part" && mv "$LOG.$$.part" "$LOG"
+LOG=/tmp/triage/log_${INPUT_HASH}.ndjson
+PART=$(mktemp /tmp/triage/part.XXXXXX)
+snouty runs --json logs "$RUN_ID" "$INPUT_HASH" > "$PART" && mv "$PART" "$LOG"
 ```
 
-Pass `INPUT_HASH` verbatim. Every moment on the branch is in the file, including the failure moment, so reuse `$LOG` for any moment with the same input hash. Other agents may be downloading the same timeline, so download to a path of your own and rename it only when complete; `$LOG` exists only once a download has finished. Find a moment in it by its `moment.vtime`.
+Pass `INPUT_HASH` verbatim, even when it is negative. Put every option before `RUN_ID` and never use `--`, which makes every later option positional. Never start a file name with the hash: commands read a name like `-123.ndjson` as options.
+
+Every moment on the branch is in the file, including the failure moment, so reuse `$LOG` for any moment with the same input hash. Other agents may be downloading the same timeline, so download to a `mktemp` file and rename it only when complete; `$LOG` exists only once a download has finished. Find a moment in it by its `moment.vtime`.
 
 Snouty strips ANSI escape codes from `output_text` and adds an `active_faults` field to every event (see "Active faults" below).
 
@@ -25,16 +28,17 @@ If the download does not complete before the timeout, decide:
 
 Do not try to estimate the log's size or the time that remains: log density varies widely across a run.
 
-Keep the incomplete `.part` file if you cancel; it never takes the final name, so no one mistakes it for a complete download. It holds the start of the run (`setup`, container lifecycle, the early workload), which a slice lacks, but probably not the failure moment. Its last line can be truncated, so read it with `jq -R 'fromjson? // empty | ...'`.
+Keep the incomplete `$PART` file if you cancel; it never takes the final name, so no one mistakes it for a complete download. It holds the start of the run (`setup`, container lifecycle, the early workload), which a slice lacks, but probably not the failure moment. Its last line can be truncated, so read it with `jq -R 'fromjson? // empty | ...'`.
 
 ### Get a slice of the log
 
 `--begin-vtime` starts the download at a vtime of your choice, such as a little before the failure moment:
 
 ```bash
-SLICE=/tmp/triage/${INPUT_HASH}_from_${BEGIN_VTIME}.ndjson
-snouty runs --json logs "$RUN_ID" "$INPUT_HASH" --begin-vtime "$BEGIN_VTIME" \
-  > "$SLICE.$$.part" && mv "$SLICE.$$.part" "$SLICE"
+SLICE=/tmp/triage/log_${INPUT_HASH}_from_${BEGIN_VTIME}.ndjson
+PART=$(mktemp /tmp/triage/part.XXXXXX)
+snouty runs --json logs --begin-vtime "$BEGIN_VTIME" "$RUN_ID" "$INPUT_HASH" \
+  > "$PART" && mv "$PART" "$SLICE"
 ```
 
 For more context, use a smaller `BEGIN_VTIME`.
