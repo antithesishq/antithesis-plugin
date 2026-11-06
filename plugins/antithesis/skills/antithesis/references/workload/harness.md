@@ -79,8 +79,8 @@ Launch every run of the workload with the `basic_test` launcher, following `refe
 
 ## 5. Debug tools
 
-To debug a failure, you run commands at a moment in a container with `snouty runs exec` (`references/debug/MODULE.md`). They can use only the tools in its image, and a run's images can't change once it exists. So before the first launch, put in every image the workload builds a shell, `curl`, `jq`, and the SUT's admin or inspection CLI, such as `fdbcli`, `etcdctl` or `psql`.
+To debug a failure, you run commands at a moment in a container with `snouty runs exec` (`references/debug/MODULE.md`). In the Antithesis environment, exec can only access tools included in the image. So ensure that workload images contain useful debugging tools such as `curl`, `jq`, and the SUT's admin or inspection CLI, such as `fdbcli`, `etcdctl`, or `psql`.
 
-If the workload has client containers, make sure a shell command in each can send its client the same requests the driver sends, for example `socat` for a Unix socket. Then `runs exec` can repeat any operation at a moment. A shell command opens a new connection, and handles are per connection, so create any handle an operation takes in the same command first. A `failed` for an unknown handle says nothing about the SUT.
+If the workload has client containers, add a tool such as `socat` to each, so a shell command there can send its client a request like the driver's. Then `runs exec` can repeat an operation at a moment. Each command opens a new connection, so create any handle the operation needs in that same command.
 
 A pattern you adopted (`references/patterns/MODULE.md`) may add services, volumes and environment variables.

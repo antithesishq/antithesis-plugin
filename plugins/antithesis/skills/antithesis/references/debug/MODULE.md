@@ -12,9 +12,9 @@ Any ready run can execute commands, but a run that already has the moment warm s
 
 1. Prefer a ready run that has already rewarmed the moment. Check with `snouty runs search --count <run_id> 'filter(ev => ev.moment.input_hash == "<hash>")'`; non-zero means every moment of that branch is warm.
 2. Prefer reusing a ready run over starting a new one.
-3. If no run is ready, start a debug run with `snouty debug` as soon as you have the moment.
+3. If no run is ready, start a debug run with `snouty debug`.
 
-When a counterexample appears in a run still in progress, the moment is warm there, so run commands in that run right away. Once it ends, pick a run with the policy above. A new debug run takes minutes to get ready, so don't block on it: wait with `snouty runs wait --until ready` in the background, and meanwhile read the timeline's logs with `snouty runs logs` and start on a reproducer.
+When an example or counterexample appears in a run still in progress, the moment is warm there, so run commands in that run. Once the run ends, pick a run with the policy above. A new debug run takes minutes to get ready, so don't block on it: wait with `snouty runs wait --until ready` in the background, and meanwhile read the timeline's logs with `snouty runs logs` and start on a reproducer.
 
 Executing commands doesn't keep a run alive. If the run exits while you debug, pick a new one with this policy and continue.
 
@@ -26,7 +26,7 @@ Run a bash command at a moment with `snouty runs exec`. Put every option before 
 snouty runs exec --container client1 --timeout 5m "$RUN_ID" -1469731053185852001 38.52 'ps aux'
 ```
 
-- **With `--container <name>`,** the command runs in that container and can use the tools in its image. A run's images can't change, so the workload puts its debug tools there before launch ("Debug tools" in `references/workload/harness.md`).
+- **With `--container <name>`,** the command runs in that container and can use the tools available in its image. You cannot install additional tools, as access to the internet is blocked in the Antithesis environment.
 - **Without `--container`,** it runs in the guest: the virtual machine in Antithesis's deterministic hypervisor that runs every container or Kubernetes manifest. You can't change its tools, but it has the basics, such as bash and the usual shell commands, `podman` and `kubectl`. Use it for Kubernetes pods, which `--container` doesn't support.
 - If a tool is missing in either place, process the output on your machine.
 - Rewarming a deep moment takes longer: a moment at vtime 10 rewarms faster than one at vtime 100.
