@@ -65,6 +65,7 @@ If setup complete never arrives, the driver stopped in its startup. `docker comp
   Any other unmet sometimes or reachable assertion means the workload doesn't reach that situation or code: change the actions or their mix.
 - **Eventually.** Run once more with the eventually on and its direct call set to a minute or two of workload. The driver logs that its assertions start and that it's ending the timeline, then exits with status 0 (`docker compose ps -a`), and the eventually's assertions pass. `docker compose cp` still copies `sdk.jsonl` from the stopped container.
 - **Shutdown.** `docker stop` on a system container shuts its process down cleanly, without a kill.
+- **Debug tools.** Each debug tool ("Debug tools" in `references/workload/harness.md`) runs in its container. Check them in the session above, before `docker compose stop`, such as `docker compose exec -T <service> jq --version`.
 - **Patterns.** Each pattern you adopted passes its own local checks.
 
 ## 4. Read the coverage

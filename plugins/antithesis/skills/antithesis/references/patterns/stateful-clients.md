@@ -45,6 +45,7 @@ A small program in the library's language:
 - **Run it with no restart policy,** like every container: Antithesis restarts killed and stopped containers itself, and a policy would bring them back early, cancelling the fault. Run several client containers, since many bugs sit between clients.
 - **Add exploration assertions to the library's code,** for states inside a single library call ("Exploration assertions" in `references/properties/assertions.md`).
 - **Instrument the program** (`references/workload/instrumentation.md`). Client containers count as system services for local coverage (`references/workload/local-loop.md`).
+- **Add `socat` or another JSON-RPC tool to the image,** so a debug session (`references/debug/MODULE.md`) can drive the client from a shell. Its connection is new and can't use the driver's handles, so create any handle it needs first.
 
 ## The driver
 
@@ -121,5 +122,5 @@ The driver keeps `KV_URLS` for its readiness checks, admin setup and eventually 
 
 ## Checking it
 
-- **Locally,** every client answers `health`, `a client can't run a request` is never hit, and every method reaches `ok` sometimes. `failed` and `unknown` mostly need faults. After `docker compose restart client1` while the workload is active, `a client restarts` is reached. After `docker compose pause client1` for longer than `ABANDON`, then `unpause`, the workload carries on through the other clients, and client1 drains.
+- **Locally,** every client answers `health`, both from the driver and from its own shell with the JSON-RPC tool, `a client can't run a request` is never hit, and every method reaches `ok` sometimes. `failed` and `unknown` mostly need faults. After `docker compose restart client1` while the workload is active, `a client restarts` is reached. After `docker compose pause client1` for longer than `ABANDON`, then `unpause`, the workload carries on through the other clients, and client1 drains.
 - **In a short run** under `high_availability`, clients restart and get partitioned from the servers, `a client restarts` passes, and `every client answers once faults stop` passes.

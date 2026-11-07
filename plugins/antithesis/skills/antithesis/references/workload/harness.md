@@ -77,4 +77,8 @@ Launch every run of the workload with the `basic_test` launcher, following `refe
 
 `--fault-exclusions` is a regex matched against container names, so `^driver$` relies on the driver's `container_name: driver` (section 1); without it, Compose names the container `<project>-driver-1` and the regex matches nothing. Exclude only the driver.
 
+## 5. Debug tools
+
+To debug a failure, you run commands at a moment in a container with `snouty runs exec` (`references/debug/MODULE.md`). In the Antithesis environment, exec can only access tools included in the image. So ensure that workload images contain useful debugging tools such as `curl`, `jq`, and the SUT's admin or inspection CLI, such as `fdbcli`, `etcdctl`, or `psql`.
+
 A pattern you adopted (`references/patterns/MODULE.md`) may add services, volumes and environment variables.
