@@ -2,6 +2,10 @@
 
 Input: a system to test in Antithesis, and optionally the behaviors to focus on.
 
+## Compute budget
+
+Ask for a compute budget up front. If the user gives none, use 60 compute hours as your budget for runs launched while working on the workload. Launch nothing beyond the workload without a budget from the user.
+
 ## What a workload is
 
 - **The driver.** One Rust binary written with [hegel](https://hegel.dev), using `#[hegel::main]`. It picks actions at random, sends them to the system, and records each outcome in a model of what the system should contain. Every random choice comes from hegel, so Antithesis controls it.
@@ -22,8 +26,7 @@ The SUT itself is built with Antithesis coverage instrumentation.
 6. **Wire up the harness:** the `driver` container with its `first_` test command, any shared volumes, and the fault flags. Follow `references/workload/harness.md`.
 7. **Build and validate.** Build the images, run the instrumentation checks, then run `snouty validate <config_dir>`. Commit every file the images build from, and check `git status --ignored`, since ignore rules can drop harness files.
 8. **Iterate locally** on coverage and the exploration assertions (`references/properties/assertions.md`). Follow `references/workload/local-loop.md`.
-9. **Iterate on short Antithesis runs.** Follow `references/workload/run-loop.md`.
-10. **Launch the final run** with `--max-compute-hours 24` on the standard tier. Follow `references/launch/MODULE.md` with the launcher and fault flags in `references/workload/harness.md`, and read the run with the triage module.
-11. **Report to the user,** including which patterns you adopted and why, and any step you skipped or changed, and why.
+9. **Iterate on Antithesis runs** until a 24-hour run passes its checks. Follow `references/workload/run-loop.md`.
+10. **Report to the user,** including which patterns you adopted and why, and any step you skipped or changed, and why.
 
 Each pattern you adopt adds to steps 4 to 9. Its page says what.
