@@ -29,5 +29,3 @@ The SUT itself is built with Antithesis coverage instrumentation.
 9. **Iterate locally** on coverage and the exploration assertions (`references/properties/assertions.md`). Follow `references/workload/local-loop.md`.
 10. **Iterate on Antithesis runs** until a 24-hour run passes its checks. Follow `references/workload/run-loop.md`.
 11. **Update the README and scripts, and report to the user,** including which patterns you adopted and why, and any step you skipped or changed, and why.
-
-Each pattern you adopt adds to steps 5 to 10. Its page says what.
