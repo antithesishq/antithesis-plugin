@@ -47,6 +47,8 @@ docker compose cp <service>:/coverage/<service>/sdk.jsonl sdk-<service>.jsonl
 docker compose stop
 ```
 
+Copy each run's logs and `sdk.jsonl` files into a fresh directory, outside the config directory, so a run never overwrites the last one's evidence or ends up in the config image.
+
 If setup complete never arrives, the driver stopped in its startup. `docker compose logs driver`, with the same `COMPOSE_FILE`, shows what it was waiting for or which request failed.
 
 ## 3. Check the behavior

@@ -1,6 +1,6 @@
 # Wire up the harness
 
-Every service in `docker-compose.yaml` needs an explicit `image:`. snouty rejects services without one.
+`docker-compose.yaml` lives in `config/` (`references/workload/layout.md`). Every service needs an explicit `image:`. snouty rejects services without one.
 
 ## 1. The driver container
 
@@ -12,7 +12,7 @@ driver:
   hostname: driver
   platform: linux/amd64
   build:
-    context: .
+    context: ..
     dockerfile: driver/Dockerfile
   image: driver:latest
   environment:

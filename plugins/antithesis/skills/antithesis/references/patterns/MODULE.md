@@ -20,4 +20,4 @@ Read `references/patterns/log-forwarding.md`.
 
 Read the pattern's page. It says what the pattern adds to each workload step: the driver, the harness, the local loop and short runs. Do those as part of the steps in `references/workload/MODULE.md`. In the report, tell the user which patterns you adopted and why.
 
-To add a pattern to an existing workload, make its changes, then build and validate (step 7 in `references/workload/MODULE.md`), and iterate locally (`references/workload/local-loop.md`) and on short runs (`references/workload/run-loop.md`) again.
+To add a pattern to an existing workload, make its changes, then build and validate (`references/workload/MODULE.md`), and iterate locally (`references/workload/local-loop.md`) and on short runs (`references/workload/run-loop.md`) again.
