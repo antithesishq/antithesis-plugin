@@ -22,7 +22,7 @@ Get the run's status with `snouty runs show <run_id>`.
 | `summary`    | `references/triage/summary.md`    | The run has finished. Summarize its failures and what's new.                         |
 | `root-cause` | `references/triage/root-cause.md` | One failing property or anomaly, in a running or finished run, needs its root cause. |
 
-If no mode is given, use `monitor` for an `in_progress` run and `summary` for a finished one.
+If no mode is given, use `monitor` for an `in_progress` run and `summary` for a finished one. Never wait for a run to finish before triaging it: results and failing moments are available while it runs, and a live run lets you run commands at a failing moment right away.
 
 ## Read the properties
 
