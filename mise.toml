@@ -54,7 +54,7 @@ description = "Validate skills against the Agent Skills spec"
 run = "{{vars.check}} skillcheck"
 
 [tasks."check:references"]
-description = "Every referenced skill file exists, and every skill file is reachable"
+description = "Every referenced skill file and section exists, no step is referred to by number, and every skill file is reachable"
 run = "{{vars.check}} references"
 
 [tasks."check:tokens"]
