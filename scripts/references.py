@@ -46,7 +46,9 @@ def check_sections(skill: Path, source: Path, by_name: dict[str, Path]) -> int:
         else:
             target, where = source, "this page"
         if target is None or not target.is_file():
-            error("check-references", f'"{name}" points at {where}, which this skill can\'t reach', source, line)
+            error(
+                "check-references", f'"{name}" points at {where}, which this skill can\'t reach', source, line
+            )
             problems += 1
         elif name not in section_names(target.read_text()):
             error("check-references", f'"{name}" is not a heading or list label on {where}', source, line)
