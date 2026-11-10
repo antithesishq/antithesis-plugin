@@ -11,39 +11,52 @@ The `release` skill watches its PR with this skill too, and adds its own rules f
 
 ## 1. Start the watcher
 
-Run the watcher in the background: through the Monitor tool with `persistent: true` when the harness has it, otherwise as a background shell task.
+The user often opens a PR and reviews it a day later. Watch so that you wake only when there's something to do, never on a timer.
+
+Run the watcher as a background shell task, the kind that tells you when its command exits. Run it from the repo's root:
 
 ```bash
-scripts/watch-prs.py <PR> [<PR> ...]
+scripts/watch-prs.py --exit-on-event <PR> [<PR> ...]
 ```
 
-Run it from the repo's root. It watches the checkout's repository, or the one `-R owner/repo` names. `-i seconds` sets the poll interval, 45 by default.
+It polls in silence, for days if need be, and exits after the first poll that prints an event you need to react to. Read its whole output, react to each line (step 3), then start it again with the same command, and end your turn. Stop once it prints `merged` or `closed without merge` for every PR.
 
-It prints one line per event, and exits when every watched PR is merged or closed:
+Don't poll it, don't check on it on a timer, and don't run it through a tool that expires, such as a monitor with a timeout: each expiry wakes you for nothing. Without `--exit-on-event` it streams events and runs until every PR closes, which suits only a monitor that never expires.
+
+It records each event it has printed in a state file per PR, so a restart prints only what's new. The first run on a PR prints its existing comments, reviews and failing checks. Triage that batch like any other events. If the task is gone when you come back, after a reboot or in a new session, start it again: nothing is lost or repeated. `--replay` prints everything again.
+
+`-R owner/repo` watches another repository than the checkout's. `-i seconds` sets the poll interval, 45 by default.
+
+These events need a reaction, and end a run with `--exit-on-event`:
 
 ```text
 PR #123 comment by <login> (id <id>)
 PR #123 review comment by <login> on <path> (id <id>)
 PR #123 review by <login>: <APPROVED|CHANGES_REQUESTED|COMMENTED> (id <id>)
 PR #123 check <name>: <failure|timed_out|cancelled|...> (job <id>)
-PR #123 all checks passed for <short-sha>
-PR #123 has no checks
+PR #123 conflicts with <branch>
 PR #123 base changed to <branch>
-PR #123 base <branch> moved to <short-sha>
 PR #123 merged
 PR #123 closed without merge
+gh failed on <N> polls in a row
+```
+
+These need none. They are printed for the record, and you read them the next time an event wakes you:
+
+```text
+PR #123 all checks passed for <short-sha>
+PR #123 has no checks
+PR #123 base <branch> moved to <short-sha>
 gh failed: <message>
 ```
 
 Every line names its PR, so one watcher covers several PRs.
 
-The first poll prints each PR's existing comments, reviews and failing checks as a baseline, and a base-moved line when the PR is already behind its base. Triage that batch like any other events.
-
 ## 2. Read the event lines
 
 An event line carries only metadata. Read the full comment, review or log through the API before you act on it.
 
-**Checks.** The watcher prints each failed check once, and one "all checks passed" line per head commit once every check on it concludes success, skipped or neutral. So you never need to poll `gh pr checks`: silence means a check is still running. The "all checks passed" line names the head commit. Check that it names your latest push before you act on it. CI runs each `check:*` task in `mise.toml` as its own check, so a failed check's name ends in the task to rerun locally.
+**Checks.** The watcher prints each failed check once, and one "all checks passed" line per head commit once every check on it concludes success, skipped or neutral. So you never need to poll `gh pr checks`, or wait for the checks after a push: a failure wakes you, and a pass needs nothing from you. The "all checks passed" line names the head commit. Check that it names your latest push before you rely on it. CI runs each `check:*` task in `mise.toml` as its own check, so a failed check's name ends in the task to rerun locally.
 
 **Your own replies.** When an app opened the PR, as an agent behind a GitHub integration does, the watcher leaves out that app's comments and reviews: they are your own replies. When a user opened it, the watcher leaves nothing out, because you may be posting under the user's own login, and their comments still count. Your replies then come back as events. Keep the ID that each reply call returns, and skip the events with those IDs. Never skip an event by its login.
 
@@ -57,7 +70,7 @@ gh api "repos/{owner}/{repo}/pulls/<PR>/reviews/<id>/comments?per_page=100&page=
 
 Never pass `--paginate` to `gh api`. Behind a proxy set as gh's host, the first page comes back with `Link` headers that name `api.github.com`, and gh follows them there with no credentials. That fails on a private repository, and on a public one it spends the anonymous rate limit that every machine behind the same IP shares.
 
-**`gh failed:`.** The watcher can't reach the API, so silence after this line proves nothing. Fix gh, then restart the watcher. The line prints once per distinct message, so a permanent failure doesn't repeat.
+**`gh failed`.** A `gh failed: <message>` line prints once per distinct message, and a failure that passes needs nothing. When gh fails on 20 polls in a row, 15 minutes at the default interval, the watcher prints `gh failed on <N> polls in a row` and exits with status 1, because a watcher that can't reach the API reads exactly like a quiet PR. Fix gh, then start the watcher again.
 
 ## 3. React to each event
 
@@ -83,11 +96,13 @@ Never pass `--paginate` to `gh api`. Behind a proxy set as gh's host, the first 
 
   Reproduce it with the check's own task, such as `mise run check:lychee`, fix it, update the description (step 4), and push. A check that failed for a transient reason, like a link that was briefly down, can be rerun with `gh api -X POST repos/{owner}/{repo}/actions/jobs/<job id>/rerun`.
 
-- **Base moved**: nothing to do unless GitHub reports a conflict, or the new commits on the base change what your branch relies on. Then rebase onto `origin/main`, rerun the checks, and push with `--force-with-lease`.
+- **Conflict**: rebase onto `origin/main`, resolve it, rerun the checks, and push with `--force-with-lease`. A base that moves without a conflict needs nothing.
+
+- **Base changed**: someone retargeted the PR. Compare the branch with the new base, and update the description (step 4) if what the PR contains has changed.
 
 - **Merged or closed**: stop work on that PR. The script exits on its own once every watched PR reaches this state.
 
-Don't merge a PR yourself. Tell the user when the checks pass, and when you've answered comments.
+Don't merge a PR yourself. After you react to a batch, tell the user in a line or two what came in and what you did, then start the watcher again.
 
 ## 4. Keep the description current
 
