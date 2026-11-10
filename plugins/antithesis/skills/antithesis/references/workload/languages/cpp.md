@@ -31,12 +31,12 @@ Hegel's frontend is C++ only.
 
 | In `driver.md`              | In C++                                                                           |
 | --------------------------- | -------------------------------------------------------------------------------- |
-| Main entry point            | `HEGEL_MAIN(workload, {{settings}})(hegel::TestCase& tc) {{ ... }}`              |
+| Main entry point            | `HEGEL_MAIN(workload, {settings})(hegel::TestCase& tc) { ... }`                  |
 | Concurrent state machine    | `hegel::stateful::run_concurrent(machine, tc, min_concurrency, max_concurrency)` |
-| Rule, its groups and weight | a rule's `.groups = {{"g"}}` and `.weight = 6.0`                                 |
+| Rule, its groups and weight | a rule's `.groups = {"g"}` and `.weight = 6.0`                                   |
 | Always-run invariant        | an invariant's `.always_check = true`                                            |
 | Unbounded step count        | the setting `.stateful_step_count = INT64_MAX`                                   |
-| Generate only               | the setting `.phases = {{hegel::Phase::Generate}}`                               |
+| Generate only               | the setting `.phases = {hegel::Phase::Generate}`                                 |
 | Weighted boolean draw       | no generator: draw an integer in a range, and compare it with a threshold        |
 
 Build stage: base it on `rust:1-bookworm`, so `cargo` is there for the engine, and install `cmake` and the latest clang the image offers, which the SDK needs. Build with CMake, and copy the driver binary to `/src/target/release/driver`.

@@ -29,7 +29,7 @@ The same `antithesis-go-toolexec` adds coverage instrumentation: `snouty docs sh
 
 | In `driver.md`           | In Go                                                                         |
 | ------------------------ | ----------------------------------------------------------------------------- |
-| Main entry point         | `hegel.Workload(func(tc hegel.TestCase) {{ ... }}, opts...)` in `func main`   |
+| Main entry point         | `hegel.Workload(func(tc hegel.TestCase) { ... }, opts...)` in `func main`     |
 | Concurrent state machine | `hegel.RunStateful(tc, m, hegel.WithConcurrency(), ...)`                      |
 | Rule                     | a method named `Rule...` on the machine; an invariant is named `Invariant...` |
 | Groups                   | `hegel.WithRuleGroup("g", "RuleA", "RuleB")`                                  |

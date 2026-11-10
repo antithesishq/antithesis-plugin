@@ -23,12 +23,12 @@ Use the standard coverage tool for OCaml.
 | --------------------------- | --------------------------------------------------------------------- |
 | Main entry point            | `let%hegel_main workload tc = ...`, then `let () = workload ()`       |
 | Concurrent state machine    | `module%hegel_concurrent_state_machine`, or `Stateful.run_concurrent` |
-| Rule, its groups and weight | `[@@rule {{ groups = [ "g" ]; weight = 6 }}]`                         |
-| Always-run invariant        | `[@@invariant {{ always_check = true }}]`                             |
+| Rule, its groups and weight | `[@@rule { groups = [ "g" ]; weight = 6 }]`                           |
+| Always-run invariant        | `[@@invariant { always_check = true }]`                               |
 | Unbounded step count        | `~step_count:max_int`                                                 |
-| Generate only               | the setting `phases = [ Generate ]`, in `[@@settings {{ ... }}]`      |
+| Generate only               | the setting `phases = [ Generate ]`, in `[@@settings { ... }]`        |
 | Weighted boolean draw       | `draw tc (booleans ~p ())`                                            |
 
 - Workers run on OCaml threads by default (`Concurrency.threads`). State the rules share must be safe to use from several threads.
 
-Build stage: base it on `ocaml/opam`, install the dependencies with `opam`, build with `dune build --release`, and copy the driver binary to `/src/target/release/driver`.
+Build stage: base it on `ocaml/opam:debian-12`, which matches the `debian:bookworm-slim` runtime in `references/workload/harness.md` and carries the latest OCaml, install the dependencies with `opam`, build with `dune build --release`, and copy the driver binary to `/src/target/release/driver`.

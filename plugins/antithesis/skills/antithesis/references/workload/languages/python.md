@@ -39,4 +39,9 @@ Use `coverage.py`.
 - Rules run on worker threads. Requests overlap while they wait on the network, but Python code itself runs one thread at a time, so keep the model's checks cheap.
 - Hegel doesn't run `async` functions. Write rules as plain functions, with a blocking client.
 
-Image: Python needs no build stage. Base the driver image on `python:3-slim-bookworm`, install the latest `hegeltest` and `antithesis` with `pip`, and run the script as `CMD`.
+Image: Python needs no build stage. Base the driver image on `python:3-slim-bookworm`, install the latest `hegeltest` and `antithesis` with `pip`, catalog the driver's assertions, and run the script as `CMD`. The driver isn't instrumented, so nothing else catalogs them:
+
+```dockerfile
+RUN python -m antithesis.catalog /driver -o /driver/catalog.json
+ENV ANTITHESIS_ASSERTION_CATALOG=/driver/catalog.json
+```
