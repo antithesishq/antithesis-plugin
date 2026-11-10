@@ -6,6 +6,10 @@
   "homepage": "https://antithesis.com",
   "repository": "https://github.com/antithesishq/antithesis-plugin",
   "license": "Apache-2.0",
+  "documentationUrl": "https://antithesis.com/docs/",
+  "supportUrl": "https://github.com/antithesishq/antithesis-plugin/issues",
+  "privacyPolicyUrl": "https://antithesis.com/legal/privacy_policy/",
+  "termsOfServiceUrl": "https://antithesis.com/legal/terms_of_use/",
   "icon": "./assets/logo.svg",
   "keywords": ["antithesis", "testing", "property based testing"]
 }
