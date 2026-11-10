@@ -29,17 +29,24 @@ def check_sections(skill: Path, source: Path, by_name: dict[str, Path]) -> int:
     """Check each section reference and step number on one page."""
     problems = 0
     text = source.read_text()
+    # A shipped skill's install holds only its own plugin, so it may point only at its own
+    # files and at skills in the same plugin. A repo-internal skill may name any repo file.
+    internal = is_internal(skill)
     for line, name, page, other in section_references(text):
         if other:
             target = by_name.get(other)
+            if target is not None and not internal and target.parent.parent != skill.parent:
+                target = None
             where = f"the `{other}` skill"
         elif page:
-            target = skill / page if (skill / page).is_file() else ROOT / page
+            target = skill / page
+            if internal and not target.is_file():
+                target = ROOT / page
             where = f"`{page}`"
         else:
             target, where = source, "this page"
         if target is None or not target.is_file():
-            error("check-references", f'"{name}" points at {where}, which does not exist', source, line)
+            error("check-references", f'"{name}" points at {where}, which this skill can\'t reach', source, line)
             problems += 1
         elif name not in section_names(target.read_text()):
             error("check-references", f'"{name}" is not a heading or list label on {where}', source, line)
