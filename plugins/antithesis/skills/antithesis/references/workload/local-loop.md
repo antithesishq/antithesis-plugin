@@ -42,7 +42,7 @@ If setup complete never arrives, the driver stopped in its startup. `docker comp
 
 - **Startup.** `the workload starts` was reached.
 - **Actions.** Every action reaches its intended outcome sometimes, and none is routinely slow.
-- **Assertions.** Only sometimes and reachable assertions on situations or code that need faults are unmet, which is expected without faults. This lists every assertion that would fail in a run:
+- **Assertions.** Only `assert_sometimes` and `assert_reachable` assertions on situations or code that need faults are unmet, which is expected without faults. This lists every assertion that would fail in a run:
 
   ```bash
   jq -rs '[.[].antithesis_assert // empty] | group_by(.message)[]
@@ -51,7 +51,7 @@ If setup complete never arrives, the driver stopped in its startup. `docker comp
     | "\(.[0].display_type)\t\(.[0].message)"' sdk*.jsonl
   ```
 
-  Any other unmet sometimes or reachable assertion means the workload doesn't reach that situation or code: change the actions or their mix.
+  Any other unmet `assert_sometimes` or `assert_reachable` means the workload doesn't reach that situation or code: change the actions or their mix.
 - **Eventually.** Run once more with the eventually on and its direct call set to a minute or two of workload. The driver logs that its assertions start and that it's ending the timeline, then exits with status 0 (`docker compose ps -a`), and the eventually's assertions pass. `docker compose cp` still copies `sdk.jsonl` from the stopped container.
 - **Shutdown.** `docker stop` on a system container shuts its process down cleanly, without a kill.
 - **Debug tools.** Each debug tool ("Debug tools" in `references/workload/harness.md`) runs in its container. Check them in the session above, before `docker compose stop`, such as `docker compose exec -T <service> jq --version`.

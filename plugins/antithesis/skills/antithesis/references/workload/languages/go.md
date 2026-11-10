@@ -44,7 +44,7 @@ The same `antithesis-go-toolexec` adds coverage instrumentation, and writes the 
 Build stage:
 
 ```dockerfile
-FROM golang:1-bookworm AS build
+FROM golang:1-trixie AS build
 WORKDIR /src
 RUN go install github.com/antithesishq/antithesis-sdk-go/tools/antithesis-go-toolexec@latest
 COPY driver/ .

@@ -19,12 +19,12 @@ driver:
     KV_URLS: http://kv1:8000,http://kv2:8000
 ```
 
-`driver/Dockerfile`, for a driver that compiles to one binary. Its build stage leaves the instrumented binary at `/out/driver` and its symbol files in `/symbols`. An interpreted driver keeps its runtime in the final image and runs its script as `CMD`; the test template lines stay the same:
+`driver/Dockerfile`, for a driver that compiles to one binary. Its build stage leaves the instrumented binary at `/out/driver` and its symbol files in `/symbols`. Base every image on Debian trixie, the current stable release, unless there's a strong reason to use another; build and runtime images must share one release, or the binary may not find the libraries it was linked against. An interpreted driver keeps its runtime in the final image and runs its script as `CMD`; the test template lines stay the same:
 
 ```dockerfile
 # The build stage from "Hegel driver" in references/workload/languages/<language>.md
 
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 COPY --from=build /out/driver /usr/local/bin/
 COPY --from=build /symbols /symbols
 COPY driver/first_start_workload /opt/antithesis/test/v1/main/

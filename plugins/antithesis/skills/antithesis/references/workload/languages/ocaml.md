@@ -31,4 +31,4 @@ Use the standard coverage tool for OCaml.
 
 - Workers run on OCaml threads by default (`Concurrency.threads`). State the rules share must be safe to use from several threads.
 
-Build stage: base it on `ocaml/opam:debian-12`, which matches the `debian:bookworm-slim` runtime in `references/workload/harness.md` and carries the latest OCaml, install the dependencies with `opam`, build with `dune build --release`, copy the driver binary to `/out/driver`, and create an empty `/symbols`, since there's nothing to symbolize.
+Build stage: base it on `ocaml/opam:debian-13`, which matches the `debian:trixie-slim` runtime in `references/workload/harness.md` and carries the latest OCaml, install the dependencies with `opam`, build with `dune build --release`, copy the driver binary to `/out/driver`, and create an empty `/symbols`, since there's nothing to symbolize.

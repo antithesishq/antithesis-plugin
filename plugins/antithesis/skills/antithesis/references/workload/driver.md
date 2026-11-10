@@ -14,7 +14,7 @@ This page describes the driver in hegel's terms, which every language shares. Th
 4. **Wait until the system serves the workload's requests:** a read answers, the cluster has a leader, all members joined.
 5. **Report setup complete** with the SDK's lifecycle call. Antithesis takes the first setup complete from any process, so remove any other reporter, such as one in the system's containers.
 6. **Wait for `/workload-active`,** polling every 100 ms; this wait is outside the state machine, so a sleep loop is fine. The driver container's `first_` command creates it (`references/workload/harness.md`).
-7. **Mark the start** with a `reachable` assertion, "the workload starts".
+7. **Mark the start** with a `assert_reachable` assertion, "the workload starts".
 8. **Run the state machine** forever.
 
 A pattern you adopted (`references/patterns/MODULE.md`) may add to these steps.

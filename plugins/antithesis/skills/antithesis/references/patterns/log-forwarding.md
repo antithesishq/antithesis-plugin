@@ -39,7 +39,7 @@ Run the system's command through a wrapper, `driver/forward-logs`, which:
 In each system service's Antithesis Dockerfile, build the forwarder statically, so it runs on any base image, and put the wrapper, which needs bash, in front of the system's command:
 
 ```dockerfile
-FROM rust:1-bookworm AS log-forward
+FROM rust:1-trixie AS log-forward
 RUN rustup target add x86_64-unknown-linux-musl
 COPY driver/log-forward/ /src/
 RUN cd /src && cargo build --release --target x86_64-unknown-linux-musl
@@ -77,16 +77,16 @@ The node states, `NodeStates`, hold each container's last `boot` and `seq`, and 
 ```text
 record(line):
   if same boot as this container's last line:
-    always seq == last seq + 1          "the driver receives every forwarded log line"
+    assert_always seq == last seq + 1   "the driver receives every forwarded log line"
   else:
     forget this container's state               # a new process
   if the line parses as a raft-state:
-    reachable                           "the driver reads a node's state from its logs"
+    assert_reachable                    "the driver reads a node's state from its logs"
     guarantee checks on node state go here      # see section 4
     store it as the container's latest state
     once active, exploration assertions over every container's latest state:
-      sometimes two nodes disagree on the term
-      sometimesGreaterThan the leader's commit minus the furthest-behind node's, 10
+      assert_sometimes two nodes disagree on the term
+      assert_sometimes_greater_than the leader's commit minus the furthest-behind node's, 10
 ```
 
 The exploration assertions wait for the `active` flag, set once `main` sees `/workload-active`, or the first election would satisfy them in every run.
@@ -103,11 +103,11 @@ Guarantee checks on node state, such as at most one leader per term, go in `reco
 - **Keep only current state.** Keep each node's latest state and what the checks need, never the lines or a history of states, so memory stays bounded however long the run. To assert on a transition, keep the previous value.
 - **Parse cheaply,** and before taking the node-state lock.
 - **Share state both ways.** Rules read the node states, for example to send reads to a lagging follower. Give the receiving thread the model too, so assertions that combine the logs with the model are checked when the line arrives. Never hold a model lock and the node-state lock at once: copy what you need from one, release it, then take the other.
-- **Don't depend on arrival order across containers.** One container's lines arrive in `seq` order, but a paused container's arrive late. The latest state of several nodes is a mix of times: use it only for sometimes assertions.
+- **Don't depend on arrival order across containers.** One container's lines arrive in `seq` order, but a paused container's arrive late. The latest state of several nodes is a mix of times: use it only for `assert_sometimes` assertions.
 - **Mark combinations worth exploring from,** with exploration assertions (`references/properties/assertions.md`): a leader change while a follower lags, a node rejoining with a stale term. Use rich assertions when there's a distance to the state ("Rich assertions" in `references/properties/assertions.md`).
-- **Assert that every kind of line you parse arrives,** with a reachable assertion per kind. Otherwise a changed format or a disabled log level looks like a quiet system.
+- **Assert that every kind of line you parse arrives,** with an `assert_reachable` per kind. Otherwise a changed format or a disabled log level looks like a quiet system.
 
 ## Checking it
 
-- **Locally,** every kind of line you parse arrives, its reachable assertion is met in the local loop (`references/workload/local-loop.md`), and `the driver receives every forwarded log line` holds. Check it under a burst: restart every system container at once while the workload runs.
+- **Locally,** every kind of line you parse arrives, its `assert_reachable` is met in the local loop (`references/workload/local-loop.md`), and `the driver receives every forwarded log line` holds. Check it under a burst: restart every system container at once while the workload runs.
 - **In a short run,** the exploration assertions on node state are reached.

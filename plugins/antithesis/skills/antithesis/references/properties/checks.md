@@ -13,7 +13,7 @@ a value v  if v's write was sent before end, and wasn't overwritten before start
 nothing    if no write had been acknowledged before start
 ```
 
-Add that to `KeyHistory` as `may_return(got, start, end)`, and assert it in the get rule: `always(may_return(...), "a read returns the latest acknowledged write or one that overlapped it", ...)`, with the node, key and value read in the details.
+Add that to `KeyHistory` as `may_return(got, start, end)`, and assert it in the get rule: `assert_always(may_return(...), "a read returns the latest acknowledged write or one that overlapped it", ...)`, with the node, key and value read in the details.
 
 ## Node state, from forwarded logs
 
@@ -27,5 +27,5 @@ With the log-forwarding pattern (`references/patterns/log-forwarding.md`), check
 
 Guarantees that hold only once faults stop fail falsely during faults. Check them in an eventually (`references/workload/driver.md`), after it waits for the nodes:
 
-- **Recovery:** assert `always` that every node serves requests again. It replaces the eventually's sometimes assertion on recovery: when it passes, the system recovered at least once. If it fails, skip the rest.
-- **Durability:** with every node serving and no rule running, read every key and assert `always` that `may_return` holds: "acknowledged writes survive once faults stop".
+- **Recovery:** assert `assert_always` that every node serves requests again. It replaces the eventually's `assert_sometimes` on recovery: when it passes, the system recovered at least once. If it fails, skip the rest.
+- **Durability:** with every node serving and no rule running, read every key and assert `assert_always` that `may_return` holds: "acknowledged writes survive once faults stop".
