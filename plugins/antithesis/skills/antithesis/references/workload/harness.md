@@ -19,13 +19,10 @@ driver:
     KV_URLS: http://kv1:8000,http://kv2:8000
 ```
 
-`driver/Dockerfile`:
+`driver/Dockerfile`, for a driver that compiles to one binary. An interpreted driver keeps its runtime in the final image and runs its script as `CMD`; the test template lines stay the same:
 
 ```dockerfile
-FROM rust:1-bookworm AS build
-WORKDIR /src
-COPY driver/ .
-RUN cargo build --release
+# The build stage from "Hegel driver" in references/workload/languages/<language>.md
 
 FROM debian:bookworm-slim
 COPY --from=build /src/target/release/driver /usr/local/bin/

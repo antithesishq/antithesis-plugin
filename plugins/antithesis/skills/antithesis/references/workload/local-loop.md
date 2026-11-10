@@ -4,20 +4,7 @@
 
 Antithesis instrumentation records nothing locally, so measure local coverage with the language's own tool. Add a `docker-compose.coverage.yaml` that overrides each system service with a coverage Dockerfile and a shared `coverage` volume, one directory per service. Client containers, if a pattern adds them, count as system services: the client library is code under test.
 
-### Rust
-
-- In the build stage, run `rustup component add llvm-tools-preview` and build with `RUSTFLAGS="-Cinstrument-coverage -Cllvm-args=-runtime-counter-relocation"`. This overrides the Antithesis flags in `.cargo/config.toml`.
-- Set `LLVM_PROFILE_FILE=/coverage/<service>/%c%m.profraw`. `%c` writes counters as they change, so the data survives a killed process. `%m` merges restarts into one file. Don't use `%p`: every container's process is PID 1, so a restart overwrites the data.
-
-### Go
-
-- Build with `go build -cover -covermode=atomic -coverpkg=./...`, and set `GOCOVERDIR=/coverage/<service>`.
-- Go writes counters only when `main` returns or the program calls `os.Exit`.
-
-### Other languages
-
-- Use the standard tool: clang's `-fprofile-instr-generate -fcoverage-mapping` for C and C++ (same `LLVM_PROFILE_FILE` rules as Rust), JaCoCo for Java, `c8` for Node, `coverage.py` for Python.
-- Check that the data survives `docker compose stop` and a container restart before trusting it.
+Build each service as "Local coverage" on its language's page says (`references/workload/languages.md`). Check that the data survives `docker compose stop` and a container restart before trusting it.
 
 ## 2. Run the workload
 
@@ -72,7 +59,7 @@ If setup complete never arrives, the driver stopped in its startup. `docker comp
 
 ## 4. Read the coverage
 
-After the system stops, run the language's coverage tool on the `coverage` volume, and list the functions in the system's own source that never ran: `llvm-cov` for Rust, C and C++, and `go tool cover` for Go.
+After the system stops, run the language's coverage tool on the `coverage` volume, and list the functions in the system's own source that never ran.
 
 Error-handling and recovery code looks unreached without faults. Don't chase it locally: put exploration assertions on it ("Exploration assertions" in `references/properties/assertions.md`), and check them in the Antithesis runs (`references/workload/run-loop.md`).
 

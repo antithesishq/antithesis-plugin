@@ -27,7 +27,7 @@ Every `result` has an `outcome`:
 - **`failed`:** the library reported an error that, by its documentation, means the operation didn't take effect, such as a rejected precondition.
 - **`unknown`:** any other error, such as a timeout, a lost connection, or an error whose effect the documentation doesn't settle. When unsure, use `unknown`.
 
-A JSON-RPC `error`, instead of a `result`, means the client couldn't run the request at all: an unknown method (code -32601), missing params (-32602), or a value JSON can't hold (-32603). That is a bug in the workload, so the driver checks for it with `assert_unreachable!`.
+A JSON-RPC `error`, instead of a `result`, means the client couldn't run the request at all: an unknown method (code -32601), missing params (-32602), or a value JSON can't hold (-32603). That is a bug in the workload, so the driver checks for it with `unreachable`.
 
 **Methods.** Add one method per library operation in the surface you mapped, named after it, with the inputs the driver drew as its params. Add `health`, which answers `ok` without touching the servers. For long-lived library objects such as sessions, transactions, locks and cursors, have the method that creates one return a handle, such as `{"outcome": "ok", "value": {"txn": 5}}`. Later methods take the handle as a param. The client keeps the objects per connection, and answers a handle it doesn't know as `failed`.
 
@@ -44,7 +44,7 @@ A small program in the library's language:
 - **Exit on SIGTERM.** As the container's main process, PID 1, the program ignores SIGTERM unless it handles it, so a graceful stop would end in a kill.
 - **Run it with no restart policy,** like every container: Antithesis restarts killed and stopped containers itself, and a policy would bring them back early, cancelling the fault. Run several client containers, since many bugs sit between clients.
 - **Add exploration assertions to the library's code,** for states inside a single library call ("Exploration assertions" in `references/properties/assertions.md`).
-- **Instrument the program** (`references/workload/instrumentation.md`). Client containers count as system services for local coverage (`references/workload/local-loop.md`).
+- **Instrument the program** ("Instrument the SUT" in `references/workload/languages.md`). Client containers count as system services for local coverage (`references/workload/local-loop.md`).
 - **Add `socat` or another JSON-RPC tool to the image,** so a debug session (`references/debug/MODULE.md`) can drive the client from a shell. Its connection is new and can't use the driver's handles, so create any handle it needs first.
 
 ## The driver
@@ -71,7 +71,7 @@ call(client, generation?, op):
 reader thread, per connection:
   for each line:
     notification -> model.event(client, params)
-    response -> assert_unreachable! if it's a JSON-RPC error
+    response -> unreachable if it's a JSON-RPC error
                 model.complete(op, outcome)        # records and checks it, however late
                 remove op from outstanding, and wake its rule if it's still waiting
   at close: forget the connection, then model.lost(client, generation, its outstanding ops)
@@ -87,7 +87,7 @@ Never hold a model lock while sending or waiting.
 - **An outstanding write stays possible until its outcome arrives or its client restarts,** however long that takes: the library may still be retrying it. `MAX_IN_FLIGHT` bounds how many there are.
 - **An outstanding read stops pinning the model after `ABANDON`,** for example 30 s. Pruning must not forget what an outstanding read may still return, so a hung read would keep the whole history forever. Once a read is older than `ABANDON`, prune past it, and when its answer arrives, skip the checks that need the pruned history.
 - **A closed connection means the client restarted.** In `lost`, everything outstanding on it gets an unknown outcome, and the model forgets that client's sessions, locks, open transactions and handles. A write lost this way may still land soon, from a request already on the wire, so start its `AMBIGUITY_WINDOW` at the restart. A paused client, not restarted, may still think it holds a lock that has since expired.
-- **Under `high_availability`, mark restarts:** `assert_reachable!("a client restarts", ...)` in `lost`, once the workload is active, so restarts during setup don't count. Under `resilient`, nothing kills a client, so leave it out.
+- **Under `high_availability`, mark restarts:** `reachable("a client restarts", ...)` in `lost`, once the workload is active, so restarts during setup don't count. Under `resilient`, nothing kills a client, so leave it out.
 - **Actions always go through the clients.** A direct connection to the servers is a client that never fails. Use one only for the startup waits, admin setup, and read-only checks in an eventually.
 
 **Startup.** In step 2 of "Starting up" in `references/workload/driver.md`, also wait until every client answers `health`, so a client that can't start fails setup loudly.
