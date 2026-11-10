@@ -7,7 +7,7 @@
   "homepage": "https://antithesis.com",
   "repository": "https://github.com/antithesishq/antithesis-plugin",
   "license": "Apache-2.0",
-  "keywords": ["antithesis", "testing", "property based testing"],
+  "keywords": ["antithesis", "testing", "property based testing", "deterministic simulation testing"],
   "extensions": {
     "com.openai": {
       "interface": {
