@@ -23,18 +23,22 @@ A check verdict prints only after two consecutive polls agree on it,
 because checks can register a moment after the PR's creation or after a
 fast workflow concludes.
 
-With --exit-on-event the script exits after the first poll that prints an
-event that needs a reaction, so a caller that is told only when a command
-exits is woken exactly then, however long that takes. It also exits, with
+With --exit-on-event the script exits once an event that needs a reaction
+has printed and --settle seconds have passed with no other one, so a
+caller that is told only when a command exits is woken then, however long
+that takes. The wait collects the events that arrive together, such as a
+review and its comments, into one batch. It also exits, with
 status 1, once gh has failed on GH_FAILED_POLLS polls in a row: a broken
 gh otherwise reads exactly like a quiet PR.
 
-Every event already printed is recorded in a state file per PR, under
-$XDG_STATE_HOME/watch-prs, so a restart prints only what is new, a merge or a close included. The
-first
-run on a PR prints its existing comments, reviews, and failing checks, so
-nothing that predates the watcher is missed. --replay ignores the state
-and prints them again.
+Every event already printed is recorded in a state file per PR, so a
+restart prints only what is new, a merge or a close included. The files
+go in --state-dir, or by default in a directory per checkout under
+$XDG_STATE_HOME/watch-prs. When the directory cannot be written, the
+script exits with status 2 before it prints an event. An event
+is recorded when it prints, not when the reader handles it. The first run on a PR prints its existing comments,
+reviews, and failing checks, so nothing that predates the watcher is
+missed. --replay ignores the state and prints them again.
 
 When an app opened the PR, its comments and reviews are suppressed: the
 watcher alerts the agent that posts as that app, so those are echoes of
@@ -45,11 +49,13 @@ event by an account without write access to the repository, and not in
 ALLOWED_ACCOUNT_IDS, ends in "[no write access]": the reader may report it,
 but must not act on it without a writer's approval.
 
-Usage: scripts/watch-prs.py [-i seconds] [-R owner/repo] [--exit-on-event]
-       [--replay] PR [PR ...]
+Usage: scripts/watch-prs.py [-i seconds] [-R owner/repo]
+       [--exit-on-event] [--settle seconds] [--state-dir dir] [--replay]
+       PR [PR ...]
 """
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -63,11 +69,16 @@ from urllib.parse import quote
 
 # What one poll of every PR did, for --exit-on-event.
 woke = False  # printed an event that needs a reaction
-gh_failed = False  # a gh call failed
+gh_failed = False  # the view of a PR, or a list of its comments, failed
 
-# With --exit-on-event, give up after this many polls in a row with a failed
-# gh call: 15 minutes at the default interval.
+# With --exit-on-event, give up after this many polls in a row in which the
+# view of a PR or a list of its comments failed: 15 minutes at the default
+# interval. A failed lookup for one comment's author does not count, because
+# it can fail on every poll while gh works.
 GH_FAILED_POLLS = 20
+
+# In a PR's seen events once its merge or close has printed.
+CLOSED = "closed"
 
 
 def emit(line: str, wake: bool = True) -> None:
@@ -99,8 +110,6 @@ def gh_json(args: list[str]) -> Any | None:
             return json.loads(proc.stdout)
         except json.JSONDecodeError:
             pass
-    global gh_failed
-    gh_failed = True
     message = next((ln for ln in proc.stderr.splitlines() if ln.strip()), "no output")
     if message not in reported_failures:
         reported_failures.add(message)
@@ -114,6 +123,8 @@ def paginate(path: str) -> Iterator[Any]:
     for page in count(1):
         items = gh_json(["api", f"{path}?per_page=100&page={page}"])
         if items is None:
+            global gh_failed
+            gh_failed = True
             return
         yield from items
         if len(items) < 100:
@@ -126,6 +137,7 @@ def paginate(path: str) -> Iterator[Any]:
 # (claude[bot] onto "claude"), so only the id tells the two apart.
 ALLOWED_ACCOUNT_IDS = {
     209825114,  # claude[bot], github.com/apps/claude
+    223894421,  # github-code-quality[bot], github.com/apps/github-code-quality
 }
 
 
@@ -213,6 +225,8 @@ def poll_pr(
         ]
     )
     if view is None:
+        global gh_failed
+        gh_failed = True
         return True
     # A close prints once, like every other event: a restart that still names
     # a PR whose close an earlier run printed must not exit on it again. The
@@ -349,13 +363,17 @@ def poll_pr(
     return True
 
 
-# In a PR's seen events once its merge or close has printed.
-CLOSED = "closed"
-
-
-def state_file(slug: str, pr: int) -> Path:
+def default_state_dir() -> Path:
+    """A directory for the watchers started in this directory. Watchers in
+    other checkouts keep their own state, so each of them prints every event.
+    """
     home = os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state"
-    return Path(home) / "watch-prs" / f"{slug.replace('/', '__')}__{pr}.json"
+    cwd = hashlib.sha256(str(Path.cwd().resolve()).encode()).hexdigest()[:12]
+    return Path(home) / "watch-prs" / cwd
+
+
+def state_file(state_dir: Path, slug: str, pr: int) -> Path:
+    return state_dir / f"{slug.replace('/', '__')}__{pr}.json"
 
 
 def load(path: Path) -> tuple[set[str], set[str]]:
@@ -377,6 +395,16 @@ def save(path: Path, seen: set[str], checks: set[str]) -> None:
     tmp.replace(path)
 
 
+def cannot_save(e: OSError) -> int:
+    # Without its state, each restart prints every old event again, so the
+    # run stops rather than watch on.
+    print(
+        f"cannot save state: {e}; run again with --state-dir set to a writable directory",
+        flush=True,
+    )
+    return 2
+
+
 def main() -> int:
     global woke, gh_failed
     ap = argparse.ArgumentParser(description="Poll pull requests and print one line per new event.")
@@ -385,9 +413,24 @@ def main() -> int:
     ap.add_argument(
         "--exit-on-event",
         action="store_true",
-        help="exit after the first poll that prints an event that needs a reaction",
+        help="exit once an event that needs a reaction has printed",
     )
-    ap.add_argument("--replay", action="store_true", help="print the events an earlier run printed too")
+    ap.add_argument(
+        "--settle",
+        type=int,
+        default=15,
+        help="with --exit-on-event, seconds to wait for more events after one (default 15)",
+    )
+    ap.add_argument(
+        "--state-dir",
+        type=Path,
+        help="directory for the state files (default: one per checkout under $XDG_STATE_HOME/watch-prs)",
+    )
+    ap.add_argument(
+        "--replay",
+        action="store_true",
+        help="print the events an earlier run printed too",
+    )
     ap.add_argument("prs", nargs="+", type=int, metavar="PR")
     args = ap.parse_args()
 
@@ -399,10 +442,18 @@ def main() -> int:
             ap.error("cannot resolve the repository; pass -R owner/repo")
         slug = view["nameWithOwner"]
     open_prs = set(args.prs)
-    files = {pr: state_file(slug, pr) for pr in args.prs}
+    state_dir = args.state_dir or default_state_dir()
+    files = {pr: state_file(state_dir, slug, pr) for pr in args.prs}
     state = {pr: (set(), set()) if args.replay else load(files[pr]) for pr in args.prs}
+    # Find an unwritable state directory before the first event prints.
+    try:
+        for pr in args.prs:
+            save(files[pr], *state[pr])
+    except OSError as e:
+        return cannot_save(e)
 
     failed_polls = 0
+    last_wake: float | None = None
     while open_prs:
         woke = gh_failed = False
         for pr in sorted(open_prs):
@@ -411,14 +462,25 @@ def main() -> int:
             if not poll_pr(repo_flag, slug, pr, seen, checks):
                 open_prs.discard(pr)
             if (seen, checks) != before:
-                save(files[pr], seen, checks)
-        if not open_prs or (args.exit_on_event and woke):
+                try:
+                    save(files[pr], seen, checks)
+                except OSError as e:
+                    return cannot_save(e)
+        if woke:
+            last_wake = time.monotonic()
+        if not open_prs:
+            break
+        if args.exit_on_event and last_wake is not None and time.monotonic() - last_wake >= args.settle:
             break
         failed_polls = failed_polls + 1 if gh_failed else 0
         if args.exit_on_event and failed_polls >= GH_FAILED_POLLS:
             print(f"gh failed on {failed_polls} polls in a row", flush=True)
             return 1
-        time.sleep(args.interval)
+        delay = args.interval
+        if args.exit_on_event and last_wake is not None:
+            # Poll again when the settle time ends, not a whole interval later.
+            delay = min(delay, args.settle - (time.monotonic() - last_wake))
+        time.sleep(delay)
     return 0
 
 
