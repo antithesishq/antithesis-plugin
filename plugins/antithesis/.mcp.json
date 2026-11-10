@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "snouty": {
+      "command": "snouty",
+      "args": ["mcp"],
+      "env": { "SNOUTY_UNSTABLE_FEATURES": "mcp" }
+    }
+  }
+}
