@@ -23,7 +23,7 @@ It polls in silence, for days if need be, and exits after the first poll that pr
 
 Don't poll it, don't check on it on a timer, and don't run it through a tool that expires, such as a monitor with a timeout: each expiry wakes you for nothing. Without `--exit-on-event` it streams events and runs until every PR closes, which suits only a monitor that never expires.
 
-It records each event it has printed in a state file per PR, so a restart prints only what's new. The first run on a PR prints its existing comments, reviews and failing checks. Triage that batch like any other events. If the task is gone when you come back, after a reboot or in a new session, start it again: nothing is lost or repeated. That holds for a PR that has closed too: its `merged` line prints once, and later runs that still name it only note that it's closed. `--replay` prints everything again.
+It records each event it has printed in a state file per PR, so a restart prints only what's new. The first run on a PR prints its existing comments, reviews and failing checks. Triage that batch like any other events. If the task is gone when you come back, after a reboot or in a new session, start it again: nothing is lost or repeated. That holds for a PR that has closed too: its `merged` line prints once, and later runs that still name it only note that it's closed, unless someone has reopened it. `--replay` prints everything again.
 
 `-R owner/repo` watches another repository than the checkout's. `-i seconds` sets the poll interval, 45 by default.
 
@@ -38,6 +38,7 @@ PR #123 conflicts with <branch>
 PR #123 base changed to <branch>
 PR #123 merged
 PR #123 closed without merge
+PR #123 reopened
 gh failed on <N> polls in a row
 ```
 
@@ -99,6 +100,8 @@ Never pass `--paginate` to `gh api`. Behind a proxy set as gh's host, the first 
 - **Conflict**: rebase onto `origin/main`, resolve it, rerun the checks, and push with `--force-with-lease`. A base that moves without a conflict needs nothing.
 
 - **Base changed**: someone retargeted the PR. Compare the branch with the new base, and update the description (step 4) if what the PR contains has changed.
+
+- **Reopened**: the PR closed earlier, and someone opened it again. Keep watching it.
 
 - **Merged or closed**: stop work on that PR. The script exits on its own once every watched PR reaches this state.
 

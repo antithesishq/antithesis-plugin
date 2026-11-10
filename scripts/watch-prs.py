@@ -10,7 +10,7 @@ Events that need a reaction:
 - a failed CI check, with the job id that fetches its log
 - a conflict with the base branch
 - a retarget to another base branch
-- a merge or a close
+- a merge or a close, or a reopening after a close that was printed
 
 Events that need none, which are printed for the record:
 - "all checks passed", once per head commit, when every check on it
@@ -214,9 +214,19 @@ def poll_pr(
     )
     if view is None:
         return True
+    # A close prints once, like every other event: a restart that still names
+    # a PR whose close an earlier run printed must not exit on it again. The
+    # live state decides, so a PR that someone reopens is watched again.
     if view["state"] != "OPEN":
-        emit(f"PR #{pr} merged" if view["state"] == "MERGED" else f"PR #{pr} closed without merge")
+        if CLOSED in seen:
+            emit(f"PR #{pr} is closed, as an earlier run reported", wake=False)
+        else:
+            seen.add(CLOSED)
+            emit(f"PR #{pr} merged" if view["state"] == "MERGED" else f"PR #{pr} closed without merge")
         return False
+    if CLOSED in seen:
+        seen.discard(CLOSED)
+        emit(f"PR #{pr} reopened")
     # Only an app author is suppressed. Compare its exact REST login, not a
     # norm_login fold: an app's "app/name" is "name[bot]" over REST, and no
     # user can take a login with brackets.
@@ -388,13 +398,9 @@ def main() -> int:
         if view is None:
             ap.error("cannot resolve the repository; pass -R owner/repo")
         slug = view["nameWithOwner"]
+    open_prs = set(args.prs)
     files = {pr: state_file(slug, pr) for pr in args.prs}
     state = {pr: (set(), set()) if args.replay else load(files[pr]) for pr in args.prs}
-    # A close prints once, like every other event: a restart that still names
-    # a PR whose close an earlier run printed must not exit on it again.
-    open_prs = {pr for pr in args.prs if CLOSED not in state[pr][0]}
-    for pr in sorted(set(args.prs) - open_prs):
-        emit(f"PR #{pr} is closed, as an earlier run reported", wake=False)
 
     failed_polls = 0
     while open_prs:
@@ -404,7 +410,6 @@ def main() -> int:
             before = (set(seen), set(checks))
             if not poll_pr(repo_flag, slug, pr, seen, checks):
                 open_prs.discard(pr)
-                seen.add(CLOSED)
             if (seen, checks) != before:
                 save(files[pr], seen, checks)
         if not open_prs or (args.exit_on_event and woke):
