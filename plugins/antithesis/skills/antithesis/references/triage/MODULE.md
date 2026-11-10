@@ -40,12 +40,12 @@ Whoever downloads a log reads `references/triage/logs.md` first. In `monitor` an
 
 1. Pick the first failing example and find its moment. If the counterexample has no `moment` (properties that report a value, see `references/triage/properties.md`), the counterexample value is the evidence; skip to step 5.
 2. Download the log for that moment and analyze it locally.
-3. If a run is ready, run commands at the failing moment, even if the log seems to explain the failure. See `references/debug/MODULE.md`.
+3. If a run is ready, run commands at the failing moment. See `references/debug/MODULE.md`.
 4. If you aren't sure what caused the failure, find more moments for the same property with `snouty runs search -n 999` and compare them. Passing examples are useful for finding what differs between success and failure.
 5. Cross-reference the log and command output against the source code of the system under test and the workload.
 6. Work out the timeline of events that led up to the failure and its root cause.
 
-The property status and assertion text alone are not enough. Download and read the logs before concluding on any failure that has moments, and if a run is ready, run commands at the failing moment too. If its assertion has details, use them: its author chose those fields to show the system's state at the failure.
+The property status and assertion text alone are not enough. Download and read the logs before concluding on any failure that has moments. If its assertion has details, use them: its author chose those fields to show the system's state at the failure.
 
 ## Diagnose an incomplete run
 
