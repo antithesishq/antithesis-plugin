@@ -30,7 +30,8 @@ status 1, once gh has failed on GH_FAILED_POLLS polls in a row: a broken
 gh otherwise reads exactly like a quiet PR.
 
 Every event already printed is recorded in a state file per PR, under
-$XDG_STATE_HOME/watch-prs, so a restart prints only what is new. The first
+$XDG_STATE_HOME/watch-prs, so a restart prints only what is new, a merge or a close included. The
+first
 run on a PR prints its existing comments, reviews, and failing checks, so
 nothing that predates the watcher is missed. --replay ignores the state
 and prints them again.
@@ -338,6 +339,10 @@ def poll_pr(
     return True
 
 
+# In a PR's seen events once its merge or close has printed.
+CLOSED = "closed"
+
+
 def state_file(slug: str, pr: int) -> Path:
     home = os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state"
     return Path(home) / "watch-prs" / f"{slug.replace('/', '__')}__{pr}.json"
@@ -383,9 +388,13 @@ def main() -> int:
         if view is None:
             ap.error("cannot resolve the repository; pass -R owner/repo")
         slug = view["nameWithOwner"]
-    open_prs = set(args.prs)
     files = {pr: state_file(slug, pr) for pr in args.prs}
     state = {pr: (set(), set()) if args.replay else load(files[pr]) for pr in args.prs}
+    # A close prints once, like every other event: a restart that still names
+    # a PR whose close an earlier run printed must not exit on it again.
+    open_prs = {pr for pr in args.prs if CLOSED not in state[pr][0]}
+    for pr in sorted(set(args.prs) - open_prs):
+        emit(f"PR #{pr} is closed, as an earlier run reported", wake=False)
 
     failed_polls = 0
     while open_prs:
@@ -395,8 +404,8 @@ def main() -> int:
             before = (set(seen), set(checks))
             if not poll_pr(repo_flag, slug, pr, seen, checks):
                 open_prs.discard(pr)
-                files[pr].unlink(missing_ok=True)
-            elif (seen, checks) != before:
+                seen.add(CLOSED)
+            if (seen, checks) != before:
                 save(files[pr], seen, checks)
         if not open_prs or (args.exit_on_event and woke):
             break

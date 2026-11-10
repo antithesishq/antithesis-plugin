@@ -23,7 +23,7 @@ It polls in silence, for days if need be, and exits after the first poll that pr
 
 Don't poll it, don't check on it on a timer, and don't run it through a tool that expires, such as a monitor with a timeout: each expiry wakes you for nothing. Without `--exit-on-event` it streams events and runs until every PR closes, which suits only a monitor that never expires.
 
-It records each event it has printed in a state file per PR, so a restart prints only what's new. The first run on a PR prints its existing comments, reviews and failing checks. Triage that batch like any other events. If the task is gone when you come back, after a reboot or in a new session, start it again: nothing is lost or repeated. `--replay` prints everything again.
+It records each event it has printed in a state file per PR, so a restart prints only what's new. The first run on a PR prints its existing comments, reviews and failing checks. Triage that batch like any other events. If the task is gone when you come back, after a reboot or in a new session, start it again: nothing is lost or repeated. That holds for a PR that has closed too: its `merged` line prints once, and later runs that still name it only note that it's closed. `--replay` prints everything again.
 
 `-R owner/repo` watches another repository than the checkout's. `-i seconds` sets the poll interval, 45 by default.
 
