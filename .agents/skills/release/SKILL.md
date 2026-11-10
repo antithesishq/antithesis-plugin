@@ -20,7 +20,7 @@ A release is `X.Y.Z`. A release candidate is `X.Y.Z-rc.N`, and follows the same 
 
 ## 1. Pick and check the version
 
-Get the current version from `plugins/antithesis/plugin.json`. If the user gave a version, strip any leading `v`. Otherwise, pick the next one once you've read the changes in step 2: bump the minor version if any change is breaking, and the patch version otherwise. When the user asks for a release candidate, the next one after `X.Y.Z-rc.N` is `X.Y.Z-rc.N+1`, and the first is `-rc.1` of the version you'd pick. Releasing a candidate's `X.Y.Z` drops the suffix. Say which you picked and why in the PR, so the user can change it in review.
+Get the current version from `plugins/antithesis/plugin.json`. If the user gave a version, strip any leading `v`. Otherwise, pick the next one once you've read the changes in "Write the notes": bump the minor version if any change is breaking, and the patch version otherwise. When the user asks for a release candidate, the next one after `X.Y.Z-rc.N` is `X.Y.Z-rc.N+1`, and the first is `-rc.1` of the version you'd pick. Releasing a candidate's `X.Y.Z` drops the suffix. Say which you picked and why in the PR, so the user can change it in review.
 
 Before changing anything, check:
 
@@ -83,7 +83,7 @@ For a release PR, also:
 
 - A fix that isn't the notes or the version, like a lint rule or a script, can go in the release PR. Say why in the PR body.
 - If someone who can write to the repository asks to abort the release, close the PR and stop.
-- When the watcher prints `merged`, go on to step 6. When it prints `closed without merge`, stop.
+- When the watcher prints `merged`, go on to "Tag the merge commit". When it prints `closed without merge`, stop.
 
 ## 6. Tag the merge commit
 

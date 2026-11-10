@@ -19,7 +19,7 @@ Run the watcher as a background shell task, the kind that tells you when its com
 scripts/watch-prs.py --exit-on-event <PR> [<PR> ...]
 ```
 
-It polls in silence, for days if need be. When an event you need to react to prints, it waits until 15 seconds pass with no other one, then exits, so events that arrive together, such as a review and its comments, come in one batch. `--settle seconds` changes the wait. Read its whole output, react to each line (step 3), then start it again with the same command, and end your turn. Stop once it prints `merged` or `closed without merge` for every PR.
+It polls in silence, for days if need be. When an event you need to react to prints, it waits until 15 seconds pass with no other one, then exits, so events that arrive together, such as a review and its comments, come in one batch. `--settle seconds` changes the wait. Read its whole output, react to each line ("React to each event"), then start it again with the same command, and end your turn. Stop once it prints `merged` or `closed without merge` for every PR.
 
 Don't poll it, don't check on it on a timer, and don't run it through a tool that expires, such as a monitor with a timeout: each expiry wakes you for nothing. Without `--exit-on-event` it streams events and runs until every PR closes, which suits only a monitor that never expires.
 
@@ -80,7 +80,7 @@ Never pass `--paginate` to `gh api`. Behind a proxy set as gh's host, the first 
 
 ## 3. React to each event
 
-- **Review or comment**: decide whether it's valid. A bot's comment can be wrong. If it asks for a valid change, check out that PR's branch, make the change, run `mise run fix` and `mise run check`, update the description (step 4), and push. Reply with the commit hash, or with why you didn't make the change. Leave the thread open: the reviewer resolves it. If the comment is unclear, ask on the thread instead of guessing.
+- **Review or comment**: decide whether it's valid. A bot's comment can be wrong. If it asks for a valid change, check out that PR's branch, make the change, run `mise run fix` and `mise run check`, update the description ("Keep the description current"), and push. Reply with the commit hash, or with why you didn't make the change. Leave the thread open: the reviewer resolves it. If the comment is unclear, ask on the thread instead of guessing.
 
   Reply to a review comment over REST, with the ID from its event line:
 
@@ -100,11 +100,11 @@ Never pass `--paginate` to `gh api`. Behind a proxy set as gh's host, the first 
   gh api --allow-escape-sequences repos/{owner}/{repo}/actions/jobs/<job id>/logs | sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | tail -100
   ```
 
-  Reproduce it with the check's own task, such as `mise run check:lychee`, fix it, update the description (step 4), and push. A check that failed for a transient reason, like a link that was briefly down, can be rerun with `gh api -X POST repos/{owner}/{repo}/actions/jobs/<job id>/rerun`.
+  Reproduce it with the check's own task, such as `mise run check:lychee`, fix it, update the description ("Keep the description current"), and push. A check that failed for a transient reason, like a link that was briefly down, can be rerun with `gh api -X POST repos/{owner}/{repo}/actions/jobs/<job id>/rerun`.
 
 - **Conflict**: merge `origin/<branch>`, the base that the event names, into the branch, resolve it, rerun the checks, and push. A base that moves without a conflict needs nothing.
 
-- **Base changed**: someone retargeted the PR. Compare the branch with the new base, and update the description (step 4) if what the PR contains has changed.
+- **Base changed**: someone retargeted the PR. Compare the branch with the new base, and update the description ("Keep the description current") if what the PR contains has changed.
 
 - **Reopened**: the PR closed earlier, and someone opened it again. Keep watching it.
 
@@ -120,7 +120,7 @@ Reviewers read the PR description, and the squash commit on `main` takes the PR'
 
 Before each push, compare the title and description with the whole branch: `git diff origin/main...HEAD`. Update them when the push changes the behavior, the scope or the reason: a reviewer asks for a different approach, a CI fix changes behavior, or the push adds or removes part of the change. A push that only fixes formatting, a typo or a lint finding needs no update.
 
-The description says what the PR does to `main`, as if the branch had been written in one pass. Leave out the earlier versions of the diff. When a reviewer asks for a different approach, rewrite the description for the new approach, and drop the old one from it. Don't add a change log or an "Update:" section: the commits and review threads keep that history. Only for a very large change, a sentence on an approach you tried and why you dropped it can stay, when it would save the next reader from trying it. Follow step 3 of the `open-pr` skill.
+The description says what the PR does to `main`, as if the branch had been written in one pass. Leave out the earlier versions of the diff. When a reviewer asks for a different approach, rewrite the description for the new approach, and drop the old one from it. Don't add a change log or an `Update:` section: the commits and review threads keep that history. Only for a very large change, a sentence on an approach you tried and why you dropped it can stay, when it would save the next reader from trying it. Follow "Write the title and body" in the `open-pr` skill.
 
 Copy the current description to a file outside the checkout, edit it, and write it back over REST:
 

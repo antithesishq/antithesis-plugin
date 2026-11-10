@@ -19,9 +19,9 @@ Dependencies: `hegeltest` with `features = ["static-engine"]`, and the latest `a
 
 A pattern you adopted (`references/patterns/MODULE.md`) may add to these steps.
 
-Steps 2 to 4 retry rather than sleep a fixed time, and print what they're waiting for, or why a request failed, whenever that changes, so a setup timeout shows where it stopped without flooding the log. They have no deadline of their own: `--setup-timeout` bounds them in Antithesis, and `snouty validate --timeout` locally. They count toward setup time.
+The two waits and the admin setup between them retry rather than sleep a fixed time, and print what they're waiting for, or why a request failed, whenever that changes, so a setup timeout shows where it stopped without flooding the log. They have no deadline of their own: `--setup-timeout` bounds them in Antithesis, and `snouty validate --timeout` locally. They count toward setup time.
 
-Nothing before step 8 draws from hegel: every timeline branches from a snapshot taken during step 6, so all randomness comes after it.
+Nothing before "Run the state machine" draws from hegel: every timeline branches from a snapshot taken during the wait for `/workload-active`, so all randomness comes after it.
 
 ### Shared volumes for out-of-band facts
 
@@ -96,7 +96,7 @@ Write it as a normal rule, so swarm testing leaves it out of some timelines. Lea
 
 1. Takes a global lock, so no other eventually can start.
 2. Stops faults for good, by running `$ANTITHESIS_STOP_FAULTS <seconds>` for far longer than the rest of the timeline can take, such as an hour.
-3. Waits, up to a deadline, until every node serves requests again. Restarted containers take a while to come back. Step 2 of "Starting up" can share this per-node check.
+3. Waits, up to a deadline, until every node serves requests again. Restarted containers take a while to come back. The "Wait until every node is up" step can share this per-node check.
 4. Logs that its assertions start, then asserts that the system recovered, and asserts each guarantee that must hold once faults stop ("After faults stop" in `references/properties/checks.md`). Each assertion becomes a property in the run.
 5. Logs that it's ending the timeline, then exits the driver with status 0. Antithesis can't end a timeline explicitly. Once the driver exits, the timeline goes idle, and Antithesis stops spending fuzzing effort on it.
 

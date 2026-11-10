@@ -10,7 +10,7 @@ Take a task from its description to a merged PR. The task arrives in one of two 
 - **An issue reference**: an issue number, `#N`, or a GitHub issue URL.
 - **A plain text prompt**: a description of the work to do.
 
-Both forms follow the same steps. They differ only in how you read the task in step 1, and in whether the PR closes an issue in step 4.
+Both forms follow the same steps. They differ only in how you read the task in "Read the task and branch", and in whether the PR closes an issue in "Submit the PR".
 
 A release is not a task: use the `release` skill for one.
 

@@ -35,7 +35,7 @@ When the change raises a token budget in `mise.toml`, say so and why, as `AGENTS
 
 When the work closes an issue, put `fixes #<N>` on its own line, one line per issue.
 
-The title is one line in the voice of the subjects in `git log --oneline origin/main`, such as "Triage runs live instead of waiting for them to finish". The repo squash-merges, so the title becomes the commit subject on `main`, and GitHub adds the `(#N)`.
+The title is one line in the voice of the subjects in `git log --oneline origin/main`, such as `Triage runs live instead of waiting for them to finish`. The repo squash-merges, so the title becomes the commit subject on `main`, and GitHub adds the `(#N)`.
 
 ## 4. Create the PR
 
