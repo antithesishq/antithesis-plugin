@@ -11,8 +11,11 @@ line. An event line carries only metadata — the reader fetches the full
 content through gh.
 The script exits when every watched PR is closed.
 
-Comments and reviews by the PR's own author are suppressed: the watcher
-alerts the author's agent, so those are echoes of its own replies. An
+When an app opened the PR, its comments and reviews are suppressed: the
+watcher alerts the agent that posts as that app, so those are echoes of
+its own replies. A user's are never suppressed, the PR author's included:
+an agent can post under the user's own login, and the user's comments
+must still come through. That agent sees its own replies as events. An
 event by an account without write access to the repository, and not in
 ALLOWED_ACCOUNT_IDS, ends in "[no write access]": the reader may report it,
 but must not act on it without a writer's approval. Checks
@@ -184,11 +187,11 @@ def poll_pr(
     if view["state"] != "OPEN":
         emit(f"PR #{pr} merged" if view["state"] == "MERGED" else f"PR #{pr} closed without merge")
         return False
-    # Compare the author's exact REST login, not a norm_login fold: an
-    # app's "app/name" is "name[bot]" over REST, and no user can take a
-    # login with brackets.
+    # Only an app author is suppressed. Compare its exact REST login, not a
+    # norm_login fold: an app's "app/name" is "name[bot]" over REST, and no
+    # user can take a login with brackets.
     author = view["author"]["login"]
-    ignore = f"{author.removeprefix('app/')}[bot]" if author.startswith("app/") else author
+    ignore = f"{author.removeprefix('app/')}[bot]" if author.startswith("app/") else None
 
     if changed(seen, "base", view["baseRefName"]):
         emit(f"PR #{pr} base changed to {view['baseRefName']}")
@@ -239,7 +242,7 @@ def poll_pr(
     for key, item, line in events:
         if key in seen:
             continue
-        if (item.get("user") or {}).get("login") == ignore:
+        if ignore and (item.get("user") or {}).get("login") == ignore:
             seen.add(key)
             continue
         ok = trusted(slug, item.get("user") or {}, write_access)
