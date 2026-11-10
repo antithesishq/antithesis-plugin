@@ -44,7 +44,7 @@ A small program in the library's language:
 - **Exit on SIGTERM.** As the container's main process, PID 1, the program ignores SIGTERM unless it handles it, so a graceful stop would end in a kill.
 - **Run it with no restart policy,** like every container: Antithesis restarts killed and stopped containers itself, and a policy would bring them back early, cancelling the fault. Run several client containers, since many bugs sit between clients.
 - **Add exploration assertions to the library's code,** for states inside a single library call ("Exploration assertions" in `references/properties/assertions.md`).
-- **Instrument the program** ("Instrument the SUT" in `references/workload/languages.md`). Client containers count as system services for local coverage (`references/workload/local-loop.md`).
+- **Instrument the program** ("Instrument the software" in `references/workload/languages.md`). Client containers count as system services for local coverage (`references/workload/local-loop.md`).
 - **Add `socat` or another JSON-RPC tool to the image,** so a debug session (`references/debug/MODULE.md`) can drive the client from a shell. Its connection is new and can't use the driver's handles, so create any handle it needs first.
 
 ## The driver

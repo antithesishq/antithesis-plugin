@@ -14,7 +14,7 @@ Ask for a compute budget up front. If the user gives none, use 60 compute hours 
 
 The driver binary is the main process of its own fault-excluded container. It waits for the system, reports setup complete, then waits for `/workload-active`, which the container's one `first_` test command creates when fuzzing starts. Every decision is made in the driver.
 
-The SUT itself is built with Antithesis coverage instrumentation.
+The SUT and the driver are built with Antithesis coverage instrumentation.
 
 ## Steps
 
@@ -23,7 +23,7 @@ The SUT itself is built with Antithesis coverage instrumentation.
 3. **Pick the driver's language.** Follow "Pick the driver's language" in `references/workload/languages.md`.
 4. **Pick the model.** For every in-scope item, decide what the driver must record so an assertion can judge each response.
 5. **Lay out the workload,** its README and its scripts. Follow `references/workload/layout.md`.
-6. **Instrument the SUT.** Follow "Instrument the SUT" in `references/workload/languages.md`. Add exploration assertions to its code, following "Exploration assertions" in `references/properties/assertions.md`. They are the default way to see a node's internal state.
+6. **Instrument the software.** Follow "Instrument the software" in `references/workload/languages.md`. Add exploration assertions to its code, following "Exploration assertions" in `references/properties/assertions.md`. They are the default way to see a node's internal state.
 7. **Write the driver,** including its startup: the waits for the system, admin setup, setup complete and the `/workload-active` wait. Follow `references/workload/driver.md`.
 8. **Wire up the harness:** the `driver` container with its `first_` test command, any shared volumes, the fault flags, and debug tools in every image. Follow `references/workload/harness.md`.
 9. **Build and validate.** Build the images, run the instrumentation checks, then run `snouty validate <config_dir>`. Commit every file the images build from, and check `git status --ignored`, since ignore rules can drop harness files.

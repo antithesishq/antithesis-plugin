@@ -39,9 +39,14 @@
 
 Build stage:
 
+Instrument it as "Instrumentation" says: add the latest `antithesis-instrumentation` crate, reference it with `use antithesis_instrumentation as _;`, and put the docs page's build flags in `driver/.cargo/config.toml`. Copy the flags from the docs page, not from memory: they set the build target, which moves the binary under `target/<target>/`.
+
 ```dockerfile
 FROM rust:1-bookworm AS build
 WORKDIR /src
 COPY driver/ .
-RUN cargo build --release
+RUN cargo build --release \
+ && mkdir -p /out /symbols \
+ && cp target/x86_64-unknown-linux-gnu/release/driver /out/ \
+ && cp /out/driver /symbols/
 ```

@@ -12,7 +12,7 @@
 
 ## Instrumentation
 
-The same `antithesis-go-toolexec` adds coverage instrumentation: `snouty docs show /docs/reference/sdk/go/instrumentation/`. `ANTITHESIS_SKIP_COVERAGE=1` catalogs without instrumenting, which is what the driver wants.
+The same `antithesis-go-toolexec` adds coverage instrumentation, and writes the symbol tables to `/symbols`: `snouty docs show /docs/reference/sdk/go/instrumentation/`.
 
 ## Local coverage
 
@@ -48,6 +48,6 @@ FROM golang:1-bookworm AS build
 WORKDIR /src
 RUN go install github.com/antithesishq/antithesis-sdk-go/tools/antithesis-go-toolexec@latest
 COPY driver/ .
-# Catalog the driver's assertions, without coverage instrumentation.
-RUN ANTITHESIS_SKIP_COVERAGE=1 go build -toolexec=antithesis-go-toolexec -o /src/target/release/driver .
+# Instruments the driver, catalogs its assertions, and writes /symbols.
+RUN go build -toolexec=antithesis-go-toolexec -o /out/driver .
 ```

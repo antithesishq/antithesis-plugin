@@ -8,11 +8,11 @@
 - **Init:** none.
 - **Setup complete:** `antithesis.lifecycle.setup_complete(details)`.
 - **Assertions:** functions in `antithesis.assertions`, such as `always`, `sometimes`, `reachable` and `sometimes_greater_than`.
-- **Cataloging:** the SDK reports an assertion only when it runs, so one that's never reached is missing rather than failing. `python -m antithesis.catalog <src-dir> -o catalog.json` writes the catalog, and the SDK registers it at startup when `ANTITHESIS_ASSERTION_CATALOG` names that file. Set it for the local loop. For a run, follow `snouty docs show /docs/reference/sdk/python/`.
+- **Cataloging:** the SDK reports an assertion only when it runs, so one that's never reached is missing rather than failing. In a run, Antithesis catalogs the code in `/opt/antithesis/catalog/` ("Instrumentation"). For the local loop, `python -m antithesis.catalog <src-dir> -o catalog.json` writes the catalog, and the SDK registers it at startup when `ANTITHESIS_ASSERTION_CATALOG` names that file.
 
 ## Instrumentation
 
-`snouty docs show /docs/reference/sdk/python/`.
+Antithesis catalogs and instruments the Python code placed in `/opt/antithesis/catalog/` of an image: `snouty docs show /docs/reference/sdk/python/`.
 
 ## Local coverage
 
@@ -39,9 +39,8 @@ Use `coverage.py`.
 - Rules run on worker threads. Requests overlap while they wait on the network, but Python code itself runs one thread at a time, so keep the model's checks cheap.
 - Hegel doesn't run `async` functions. Write rules as plain functions, with a blocking client.
 
-Image: Python needs no build stage. Base the driver image on `python:3-slim-bookworm`, install the latest `hegeltest` and `antithesis` with `pip`, catalog the driver's assertions, and run the script as `CMD`. The driver isn't instrumented, so nothing else catalogs them:
+Image: Python needs no build stage. Base the driver image on `python:3-slim-bookworm`, install the latest `hegeltest` and `antithesis` with `pip`, link the driver's source into `/opt/antithesis/catalog/` so Antithesis instruments it and catalogs its assertions, and run the script as `CMD`:
 
 ```dockerfile
-RUN python -m antithesis.catalog /driver -o /driver/catalog.json
-ENV ANTITHESIS_ASSERTION_CATALOG=/driver/catalog.json
+RUN mkdir -p /opt/antithesis && ln -s /driver /opt/antithesis/catalog
 ```
