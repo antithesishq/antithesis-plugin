@@ -38,11 +38,12 @@ Also check the instrumentation properties, and include their status in your repo
 
 Whoever downloads a log reads `references/triage/logs.md` first. In `monitor` and `summary` modes, the subagents download the logs for failing properties: tell each one to read it, and don't read it yourself unless you download a log too, as for an incomplete run. Then:
 
-1. Pick the first failing example and find its moment. If the counterexample has no `moment` (properties that report a value, see `references/triage/properties.md`), the counterexample value is the evidence; skip to step 4.
+1. Pick the first failing example and find its moment. If the counterexample has no `moment` (properties that report a value, see `references/triage/properties.md`), the counterexample value is the evidence; skip to step 5.
 2. Download the log for that moment and analyze it locally.
-3. If you aren't sure what caused the failure, find more moments for the same property with `snouty runs search -n 999` and compare their logs. Logs from passing examples are useful for finding what differs between success and failure.
-4. Cross-reference the log against the source code of the system under test and the workload.
-5. Work out the timeline of events that led up to the failure and its root cause.
+3. If there is an available ready run, run commands at the failing moment. See `references/debug/MODULE.md`.
+4. If you aren't sure what caused the failure, find more moments for the same property with `snouty runs search -n 999` and compare them. Passing examples are useful for finding what differs between success and failure.
+5. Cross-reference the log and command output against the source code of the system under test and the workload.
+6. Work out the timeline of events that led up to the failure and its root cause.
 
 The property status and assertion text alone are not enough. Download and read the logs before concluding on any failure that has moments. If its assertion has details, use them: its author chose those fields to show the system's state at the failure.
 
@@ -62,6 +63,6 @@ Follow `references/triage/issues.md` to report what you found.
 Check each report against these:
 
 - Every property status you report came from the properties data or the stream, not inference.
-- Conclusions about failures with moments rest on evidence from the run, with specific log lines or command output, timestamps and property names.
+- Conclusions about failures with moments rest on evidence from the run, with specific log lines, command output, timestamps and property names.
 - The report separates what the run shows from what you interpret.
 - A claim that a binary isn't instrumented follows `references/triage/instrumentation.md` and doesn't rest only on the deduplicated examples of `Software was instrumented`.

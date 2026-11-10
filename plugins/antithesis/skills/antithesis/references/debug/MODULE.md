@@ -2,6 +2,10 @@
 
 Antithesis can run scripts at any Moment in the Multiverse. Start by choosing the moment(s) and run(s) to investigate.
 
+Running commands costs little and shows the system's real state, so you should always do it when investigating any kind of failure. Additionally, running commands in available ready runs is always preferred over spinning up a dedicated debug session, as it is free. Any time you have an available ready run (even if from an unrelated source), use it to run commands.
+
+If the run you are using to run commands finishes, you can continue debugging by pulling the moments you need into another run. If no ready run exists, start a new debugging session.
+
 ## Finding moments
 
 For a property failure, find its passing and failing moments with `snouty runs search`. On a live run, `snouty runs stream` reports counterexample moments as they happen. `snouty runs logs` shows the moments along a timeline.
