@@ -27,7 +27,7 @@ git push -u origin <branch>
 
 Write the body to a file outside the checkout, such as `/tmp/pr-body-<branch>.md`, so the shell never mangles it and the repo's checks never lint or commit it.
 
-Write prose that explains the change and why. Say what an agent that uses the plugin, or a contributor to this repo, does differently after the change. If nothing changes for them, say so. The `release` skill writes the release notes from the diff, not from this body, so explain the reasoning rather than list every edit.
+Write prose that explains the change and why, as the difference between `main` and the branch. Leave out how the branch got there. Say what an agent that uses the plugin, or a contributor to this repo, does differently after the change. If nothing changes for them, say so. The `release` skill writes the release notes from the diff, not from this body, so explain the reasoning rather than list every edit.
 
 Bullets are fine for listing specific changes. Section headers usually are not. Don't add a `## Summary` header, a `## Test plan` section, or any other template boilerplate. Don't list outstanding work, test checklists, or follow-up TODOs.
 

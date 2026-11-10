@@ -81,11 +81,9 @@ Invoke the `watch-pr` skill with the PR's number. It runs the watcher, and says 
 
 For a release PR, also:
 
-- A fix that isn't the notes or the version, like a lint rule or a script, goes in its own commit, and the PR body says why.
+- A fix that isn't the notes or the version, like a lint rule or a script, can go in the release PR. Say why in the PR body.
 - If someone who can write to the repository asks to abort the release, close the PR and stop.
 - When the watcher prints `merged`, go on to step 6. When it prints `closed without merge`, stop.
-
-If you can't keep watching, say that the release isn't done, and ask the user to tell you when they've merged or commented.
 
 ## 6. Tag the merge commit
 

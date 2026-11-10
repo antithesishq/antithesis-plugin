@@ -30,7 +30,7 @@ In both cases, restate the acceptance criteria in one or two sentences before yo
 
 ## 2. Implement
 
-Follow `AGENTS.md`. Commit as you go.
+Follow `AGENTS.md`. Commit as you go. Once the PR exists, add commits and merge `origin/main` rather than amend or rebase, so a reviewer can see what changed since they last looked. The squash merge leaves one commit on `main` either way.
 
 - A change to `plugins/antithesis/skills/` changes what every agent that uses the plugin does. Read the whole page you change, and every page that links to it, so the pages still agree. When you change how the plugin uses snouty, check the command against `snouty --help` and `snouty docs`.
 - Keep to the token budgets as `AGENTS.md` describes.

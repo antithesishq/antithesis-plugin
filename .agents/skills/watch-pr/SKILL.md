@@ -97,13 +97,15 @@ Never pass `--paginate` to `gh api`. Behind a proxy set as gh's host, the first 
 
   Reproduce it with the check's own task, such as `mise run check:lychee`, fix it, update the description (step 4), and push. A check that failed for a transient reason, like a link that was briefly down, can be rerun with `gh api -X POST repos/{owner}/{repo}/actions/jobs/<job id>/rerun`.
 
-- **Conflict**: rebase onto `origin/main`, resolve it, rerun the checks, and push with `--force-with-lease`. A base that moves without a conflict needs nothing.
+- **Conflict**: merge `origin/main` into the branch, resolve it, rerun the checks, and push. A base that moves without a conflict needs nothing.
 
 - **Base changed**: someone retargeted the PR. Compare the branch with the new base, and update the description (step 4) if what the PR contains has changed.
 
 - **Reopened**: the PR closed earlier, and someone opened it again. Keep watching it.
 
 - **Merged or closed**: stop work on that PR. The script exits on its own once every watched PR reaches this state.
+
+Push every change as a new commit, and bring in the base with a merge. Never amend, rebase or force-push a branch that has a PR: the reviewer compares the branch with what they last reviewed, and a rewritten history takes that away. The extra commits cost nothing, because the squash merge leaves one commit on `main`.
 
 Don't merge a PR yourself. After you react to a batch, tell the user in a line or two what came in and what you did, then start the watcher again.
 
@@ -113,7 +115,7 @@ Reviewers read the PR description, and the squash commit on `main` takes the PR'
 
 Before each push, compare the title and description with the whole branch: `git diff origin/main...HEAD`. Update them when the push changes the behavior, the scope or the reason: a reviewer asks for a different approach, a CI fix changes behavior, or the push adds or removes part of the change. A push that only fixes formatting, a typo or a lint finding needs no update.
 
-Don't add a change log or an "Update:" section. The commits and review threads keep that history. Follow step 3 of the `open-pr` skill.
+The description says what the PR does to `main`, as if the branch had been written in one pass. Leave out the earlier versions of the diff. When a reviewer asks for a different approach, rewrite the description for the new approach, and drop the old one from it. Don't add a change log or an "Update:" section: the commits and review threads keep that history. Only for a very large change, a sentence on an approach you tried and why you dropped it can stay, when it would save the next reader from trying it. Follow step 3 of the `open-pr` skill.
 
 Copy the current description to a file outside the checkout, edit it, and write it back over REST:
 
