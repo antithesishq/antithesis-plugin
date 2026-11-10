@@ -60,6 +60,7 @@ import json
 import os
 import re
 import subprocess
+import tempfile
 import time
 from collections.abc import Iterator
 from itertools import count
@@ -79,6 +80,9 @@ GH_FAILED_POLLS = 20
 
 # In a PR's seen events once its merge or close has printed.
 CLOSED = "closed"
+
+# Failed write-access lookups in a row, by event key.
+lookup_failures: dict[str, int] = {}
 
 # The check verdict of each PR, and when the polls began to agree on it.
 verdict_since: dict[int, tuple[str, float]] = {}
@@ -314,13 +318,20 @@ def poll_pr(
             seen.add(key)
             continue
         ok = trusted(slug, item.get("user") or {}, write_access)
-        seen.add(key)
-        # A lookup that fails can fail on every poll, so the event prints now,
-        # and the reader treats it as untrusted.
         if ok is None:
-            emit(f"{line} [write access unknown]")
-        else:
-            emit(line if ok else f"{line} [no write access]")
+            # A short outage clears on a later poll. A lookup that fails on
+            # every poll would hide the event for good, so after
+            # GH_FAILED_POLLS failures it prints, and the reader treats it as
+            # untrusted.
+            lookup_failures[key] = lookup_failures.get(key, 0) + 1
+            if lookup_failures[key] < GH_FAILED_POLLS:
+                continue
+            line = f"{line} [write access unknown]"
+        elif not ok:
+            line = f"{line} [no write access]"
+        lookup_failures.pop(key, None)
+        seen.add(key)
+        emit(line)
 
     failure_results = {
         "failure",
@@ -383,9 +394,15 @@ def default_state_dir() -> Path:
     directories. Watchers in other checkouts keep their own state, so each of
     them prints every event.
     """
-    top = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=False
-    ).stdout.strip()
+    try:
+        top = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=False,
+        ).stdout.strip()
+    except OSError:  # no git on PATH
+        top = ""
     checkout = str(Path(top or Path.cwd()).resolve())
     return state_root() / hashlib.sha256(checkout.encode()).hexdigest()[:12]
 
@@ -476,11 +493,11 @@ def main() -> int:
             state[pr] = load(state_file(state_root(), slug, pr))
     # Find an unwritable state directory before the first event prints, with
     # a scratch file, so a --replay run keeps the saved state until it polls.
-    probe = state_dir / ".probe"
     try:
         state_dir.mkdir(parents=True, exist_ok=True)
-        probe.write_text("")
-        probe.unlink()
+        # A name of its own, so watchers that start together do not collide.
+        with tempfile.NamedTemporaryFile(dir=state_dir):
+            pass
     except OSError as e:
         return cannot_save(e)
 
