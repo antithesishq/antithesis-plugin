@@ -17,7 +17,7 @@ Every moment on the branch is in the file, including the failure moment, so reus
 
 Snouty strips ANSI escape codes from `output_text` and adds an `active_faults` field to every event (see "Active faults" below).
 
-Some logs are very large. A download can take 10 minutes or more, and you cannot know a log's size in advance. Run the download with a timeout.
+Some logs are very large. A download can take 10 minutes or more, and you cannot know a log's size in advance. Run the download with a timeout. If a run is ready, run commands at the moment while it downloads.
 
 ## Large logs
 
