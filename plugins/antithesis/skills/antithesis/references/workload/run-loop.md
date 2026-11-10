@@ -2,7 +2,7 @@
 
 ## 1. Launch a run
 
-Start with a short run, `--max-compute-hours 12` on the standard tier. As the workload passes the checks below and you trust it more, raise it toward 24. A longer run shows whether the workload holds up with more compute. You're done iterating when a 24-hour run passes these checks. Follow `references/launch/MODULE.md` with the launcher and fault flags in `references/workload/harness.md`, and read the run with the triage module.
+Start with a short run, `--max-compute-hours 12` on the standard tier. As the workload passes the checks below and you trust it more, raise it toward 24. A longer run shows whether the workload holds up with more compute. You're done iterating when a 24-hour run passes these checks. Follow `references/launch/MODULE.md` with the launcher and fault flags in `references/workload/harness.md`, and follow the run live with the triage module's monitor mode.
 
 ## 2. Keep setup fast
 
@@ -12,6 +12,8 @@ If a run fails because the driver didn't report setup complete within `--setup-t
 
 ## 3. Check the results
 
+Check them as they arrive, not once the run ends. A result that is final on an `in_progress` run (`references/triage/properties.md`) is final for the run.
+
 - **Instrumentation.** The instrumentation properties pass ("Checking it" in `references/workload/instrumentation.md`).
 - **The workload starts.** `the workload starts` passes. If it fails, the first command didn't run, or the driver didn't see `/workload-active`. `snouty runs events <run_id> first_start_workload` shows whether the first command ran.
 - **Behavior that needs faults.** The exploration assertions on situations and code that need faults, in the driver and in the SUT ("Exploration assertions" in `references/properties/assertions.md`), are reached, and eventuallys fire and find the system recovered.
@@ -19,7 +21,7 @@ If a run fails because the driver didn't report setup complete within `--setup-t
 
 ## 4. Conclude before the next run
 
-Classify each failing property as a SUT bug, a workload bug or expected, with the evidence for each, before you change anything or launch again. Follow the triage module. Fix workload bugs first. Tell the user about SUT bugs, and keep their assertions. Never relaunch an unchanged workload to see whether a failure repeats.
+Classify each failing property as a SUT bug, a workload bug or expected, with the evidence for each, before you change anything or launch again. Follow the triage module. Fix workload bugs first. Tell the user about SUT bugs, and keep their assertions. Never relaunch an unchanged workload to see whether a failure repeats. You don't need the run to finish to conclude: once a final failure shows a workload bug, fix it and go to step 5.
 
 ## 5. Fix and repeat
 
