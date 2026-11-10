@@ -137,7 +137,6 @@ def paginate(path: str) -> Iterator[Any]:
 # (claude[bot] onto "claude"), so only the id tells the two apart.
 ALLOWED_ACCOUNT_IDS = {
     209825114,  # claude[bot], github.com/apps/claude
-    223894421,  # github-code-quality[bot], github.com/apps/github-code-quality
 }
 
 
