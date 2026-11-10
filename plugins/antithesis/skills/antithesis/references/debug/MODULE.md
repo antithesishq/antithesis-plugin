@@ -8,9 +8,7 @@ For a property failure, find its passing and failing moments with `snouty runs s
 
 ## Choosing a run to execute commands in
 
-Running commands in a ready run costs nothing extra, and shows the system's real state, which can confirm or overturn what the logs suggest. So when a run is ready, run commands even if the logs seem to explain the failure.
-
-Any ready run can execute commands, but a run that already has the moment warm saves rewarming time:
+Running commands in any ready run costs nothing extra and shows the system's real state, so do it even if the logs seem to explain the failure. A run that already has the moment warm saves rewarming time:
 
 1. Prefer a ready run that has already rewarmed the moment. Check with `snouty runs search --count <run_id> 'filter(ev => ev.moment.input_hash == "<hash>")'`; non-zero means every moment of that branch is warm.
 2. Prefer reusing a ready run over starting a new one.
