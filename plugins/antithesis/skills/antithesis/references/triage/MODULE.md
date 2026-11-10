@@ -40,7 +40,7 @@ Whoever downloads a log reads `references/triage/logs.md` first. In `monitor` an
 
 1. Pick the first failing example and find its moment. If the counterexample has no `moment` (properties that report a value, see `references/triage/properties.md`), the counterexample value is the evidence; skip to step 5.
 2. Download the log for that moment and analyze it locally.
-3. If a run is ready, run commands at the failing moment. See `references/debug/MODULE.md`.
+3. If there is an available ready run, run commands at the failing moment. See `references/debug/MODULE.md`.
 4. If you aren't sure what caused the failure, find more moments for the same property with `snouty runs search -n 999` and compare them. Passing examples are useful for finding what differs between success and failure.
 5. Cross-reference the log and command output against the source code of the system under test and the workload.
 6. Work out the timeline of events that led up to the failure and its root cause.
@@ -63,6 +63,6 @@ Follow `references/triage/issues.md` to report what you found.
 Check each report against these:
 
 - Every property status you report came from the properties data or the stream, not inference.
-- Conclusions about failures with moments rest on evidence from the run, with specific log lines, command output if a run was ready, timestamps and property names.
+- Conclusions about failures with moments rest on evidence from the run, with specific log lines, command output, timestamps and property names.
 - The report separates what the run shows from what you interpret.
 - A claim that a binary isn't instrumented follows `references/triage/instrumentation.md` and doesn't rest only on the deduplicated examples of `Software was instrumented`.
