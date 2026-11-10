@@ -11,5 +11,6 @@
   "privacyPolicyUrl": "https://antithesis.com/legal/privacy_policy/",
   "termsOfServiceUrl": "https://antithesis.com/legal/terms_of_use/",
   "icon": "./assets/logo.svg",
+  "mcpServers": "./mcp.json",
   "keywords": ["antithesis", "testing", "property based testing"]
 }
