@@ -38,13 +38,21 @@ def references(text: str) -> Iterator[tuple[int, str]]:
 # at another skill's SKILL.md, as in `"Write the title and body" in the \`open-pr\` skill`, or,
 # with neither, at the page it's on. A step number, as in "step 2", is never a reference.
 # Quote any other literal text that starts with a capital letter in backticks, not double quotes.
+# A page path with a placeholder, such as `references/workload/languages/<language>.md`, points at
+# every page that fits it.
 _QUOTED = re.compile(r'"([A-Z][^"]{0,80})"')
-_PAGE_TARGET = re.compile(r"(?: step| section)? (?:in|on|of) (?:the [a-z ]+ )?`([^`]+\.md)`")
-_SKILL_TARGET = re.compile(r"(?: step| section)? (?:in|on|of) the `([a-z0-9-]+)` skill")
+_PAGE_TARGET = re.compile(r"(?: step| section| row)? (?:in|on|of) (?:the [a-z ]+ )?`([^`]+\.md)`")
+_SKILL_TARGET = re.compile(r"(?: step| section| row)? (?:in|on|of) the `([a-z0-9-]+)` skill")
 _STEP_NUMBER = re.compile(r"\b[Ss]teps? \d+")
 _CODE_SPAN = re.compile(r"`[^`]*`")
 _HEADING = re.compile(r"^#+\s+(?:\d+\.\s+|Step \d+:\s+)?(.+?)\s*$")
 _LIST_LABEL = re.compile(r"^\s*(?:\d+\.|[-*])\s+\*\*(.+?)\*\*")
+_TABLE_ROW = re.compile(r"^\|\s*([^|]+?)\s*\|")
+_TABLE_RULE = re.compile(r"^\|[\s:|-]+\|$")
+# An image placeholder in a Dockerfile, such as `<Rust build image>`, names a row of the
+# skill's image table.
+IMAGES_PAGE = "references/workload/images.md"
+_IMAGE_PLACEHOLDER = re.compile(r"<([A-Z][A-Za-z ]* image)>")
 
 
 def _prose_lines(text: str) -> Iterator[tuple[int, str, str]]:
@@ -60,14 +68,29 @@ def _prose_lines(text: str) -> Iterator[tuple[int, str, str]]:
 
 def section_names(text: str) -> set[str]:
     """Every name a section reference can point at on a page: its headings, without a leading
-    number such as "2. " or "Step 2: ", and the bold label opening each list item."""
+    number such as "2. " or "Step 2: ", the bold label opening each list item, and the first
+    cell of each table row below a table's header."""
     names: set[str] = set()
+    header = False
     for _, line, _ in _prose_lines(text):
         if m := _HEADING.match(line):
             names.add(m.group(1))
         elif m := _LIST_LABEL.match(line):
             names.add(m.group(1).strip().rstrip(":,."))
+        elif _TABLE_RULE.match(line.strip()):
+            header = True
+        elif header and (m := _TABLE_ROW.match(line)):
+            names.add(m.group(1).strip("`* "))
+        else:
+            header = False
     return names
+
+
+def image_placeholders(text: str) -> Iterator[tuple[int, str]]:
+    """Yield (line number, row label) for each image placeholder, in prose or code."""
+    for number, line in enumerate(text.splitlines(), 1):
+        for m in _IMAGE_PLACEHOLDER.finditer(line):
+            yield number, m.group(1)
 
 
 def section_references(text: str) -> Iterator[tuple[int, str, str | None, str | None]]:

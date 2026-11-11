@@ -4,20 +4,7 @@
 
 Antithesis instrumentation records nothing locally, so measure local coverage with the language's own tool. Add a `docker-compose.coverage.yaml` that overrides each system service with a coverage Dockerfile and a shared `coverage` volume, one directory per service. Client containers, if a pattern adds them, count as system services: the client library is code under test.
 
-### Rust
-
-- In the build stage, run `rustup component add llvm-tools-preview` and build with `RUSTFLAGS="-Cinstrument-coverage -Cllvm-args=-runtime-counter-relocation"`. `RUSTFLAGS` replaces any rustflags set through cargo config, so the Antithesis flags drop out of this build.
-- Set `LLVM_PROFILE_FILE=/coverage/<service>/%c%m.profraw`. `%c` writes counters as they change, so the data survives a killed process. `%m` merges restarts into one file. Don't use `%p`: every container's process is PID 1, so a restart overwrites the data.
-
-### Go
-
-- Build with `go build -cover -covermode=atomic -coverpkg=./...`, and set `GOCOVERDIR=/coverage/<service>`.
-- Go writes counters only when `main` returns or the program calls `os.Exit`.
-
-### Other languages
-
-- Use the standard tool: clang's `-fprofile-instr-generate -fcoverage-mapping` for C and C++ (same `LLVM_PROFILE_FILE` rules as Rust), JaCoCo for Java, `c8` for Node, `coverage.py` for Python.
-- Check that the data survives `docker compose stop` and a container restart before trusting it.
+Build each service as "Local coverage" in `references/workload/languages/<language>.md` says, for its language. Check that the data survives `docker compose stop` and a container restart before trusting it.
 
 ## 2. Run the workload
 
@@ -55,7 +42,7 @@ If setup complete never arrives, the driver stopped in its startup. `docker comp
 
 - **Startup.** `the workload starts` was reached.
 - **Actions.** Every action reaches its intended outcome sometimes, and none is routinely slow.
-- **Assertions.** Only sometimes and reachable assertions on situations or code that need faults are unmet, which is expected without faults. This lists every assertion that would fail in a run:
+- **Assertions.** Only `assert_sometimes` and `assert_reachable` assertions on situations or code that need faults are unmet, which is expected without faults. This lists every assertion that would fail in a run:
 
   ```bash
   jq -rs '[.[].antithesis_assert // empty] | group_by(.message)[]
@@ -64,7 +51,7 @@ If setup complete never arrives, the driver stopped in its startup. `docker comp
     | "\(.[0].display_type)\t\(.[0].message)"' sdk*.jsonl
   ```
 
-  Any other unmet sometimes or reachable assertion means the workload doesn't reach that situation or code: change the actions or their mix.
+  Any other unmet `assert_sometimes` or `assert_reachable` means the workload doesn't reach that situation or code: change the actions or their mix.
 - **Eventually.** Run once more with the eventually on and its direct call set to a minute or two of workload. The driver logs that its assertions start and that it's ending the timeline, then exits with status 0 (`docker compose ps -a`), and the eventually's assertions pass. `docker compose cp` still copies `sdk.jsonl` from the stopped container.
 - **Shutdown.** `docker stop` on a system container shuts its process down cleanly, without a kill.
 - **Debug tools.** Each debug tool ("Debug tools" in `references/workload/harness.md`) runs in its container. Check them in the session above, before `docker compose stop`, such as `docker compose exec -T <service> jq --version`.
@@ -72,7 +59,7 @@ If setup complete never arrives, the driver stopped in its startup. `docker comp
 
 ## 4. Read the coverage
 
-After the system stops, run the language's coverage tool on the `coverage` volume, and list the functions in the system's own source that never ran: `llvm-cov` for Rust, C and C++, and `go tool cover` for Go.
+After the system stops, run the language's coverage tool on the `coverage` volume, and list the functions in the system's own source that never ran.
 
 Error-handling and recovery code looks unreached without faults. Don't chase it locally: put exploration assertions on it ("Exploration assertions" in `references/properties/assertions.md`), and check them in the Antithesis runs (`references/workload/run-loop.md`).
 

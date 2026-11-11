@@ -14,6 +14,7 @@ import tempfile
 from collections.abc import Callable
 from pathlib import Path
 
+import images
 import references
 import release
 import tokens
@@ -269,6 +270,14 @@ def pyright() -> int:
         f"{summary.get('warningCount', '?')} warnings"
     )
     return result.returncode
+
+
+@check
+def images_() -> int:
+    if OFFLINE:
+        print("Skipped offline: the image table is checked against Debian and Docker Hub. CI checks it.")
+        return 0
+    return images.main(write=False)
 
 
 @check

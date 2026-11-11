@@ -14,7 +14,7 @@ If a run fails because the driver didn't report setup complete within `--setup-t
 
 Check them as they arrive, not once the run ends. A result that is final on an `in_progress` run (`references/triage/properties.md`) is final for the run.
 
-- **Instrumentation.** The instrumentation properties pass ("Checking it" in `references/workload/instrumentation.md`).
+- **Instrumentation.** The instrumentation properties pass ("Instrument the software" in `references/workload/languages.md`).
 - **The workload starts.** `the workload starts` passes. If it fails, the first command didn't run, or the driver didn't see `/workload-active`. `snouty runs events <run_id> first_start_workload` shows whether the first command ran.
 - **Behavior that needs faults.** The exploration assertions on situations and code that need faults, in the driver and in the SUT ("Exploration assertions" in `references/properties/assertions.md`), are reached, and eventuallys fire and find the system recovered.
 - **Patterns.** Each pattern you adopted passes its own run checks.
@@ -25,4 +25,4 @@ Classify each failing property as a SUT bug, a workload bug or expected, with th
 
 ## 5. Fix and repeat
 
-Launch one run at a time, unless the user asks for more. If the previous run you launched is still going, cancel it with `snouty runs cancel <run_id>` before you launch the next: it tests the old workload. Run the local loop (`references/workload/local-loop.md`) again after every change, then launch the next run. A few runs are usually enough. Expect a short run to miss sometimes assertions for rare conditions, but not common ones.
+Launch one run at a time, unless the user asks for more. If the previous run you launched is still going, cancel it with `snouty runs cancel <run_id>` before you launch the next: it tests the old workload. Run the local loop (`references/workload/local-loop.md`) again after every change, then launch the next run. A few runs are usually enough. Expect a short run to miss `assert_sometimes` assertions for rare conditions, but not common ones.

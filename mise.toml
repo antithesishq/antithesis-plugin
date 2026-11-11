@@ -67,7 +67,7 @@ run = "{{vars.check}} tokens"
 env.SKILL_TOKEN_BUDGET = "{{ get_env(name='SKILL_TOKEN_BUDGET', default='2600') }}"
 env.MODULE_TOKEN_BUDGET = "{{ get_env(name='MODULE_TOKEN_BUDGET', default='20000') }}"
 # Per-module budgets that differ from MODULE_TOKEN_BUDGET, as `name=tokens,...`.
-env.MODULE_TOKEN_BUDGETS = "{{ get_env(name='MODULE_TOKEN_BUDGETS', default='') }}"
+env.MODULE_TOKEN_BUDGETS = "{{ get_env(name='MODULE_TOKEN_BUDGETS', default='workload=23000,patterns=23000,properties=24000') }}"
 # tiktoken downloads its encoding once. Keep it out of $TMPDIR, so it survives a
 # reboot and the check keeps working offline.
 env.TIKTOKEN_CACHE_DIR = "{{ get_env(name='XDG_CACHE_HOME', default=env.HOME ~ '/.cache') }}/tiktoken"
@@ -88,6 +88,14 @@ run = "{{vars.check}} versions"
 [tasks."check:changelog"]
 description = "A new version has changelog notes"
 run = "{{vars.check}} changelog"
+
+[tasks."check:images"]
+description = "The workload's image table is current for Debian stable, and Docker Hub has every tag (skipped when CHECK_OFFLINE is set)"
+run = "{{vars.check}} images"
+
+[tasks."fix:images"]
+description = "Rewrite the workload's image table for the current Debian stable release"
+run = "uv run --quiet --locked scripts/images.py --write"
 
 [tasks."check:schema"]
 description = "The Agent Plugins manifest matches its schema (skipped when CHECK_OFFLINE is set)"
