@@ -4,7 +4,7 @@ Input: a system to test in Antithesis, and optionally the behaviors to focus on.
 
 ## Compute budget
 
-Runs launched while working on the workload spend the task's compute budget, from the user or the default in `SKILL.md`. Launch nothing beyond the workload unless the task asks for it.
+Runs launched while working on the workload spend the task's compute budget, from the user or the default in `SKILL.md`.
 
 ## What a workload is
 
