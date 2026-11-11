@@ -7,14 +7,16 @@ description: Release the Antithesis plugin. Use when the user asks to "release t
 
 You drive a release end to end, and watch every step until it finishes:
 
-1. Open a pull request that bumps the plugin's version and adds its notes to `CHANGELOG.md`, and watch its checks.
+1. Open a pull request, from a `release/vX.Y.Z` branch, that bumps the plugin's version and adds its notes to `CHANGELOG.md`, and watch its checks.
 2. Wait while the user reviews the PR and merges it.
-3. Tag the commit that the merge put on the default branch as `vX.Y.Z`, and push the tag.
-4. Watch the Release workflow (`.github/workflows/release.yml`). The tag starts it: it verifies the tag, runs every check, and creates the GitHub release with that version's `CHANGELOG.md` section as its notes.
+3. Watch the Tag release workflow (`.github/workflows/tag-release.yml`). The merge of a `release/` branch starts it: it tags the merge commit as `vX.Y.Z`, and runs the Release workflow (`.github/workflows/release.yml`) on the tag.
+4. Watch the Release workflow. It verifies the tag, runs every check, and creates the GitHub release with that version's `CHANGELOG.md` section as its notes.
 
-Only a pushed tag makes a GitHub release. CI never does, whatever version the default branch is at.
+Only a tag makes a GitHub release. CI never does, whatever version the default branch is at.
 
-Users install the plugin from the default branch, and Claude Code and Codex update it when its version changes. So merging the PR ships the version to every user, and the tag and release record it. Tag right after the merge.
+Users install the plugin from the default branch, and Claude Code and Codex update it when its version changes. So merging the PR ships the version to every user, and the tag and release record it.
+
+The Release PR workflow (`.github/workflows/release-pr.yml`) opens a release PR every weekday on its own, when CI passed on the default branch and the plugin changed since the last release. It has Claude follow "Pick and check the version", "Write the notes" and "Bump the version", then opens the PR itself.
 
 A release is `X.Y.Z`. A release candidate is `X.Y.Z-rc.N`, and follows the same steps: its PR bumps the default branch to the candidate, so every user gets it too, and its GitHub release is a pre-release. Below, `X.Y.Z` stands for the whole version, with its `-rc.N` for a candidate.
 
@@ -27,6 +29,7 @@ Before changing anything, check:
 - The version is `MAJOR.MINOR.PATCH` or `MAJOR.MINOR.PATCH-rc.N`, and higher than the current version. A candidate is lower than its release: `0.1.0-rc.2` is above `0.1.0-rc.1` and `0.0.9`, and below `0.1.0`.
 - `git tag -l vX.Y.Z` and `gh release view vX.Y.Z` find nothing.
 - `git status --porcelain` is empty, and you're on the default branch, up to date with the remote.
+- No release PR is open: `gh pr list --state open --json url,headRefName --jq '.[] | select(.headRefName | startswith("release/")) | .url'` prints nothing.
 
 If a check fails, tell the user and stop.
 
@@ -83,30 +86,19 @@ For a release PR, also:
 
 - A fix that isn't the notes or the version, like a lint rule or a script, can go in the release PR. Say why in the PR body.
 - If someone who can write to the repository asks to abort the release, close the PR and stop.
-- When the watcher prints `merged`, go on to "Tag the merge commit". When it prints `closed without merge`, stop.
+- When the watcher prints `merged`, go on to "Watch the tag and the release". When it prints `closed without merge`, stop.
 
-## 6. Tag the merge commit
+## 6. Watch the tag and the release
 
-Tag the commit that the PR's merge put on the default branch, `gh pr view N --json mergeCommit --jq .mergeCommit.oid`. Never tag the branch's head: another PR can land right after this one, and it must not be released.
+Get the commit that the PR's merge put on the default branch, `gh pr view N --json mergeCommit --jq .mergeCommit.oid`. Tag release tags that commit, never the branch's head: another PR can land right after this one, and it must not be released. Before it tags, it runs `scripts/verify-release.py vX.Y.Z <merge commit> origin/main`, which reads the files at the commit, and checks that it is on the default branch, that every manifest has the version, that `CHANGELOG.md` has its notes, and that the tag isn't taken or released.
 
-```bash
-git fetch origin
-scripts/verify-release.py vX.Y.Z <merge commit> origin/main
-git tag -a vX.Y.Z <merge commit> -m "antithesis plugin X.Y.Z"
-git push origin refs/tags/vX.Y.Z
-```
+Find each run with `gh run list --workflow <file> --commit <merge commit> --json databaseId,headBranch,status`, first `tag-release.yml`, then `release.yml`, whose `headBranch` is the tag. Each can take a few seconds to appear.
 
-The script reads the files at the commit, and checks that it is on the default branch, that every manifest has the version, that `CHANGELOG.md` has its notes, and that the tag isn't taken or released. If it fails, tell the user and stop. Don't push the tag.
-
-## 7. Watch the release
-
-Find the Release run for the tag with `gh run list --workflow release.yml --commit <merge commit> --json databaseId,headBranch,status`. It can take a few seconds to appear.
-
-Watch it with `gh api`, not `gh run watch` or `gh run view`. They fetch jobs from GitHub's absolute `jobs_url`, which bypasses a proxy set as gh's host. Every 30 seconds or so, check:
+Watch a run with `gh api`, not `gh run watch` or `gh run view`. They fetch jobs from GitHub's absolute `jobs_url`, which bypasses a proxy set as gh's host. Every 30 seconds or so, check:
 
 - the run: `gh api repos/{owner}/{repo}/actions/runs/<id> --jq '.status, .conclusion'`, until `status` is `completed`
 - its jobs: `gh api 'repos/{owner}/{repo}/actions/runs/<id>/jobs?per_page=100' --jq '.jobs[] | [.id, .name, .status, .conclusion] | @tsv'`
 
-When it passes, check that `targetCommitish` from `gh release view vX.Y.Z --json url,targetCommitish,isPrerelease` is the merge commit, and that it's a pre-release exactly when the version is a candidate. Give the user the release's URL.
+When Release passes, check that `targetCommitish` from `gh release view vX.Y.Z --json url,targetCommitish,isPrerelease` is the merge commit, and that it's a pre-release exactly when the version is a candidate. Give the user the release's URL.
 
-If its conclusion isn't `success`, read each failed job's log with `gh api --allow-escape-sequences repos/{owner}/{repo}/actions/jobs/<job id>/logs | sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | tail -100` (gh refuses to print the log's color codes without the flag, and `sed` strips them), and tell the user what failed. A check that failed for a transient reason, like a link that was briefly down, can be rerun with `gh api -X POST repos/{owner}/{repo}/actions/runs/<id>/rerun-failed-jobs`. Then watch the run again. Never move or delete a pushed tag without asking the user.
+If a run's conclusion isn't `success`, read each failed job's log with `gh api --allow-escape-sequences repos/{owner}/{repo}/actions/jobs/<job id>/logs | sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | tail -100` (gh refuses to print the log's color codes without the flag, and `sed` strips them), and tell the user what failed. A check that failed for a transient reason, like a link that was briefly down, can be rerun with `gh api -X POST repos/{owner}/{repo}/actions/runs/<id>/rerun-failed-jobs`. Then watch the run again. When Tag release failed, don't tag the commit yourself unless the user asks. Never move or delete a pushed tag without asking the user.

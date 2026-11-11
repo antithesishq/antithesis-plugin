@@ -1,10 +1,12 @@
 name: Release
 
-# The release skill tags the merged release PR's commit on main, and pushing that tag runs
-# this. Nothing else releases: a version bump on main alone does not.
+# Tagging the merged release PR's commit on main runs this: a pushed tag starts it, and
+# tag-release.yml, whose tag push can't, dispatches it on the tag. Nothing else releases: a
+# version bump on main alone does not, and verify rejects a dispatch on anything but a tag.
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 concurrency:
   group: release-${{ github.ref_name }}
