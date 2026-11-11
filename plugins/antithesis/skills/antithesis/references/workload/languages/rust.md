@@ -29,7 +29,7 @@ RUN cargo build --release \
 
 ## Local coverage
 
-- In the build stage, run `rustup component add llvm-tools-preview` and build with `RUSTFLAGS="-Cinstrument-coverage -Cllvm-args=-runtime-counter-relocation"`, without the Antithesis `--config` options.
+- In the build stage, run `rustup component add llvm-tools-preview` and build with the same command and `RUSTFLAGS="-Cinstrument-coverage -Cllvm-args=-runtime-counter-relocation"` set. `RUSTFLAGS` replaces the Antithesis rustflags, and the build target, so the binary's path, stays the same.
 - Set `LLVM_PROFILE_FILE=/coverage/<service>/%c%m.profraw`. `%c` writes counters as they change, so the data survives a killed process. `%m` merges restarts into one file. Don't use `%p`: every container's process is PID 1, so a restart overwrites the data.
 - Read it with `llvm-cov`.
 
