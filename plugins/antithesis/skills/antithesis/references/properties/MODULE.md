@@ -32,7 +32,7 @@ Then add exploration assertions on the situations that lead up to the guarantee 
 
 ### 3. Check it locally
 
-Run the local loop in `references/workload/local-loop.md`. Its assertions should pass. Then break the condition on purpose, for example by applying a transfer's debit without its credit, and confirm they fail. Undo the change.
+Run the local loop in `references/workload/local-loop.md`. Its assertions should pass, except exploration assertions on situations that need faults. Then break the condition on purpose, for example by applying a transfer's debit without its credit, and confirm they fail. Undo the change.
 
 If an assertion fails without a change, read the system's code. A broken promise is a real bug: keep the assertion. A check stricter than the guarantee, such as treating a transfer whose response timed out as never applied, needs fixing. Otherwise, keep the assertion, and report the failure to the user as a possible bug for them to judge.
 
