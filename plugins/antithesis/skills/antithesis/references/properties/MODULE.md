@@ -32,9 +32,15 @@ Then add exploration assertions on the situations that lead up to the guarantee 
 
 ### 3. Check it locally
 
-Run the local loop in `references/workload/local-loop.md`. Its assertions should pass, except exploration assertions on situations that need faults. Then break the condition on purpose, for example by applying a transfer's debit without its credit, and confirm the guarantee's assertions fail. Undo the change.
+The local check makes the short run count. It confirms that each assertion is implemented correctly, matches a real guarantee of the system, and should be reachable in Antithesis. Many assertions, such as those that need faults, can't be reached locally, and that's expected.
 
-If an assertion fails without a change, read the system's code. A broken promise is a real bug: keep the assertion. A check stricter than the guarantee, such as treating a transfer whose response timed out as never applied, needs fixing. Otherwise, keep the assertion, and report the failure to the user as a possible bug for them to judge.
+Run the local loop in `references/workload/local-loop.md`, and check:
+
+- **It's correct.** If the guarantee's check runs locally, break the condition on purpose, for example by applying a transfer's debit without its credit, confirm its assertion fails, and undo the change. If it doesn't run locally, read the check against the code whose output it judges.
+- **It matches the guarantee.** If an assertion fails without a change, read the system's code. A broken promise is a real bug: keep the assertion. A check stricter than the guarantee, such as treating a transfer whose response timed out as never applied, needs fixing. Otherwise, keep the assertion, and report the failure to the user as a possible bug for them to judge.
+- **It should be reachable.** The exploration assertions leading up to it that don't need faults are met, and the workload sends the requests that lead to the rest.
+
+As soon as the local loop proves inconclusive, stop iterating locally and go on to a short run.
 
 ### 4. Check it in a short run
 
