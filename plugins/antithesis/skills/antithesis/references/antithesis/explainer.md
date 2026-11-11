@@ -37,7 +37,7 @@ A debugger run takes a source run and moment as input and rewarms it into a dete
 
 ## Run readiness
 
-snouty's run commands work on any ready run: status `in_progress:ready` in `snouty runs show`, or wait with `snouty runs wait --until ready`. All except `snouty runs exec` also work on completed runs. To exec at a moment when no run is ready, start a new test or debug run.
+snouty's run commands work on any ready run: status `in_progress:ready` in `snouty runs show`, or wait with `snouty runs wait --until ready`. All except `snouty runs exec` also work on completed runs. To exec at a moment when no run is ready, start a debug run with `snouty debug`.
 
 ## snouty
 
