@@ -8,7 +8,7 @@ Antithesis injects faults throughout every timeline, interleaved with the worklo
 
 ## Scope
 
-Faults act on nodes: containers in Docker Compose, pods in Kubernetes. Everything in a node shares its fate, so two services in one container never see a network fault between them. Put services in separate containers to fault them independently. Two faults act on the whole machine instead: clock skips, and thread pausing.
+Faults act on nodes: containers in Docker Compose, pods in Kubernetes. Everything in a node shares its fate, so two services in one container never see a network fault between them. Put services in separate containers to fault them independently. Three faults act on the whole machine instead: clock skips, CPU modulation and thread pausing.
 
 ## Fault tolerance levels
 
@@ -53,7 +53,7 @@ The log records no event for thread pausing or CPU modulation.
 
 ## Excluding containers
 
-`--fault-exclusions` is a regex over container or pod names. An excluded container gets no faults of its own, but thread pausing and clock skips still reach it, and the nodes it talks to are still faulted. Unix sockets in a volume that containers share are never faulted.
+`--fault-exclusions` is a regex over container or pod names. An excluded container gets no faults of its own, but thread pausing, CPU modulation and clock skips still reach it, and the nodes it talks to are still faulted. Unix sockets in a volume that containers share are never faulted.
 
 ## Pausing faults
 
