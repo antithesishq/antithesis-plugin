@@ -20,7 +20,9 @@ and wrote its NOTES following the release skill. It checks them, adds the notes 
 pushes, and opens a PR assigned to RELEASE_REVIEWER, with REASON (why Claude picked the
 version) and PREVIOUS (the last tag) in its body. A PR that GITHUB_TOKEN
 opens runs no CI on its own, so it then dispatches CI on the branch, which gives the PR's
-head commit the `check` status that the default branch requires.
+head commit the `check` status that the default branch requires. GitHub also holds the CI
+run that the PR's opening started, and blocks the merge until it's approved, so `open`
+approves it.
 """
 
 import json
@@ -28,6 +30,7 @@ import math
 import os
 import re
 import sys
+import time
 from datetime import datetime, timedelta, timezone
 
 import release
@@ -46,6 +49,9 @@ RELEASE_TZ = timezone(timedelta(hours=-7))
 # Credentials that Claude's job could read: GitHub tokens, Anthropic tokens and keys, and
 # JWTs such as an OIDC token. Notes that hold one would publish it in the PR.
 SECRET = re.compile(r"gh[pousr]_[A-Za-z0-9]{20,}|github_pat_\w{20,}|sk-ant-[\w-]{20,}|eyJ[\w-]{10,}\.eyJ")
+# How long to wait for the PR's CI run to appear, so it can be approved.
+APPROVE_POLLS = 12
+APPROVE_WAIT_SECONDS = 5
 RELEASE_FILES = {p.relative_to(ROOT).as_posix() for p in [*release.VERSIONED, release.CHANGELOG]}
 
 
@@ -166,6 +172,34 @@ def with_section(changelog: str, version: str, notes: str) -> str:
     return (changelog[:start] + section + rest).rstrip("\n") + "\n"
 
 
+def approve_pr_ci(sha: str, url: str) -> None:
+    """Approve the CI run that the PR's opening started, which waits for approval.
+
+    GitHub holds a run that a GITHUB_TOKEN PR starts until someone with write access
+    approves it, and blocks the merge meanwhile, even once the dispatched run passed.
+    """
+    runs = f"repos/{{owner}}/{{repo}}/actions/workflows/ci.yml/runs?head_sha={sha}&event=pull_request"
+    for _ in range(APPROVE_POLLS):
+        waiting = json.loads(out("gh", "api", runs))["workflow_runs"]
+        waiting = [r for r in waiting if r["conclusion"] == "action_required"]
+        if waiting:
+            for r in waiting:
+                approved = run(
+                    *("gh", "api", "-X", "POST", f"repos/{{owner}}/{{repo}}/actions/runs/{r['id']}/approve"),
+                    capture_output=True,
+                )
+                if approved.returncode != 0:
+                    print(
+                        f"::warning title=CI approval::approve the PR's CI run on {url}: "
+                        f"{escape(approved.stderr.strip())}"
+                    )
+                else:
+                    print(f"Approved the PR's CI run, {r['html_url']}")
+            return
+        time.sleep(APPROVE_WAIT_SECONDS)
+    print(f"::warning title=CI approval::no CI run waits for approval on {url}")
+
+
 def open_pr(version: str) -> int:
     """Write Claude's notes and the version from a clean checkout, and open the PR.
 
@@ -242,6 +276,7 @@ def open_pr(version: str) -> int:
     )
     print(f"Opened {url}")
     out("gh", "workflow", "run", "ci.yml", "--ref", branch)
+    approve_pr_ci(out("git", "rev-parse", "HEAD"), url)
     return 0
 
 

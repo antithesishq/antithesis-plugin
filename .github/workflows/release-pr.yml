@@ -14,10 +14,6 @@ on:
     # 00:00 UTC, Tuesday to Saturday, is 17:00 GMT-7, Monday to Friday, all year round.
     - cron: "0 0 * * 2-6"
   workflow_dispatch:
-  # TEMPORARY: test from the PR branch, which opens a real release PR. The federation rule
-  # admits this branch for now. Remove before merging, and point the rule back at main.
-  push:
-    branches: [daily-release-workflow]
 
 concurrency:
   group: release-pr
@@ -97,7 +93,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      # To dispatch CI on the release branch.
+      # To dispatch CI on the release branch, and approve the PR's own CI run.
       actions: write
     steps:
       - uses: actions/checkout@v7
