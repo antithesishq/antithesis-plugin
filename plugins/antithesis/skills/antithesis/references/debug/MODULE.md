@@ -24,10 +24,10 @@ Executing commands doesn't keep a run alive. If the run exits while you debug, p
 
 ## Executing commands
 
-Run a bash command at a moment with `snouty runs exec`. Write the run ID, then every option, then `--`, then the input hash, vtime and command. Everything after `--` is positional, so a negative input hash passes as it is, and an option after it fails with `unexpected argument`.
+Run a bash command at a moment with `snouty runs exec`. Pass a negative input hash as it is.
 
 ```bash
-snouty runs exec "$RUN_ID" --container client1 --timeout 5m -- -1469731053185852001 38.52 'ps aux'
+snouty runs exec "$RUN_ID" --container client1 --timeout 5m -1469731053185852001 38.52 'ps aux'
 ```
 
 - **With `--container <name>`,** the command runs in that container and can use the tools available in its image. You cannot install additional tools, as access to the internet is blocked in the Antithesis environment.

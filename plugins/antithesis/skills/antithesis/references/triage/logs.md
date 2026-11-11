@@ -8,10 +8,10 @@ Read `snouty runs logs --help` first. Download the whole timeline, from the root
 mkdir -p /tmp/triage
 LOG=/tmp/triage/log_${INPUT_HASH}.ndjson
 PART=$(mktemp /tmp/triage/part.XXXXXX)
-snouty runs logs "$RUN_ID" --json -- "$INPUT_HASH" > "$PART" && mv "$PART" "$LOG"
+snouty runs logs "$RUN_ID" --json "$INPUT_HASH" > "$PART" && mv "$PART" "$LOG"
 ```
 
-Pass `INPUT_HASH` verbatim, even when it is negative. Write the run ID, then every option, then `--` and the input hash: everything after `--` is positional, so an option there fails. Never start a file name with the hash: commands read a name like `-123.ndjson` as options.
+Pass `INPUT_HASH` verbatim, even when it is negative. Never start a file name with the hash: commands read a name like `-123.ndjson` as options.
 
 Every moment on the branch is in the file, including the failure moment, so reuse `$LOG` for any moment with the same input hash. Other agents may be downloading the same timeline, so download to a `mktemp` file and rename it only when complete; `$LOG` exists only once a download has finished. Find a moment in it by its `moment.vtime`.
 
@@ -37,7 +37,7 @@ Keep the incomplete `$PART` file if you cancel; it never takes the final name, s
 ```bash
 SLICE=/tmp/triage/log_${INPUT_HASH}_from_${BEGIN_VTIME}.ndjson
 PART=$(mktemp /tmp/triage/part.XXXXXX)
-snouty runs logs "$RUN_ID" --json --begin-vtime "$BEGIN_VTIME" -- "$INPUT_HASH" \
+snouty runs logs "$RUN_ID" --json --begin-vtime "$BEGIN_VTIME" "$INPUT_HASH" \
   > "$PART" && mv "$PART" "$SLICE"
 ```
 
