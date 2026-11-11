@@ -29,7 +29,7 @@ Before changing anything, check:
 - The version is `MAJOR.MINOR.PATCH` or `MAJOR.MINOR.PATCH-rc.N`, and higher than the current version. A candidate is lower than its release: `0.1.0-rc.2` is above `0.1.0-rc.1` and `0.0.9`, and below `0.1.0`.
 - `git tag -l vX.Y.Z` and `gh release view vX.Y.Z` find nothing.
 - `git status --porcelain` is empty, and you're on the default branch, up to date with the remote.
-- No release PR is open: `gh pr list --state open --limit 1000 --json url,headRefName --jq '.[] | select(.headRefName | startswith("release/")) | .url'` prints nothing.
+- No release PR is open: `gh pr list --state open --limit 1000 --json url,headRefName,isCrossRepository --jq '.[] | select((.headRefName | startswith("release/")) and (.isCrossRepository | not)) | .url'` prints nothing.
 
 If a check fails, tell the user and stop.
 

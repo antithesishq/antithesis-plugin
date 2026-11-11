@@ -55,9 +55,15 @@ def output(**values: str) -> None:
 
 def open_release_prs() -> list[str]:
     prs = json.loads(
-        out("gh", "pr", "list", "--state", "open", "--limit", "1000", "--json", "url,headRefName")
+        out(
+            *("gh", "pr", "list", "--state", "open", "--limit", "1000"),
+            *("--json", "url,headRefName,isCrossRepository"),
+        )
     )
-    return [pr["url"] for pr in prs if pr["headRefName"].startswith("release/")]
+    # A fork's branch is named without its owner, so a fork could otherwise block releases.
+    return [
+        pr["url"] for pr in prs if pr["headRefName"].startswith("release/") and not pr["isCrossRepository"]
+    ]
 
 
 # A link that's briefly down fails only this check. CI on a push tolerates it, and the
