@@ -24,7 +24,7 @@ Executing commands doesn't keep a run alive. If the run exits while you debug, p
 
 ## Executing commands
 
-Run a bash command at a moment with `snouty runs exec`. Pass a negative input hash as it is.
+Run a bash command at a moment with `snouty runs exec`. Pass a negative input hash as it is. Never use `--`: everything after it is positional, so a later `--container client1` fails with `unexpected argument 'client1'`.
 
 ```bash
 snouty runs exec "$RUN_ID" --container client1 --timeout 5m -1469731053185852001 38.52 'ps aux'

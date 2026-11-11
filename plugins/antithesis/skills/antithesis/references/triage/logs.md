@@ -11,7 +11,7 @@ PART=$(mktemp /tmp/triage/part.XXXXXX)
 snouty runs logs "$RUN_ID" --json "$INPUT_HASH" > "$PART" && mv "$PART" "$LOG"
 ```
 
-Pass `INPUT_HASH` verbatim, even when it is negative. Never start a file name with the hash: commands read a name like `-123.ndjson` as options.
+Pass `INPUT_HASH` verbatim, even when it is negative. Never use `--`, which makes every later option positional. Never start a file name with the hash: commands read a name like `-123.ndjson` as options.
 
 Every moment on the branch is in the file, including the failure moment, so reuse `$LOG` for any moment with the same input hash. Other agents may be downloading the same timeline, so download to a `mktemp` file and rename it only when complete; `$LOG` exists only once a download has finished. Find a moment in it by its `moment.vtime`.
 
