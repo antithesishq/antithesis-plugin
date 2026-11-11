@@ -6,7 +6,7 @@ None. Write assertions and setup complete as JSON lines, following `references/w
 
 ## Instrumentation
 
-OCaml isn't among the languages Antithesis instruments. A build stage that the harness copies symbols from leaves `/symbols` empty.
+OCaml isn't among the languages Antithesis instruments.
 
 ## Local coverage
 
