@@ -12,7 +12,7 @@
 
 ## Instrumentation
 
-Python isn't among the languages Antithesis instruments. `references/workload/languages/fallback.md` says what to check.
+Python isn't among the languages Antithesis instruments.
 
 ## Local coverage
 
