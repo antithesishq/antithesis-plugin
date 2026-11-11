@@ -8,7 +8,7 @@ List with `-n 200`:
 snouty runs list -n 200 [OPTIONS]
 ```
 
-Snouty's default page size is too small for triage; it can miss the oldest non-triaged run (rule 4). Raise it (e.g. `-n 500` or `-n 1000`) if 200 doesn't find the run. Status `incomplete` usually means the run failed to start, which can be triaged.
+Snouty's default page size is too small: it can miss the run the user means. Raise it (e.g. `-n 500` or `-n 1000`) if 200 doesn't find the run. Status `incomplete` usually means the run failed to start, which can be triaged.
 
 ## Pick the run the user wants
 
