@@ -29,7 +29,7 @@ Before changing anything, check:
 - The version is `MAJOR.MINOR.PATCH` or `MAJOR.MINOR.PATCH-rc.N`, and higher than the current version. A candidate is lower than its release: `0.1.0-rc.2` is above `0.1.0-rc.1` and `0.0.9`, and below `0.1.0`.
 - `git tag -l vX.Y.Z` and `gh release view vX.Y.Z` find nothing.
 - `git status --porcelain` is empty, and you're on the default branch, up to date with the remote.
-- No release PR is open: `gh pr list --state open --json url,headRefName --jq '.[] | select(.headRefName | startswith("release/")) | .url'` prints nothing.
+- No release PR is open: `gh pr list --state open --limit 1000 --json url,headRefName --jq '.[] | select(.headRefName | startswith("release/")) | .url'` prints nothing.
 
 If a check fails, tell the user and stop.
 
@@ -92,7 +92,7 @@ For a release PR, also:
 
 Get the commit that the PR's merge put on the default branch, `gh pr view N --json mergeCommit --jq .mergeCommit.oid`. Tag release tags that commit, never the branch's head: another PR can land right after this one, and it must not be released. Before it tags, it runs `scripts/verify-release.py vX.Y.Z <merge commit> origin/main`, which reads the files at the commit, and checks that it is on the default branch, that every manifest has the version, that `CHANGELOG.md` has its notes, and that the tag isn't taken or released.
 
-Find each run with `gh run list --workflow <file> --commit <merge commit> --json databaseId,headBranch,status`, first `tag-release.yml`, then `release.yml`, whose `headBranch` is the tag. Each can take a few seconds to appear.
+Find each run with `gh run list --workflow <file> --commit <commit> --json databaseId,headBranch,status`. Tag release runs on the PR's merge, so GitHub records it under the PR's head commit, `gh pr view N --json headRefOid --jq .headRefOid`. Release runs on the tag, so it's under the merge commit, with the tag as its `headBranch`. Each can take a few seconds to appear.
 
 Watch a run with `gh api`, not `gh run watch` or `gh run view`. They fetch jobs from GitHub's absolute `jobs_url`, which bypasses a proxy set as gh's host. Every 30 seconds or so, check:
 

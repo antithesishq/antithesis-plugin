@@ -27,8 +27,11 @@ jobs:
     name: ${{ matrix.task }}
     runs-on: ubuntu-latest
     # After the pull request passed, an external link that's briefly down shouldn't fail
-    # main or block a release. A tag push is also a push.
-    continue-on-error: ${{ github.event_name == 'push' && matrix.task == 'check:lychee' }}
+    # main or block a release. A tag push is also a push, and tag-release.yml dispatches
+    # Release on the tag.
+    continue-on-error: >-
+      ${{ (github.event_name == 'push' || startsWith(github.ref, 'refs/tags/'))
+      && matrix.task == 'check:lychee' }}
     strategy:
       fail-fast: false
       matrix:

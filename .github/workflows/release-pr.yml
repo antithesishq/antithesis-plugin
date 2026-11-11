@@ -68,7 +68,7 @@ jobs:
             version and the failure as the reason.
           claude_args: >-
             --model claude-opus-5-5
-            --allowedTools "Read,Edit,Write,Glob,Grep,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git status:*),Bash(git tag -l:*),Bash(git fetch:*),Bash(git rev-parse:*),Bash(grep:*),Bash(head:*),Bash(gh release view:*),Bash(gh repo view:*),Bash(scripts/set-version.py:*),Bash(scripts/changelog-section.py:*)"
+            --allowedTools "Read,Edit,Write,Glob,Grep,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git status:*),Bash(git tag -l:*),Bash(git fetch:*),Bash(git rev-parse:*),Bash(grep:*),Bash(head:*),Bash(gh release view:*),Bash(gh pr list:*),Bash(gh repo view:*),Bash(scripts/set-version.py:*),Bash(scripts/changelog-section.py:*)"
             --json-schema '{"type":"object","properties":{"version":{"type":"string"},"reason":{"type":"string"}},"required":["version","reason"]}'
       - if: steps.gate.outputs.release == 'true'
         env:

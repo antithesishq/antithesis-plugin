@@ -7,7 +7,8 @@ The Tag release workflow (.github/workflows/tag-release.yml) runs this when a PR
 `release/` branch merges, with the merge commit. The tag's version is the one the plugin's
 manifest holds at COMMIT, so a version changed in review is still the one tagged. It checks
 COMMIT with scripts/verify-release.py, pushes `vX.Y.Z` as an annotated tag, and dispatches
-release.yml on it: a tag that GITHUB_TOKEN pushes starts no workflow on its own.
+release.yml on it: a tag that GITHUB_TOKEN pushes starts no workflow on its own. When the
+tag is already on COMMIT, as on a rerun, it only dispatches release.yml.
 """
 
 import sys
@@ -33,14 +34,17 @@ def main() -> int:
     tag = f"v{version}"
     if run("scripts/verify-release.py", tag, commit, "origin/main").returncode != 0:
         return 1
-    bot = "github-actions[bot]"
-    out(
-        *("git", "-c", f"user.name={bot}"),
-        *("-c", "user.email=41898282+github-actions[bot]@users.noreply.github.com"),
-        *("tag", "-a", tag, commit, "-m", f"antithesis plugin {version}"),
-    )
-    out("gh", "auth", "setup-git")
-    out("git", "push", "origin", f"refs/tags/{tag}")
+    # verify-release.py passed, so a tag already there is on COMMIT: a rerun after the push
+    # only needs to start Release.
+    if not out("git", "tag", "-l", tag):
+        bot = "github-actions[bot]"
+        out(
+            *("git", "-c", f"user.name={bot}"),
+            *("-c", "user.email=41898282+github-actions[bot]@users.noreply.github.com"),
+            *("tag", "-a", tag, commit, "-m", f"antithesis plugin {version}"),
+        )
+        out("gh", "auth", "setup-git")
+        out("git", "push", "origin", f"refs/tags/{tag}")
     out("gh", "workflow", "run", "release.yml", "--ref", tag)
     print(f"Tagged {commit[:12]} as {tag}, and started Release for it")
     return 0

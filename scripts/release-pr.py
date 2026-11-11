@@ -54,8 +54,17 @@ def output(**values: str) -> None:
 
 
 def open_release_prs() -> list[str]:
-    prs = json.loads(out("gh", "pr", "list", "--state", "open", "--json", "url,headRefName"))
+    prs = json.loads(
+        out("gh", "pr", "list", "--state", "open", "--limit", "1000", "--json", "url,headRefName")
+    )
     return [pr["url"] for pr in prs if pr["headRefName"].startswith("release/")]
+
+
+# A link that's briefly down fails only this check. CI on a push tolerates it, and the
+# nightly run doesn't, so the gate tolerates it too.
+FLAKY_CHECK = "check:lychee"
+# The job that sums up every check, which fails whenever one does.
+SUMMARY_CHECK = "check"
 
 
 def ci_passed(sha: str) -> str | None:
@@ -68,9 +77,20 @@ def ci_passed(sha: str) -> str | None:
     latest = max(runs, key=lambda r: r["created_at"])
     if latest["status"] != "completed":
         return f"CI on {sha[:12]} is still {latest['status']}: {latest['html_url']}"
-    if latest["conclusion"] != "success":
-        return f"CI on {sha[:12]} concluded {latest['conclusion']}: {latest['html_url']}"
-    return None
+    if latest["conclusion"] == "success":
+        return None
+    jobs = json.loads(
+        out("gh", "api", f"repos/{{owner}}/{{repo}}/actions/runs/{latest['id']}/jobs?per_page=100")
+    )["jobs"]
+    failed = [
+        j["name"]
+        for j in jobs
+        if j["conclusion"] not in ("success", "skipped", "neutral") and j["name"] != SUMMARY_CHECK
+    ]
+    if failed and all(name.endswith(FLAKY_CHECK) for name in failed):
+        print(f"CI on {sha[:12]} failed only {FLAKY_CHECK}, which a release tolerates")
+        return None
+    return f"CI on {sha[:12]} concluded {latest['conclusion']}: {latest['html_url']}"
 
 
 def gate() -> int:
@@ -132,7 +152,11 @@ def open_pr(version: str) -> int:
         *("commit", "-m", f"{title}\n\nCo-Authored-By: Claude <noreply@anthropic.com>"),
     )
     out("gh", "auth", "setup-git")
-    out("git", "push", "-u", "origin", branch)
+    # The gate found no open release PR, so a branch already there is left from one that
+    # closed without merging. A merged one would have tagged the version.
+    if run("git", "ls-remote", "--exit-code", "--heads", "origin", branch).returncode == 0:
+        print(f"Replacing {branch}, left from a closed release PR")
+    out("git", "push", "--force", "-u", "origin", branch)
 
     reviewer = os.environ["RELEASE_REVIEWER"]
     previous = os.environ["PREVIOUS"]
