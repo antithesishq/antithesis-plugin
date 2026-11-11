@@ -1,25 +1,39 @@
 # Workflows
 
-A workflow is a saved prompt that chains other modules toward a common goal. Pick the one that fits the user's prompt, fill its placeholders from the prompt and the project, and follow it as if the user had written it. Read each module only when you reach it.
+A workflow is a sequence of steps, each done with one module, that reaches the user's goal. Derive it from what the user's prompt asks for:
 
-| Workflow | Use when                                                                       |
-| -------- | ------------------------------------------------------------------------------ |
-| Setup    | The system has no workload yet, and the user wants one.                        |
-| Heal     | The system changed since its workload was last updated, and the workload lags. |
-| Test     | The user wants the system tested, and its findings triaged.                    |
+1. **Find the goal.** Read the prompt for what the user wants at the end, such as a workload, a tested release, or the root cause of a failure, and for what they already have, such as a workload, a run or a known failure. Look in the project for anything the prompt leaves out, such as whether a workload exists.
+2. **Plan the steps.** List the steps that get from what exists to the goal, and the module for each. Include every step the prompt asks for, in its order, and only the steps the goal needs. Leave out what already exists, and add what the goal depends on, such as a workload before a launch. The examples below show common shapes. Use them as a starting point, not a menu.
+3. **Ask if unclear.** If you can't tell what the goal is, ask the user before you read any module.
+4. **Follow the plan.** Read each module only when you reach its step. Revise the plan when a step's results call for it, such as a run that shows the workload needs work.
 
-If the prompt fits none, because it asks for one module's task, such as triaging a run, pick that module from the table in `SKILL.md` instead. If it fits neither, ask the user what they want before you read any module.
+Keep what the prompt adds, such as the behaviors to focus on, where to report, or a compute budget. A budget covers the whole workflow, across every module. If the prompt gives none, ask for one up front, as `SKILL.md` says, and until the user answers, use 60 compute hours for the whole workflow.
 
-Keep what the user's prompt adds, such as the behaviors to focus on, where to report, or a compute budget. A budget covers the whole workflow, across every module. If the prompt gives none, ask for one up front, as `SKILL.md` says, and until the user answers, use 60 compute hours for the whole workflow.
+## Examples
 
-## Setup
+### Set up a system
 
-> Write a new workload for `<system>` (`references/workload/MODULE.md`). Define its current guarantees as properties (`references/properties/MODULE.md`) before the "Iterate on Antithesis runs" step in `references/workload/MODULE.md`. Work autonomously within `<budget>` compute hours. Report the workload, its properties, and anything the runs found.
+For a system with no workload.
 
-## Heal
+1. Build a workload, up to the "Iterate on Antithesis runs" step in `references/workload/MODULE.md`.
+2. Define the system's current guarantees, with `references/properties/MODULE.md`.
+3. Finish the workload, from the "Iterate on Antithesis runs" step in `references/workload/MODULE.md` on.
 
-> The workload for `<system>` lags `<version or recent changes>`. Find what changed since the workload last changed, from the version control history of both and any release notes: new, changed and removed APIs, configuration, behaviors and guarantees. Update the workload to cover them (`references/workload/MODULE.md`), changing only what the changes touch, and update the properties of the changed guarantees (`references/properties/MODULE.md`). Validate it with the workload module's steps from "Build and validate" in `references/workload/MODULE.md` to the end. Work autonomously within `<budget>` compute hours. Report what changed in the workload, and anything the runs found.
+### Heal a workload
 
-## Test
+For a workload that lags changes to its system.
 
-> Test `<system>` at `<version>`, and its current guarantees, including the features new in that version. If it has no workload, write one first, as in "Setup". If its workload lags the version, heal it first. Launch a run (`references/launch/MODULE.md`), and as findings appear, triage them live to verify they are real, and root-cause the likely bugs (`references/triage/MODULE.md`). Work autonomously within `<budget>` compute hours. Report your findings here.
+1. Find what changed in the system since the workload last changed, from the version control history of both and any release notes: new, changed and removed APIs, configuration, behaviors and guarantees.
+2. Update the workload to cover them, with `references/workload/MODULE.md`, changing only what the changes touch.
+3. Update the properties of the changed guarantees, with `references/properties/MODULE.md`.
+4. Validate the workload, with the workload module's steps from "Build and validate" in `references/workload/MODULE.md` on.
+
+### Test a system
+
+For a system to test, such as a new release, with its findings triaged.
+
+1. Set up or heal its workload first, if it has none or it lags, as in "Set up a system" or "Heal a workload".
+2. Launch a run, with `references/launch/MODULE.md`.
+3. Triage it live, with `references/triage/MODULE.md` in `monitor` mode, to verify which findings are real.
+4. Root-cause the likely bugs, in the triage module's `root-cause` mode.
+5. Report the findings, with the triage module's `summary` mode once the run ends.
