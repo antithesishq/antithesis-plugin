@@ -2,7 +2,7 @@
 """The deterministic half of the Release PR workflow (.github/workflows/release-pr.yml).
 
     scripts/release-pr.py gate
-    scripts/release-pr.py open VERSION
+    scripts/release-pr.py open VERSION    (VERSION may be empty: Claude stopped)
 
 `gate` decides whether to release the default branch's head, HEAD. It releases only when:
 
@@ -14,17 +14,21 @@
 It writes `release=true` or `false`, and the last tag as `previous`, to GITHUB_OUTPUT, and
 exits 0 either way: a day with nothing to release isn't a failure.
 
-`open` runs after Claude has bumped the version to VERSION and written its notes, following
-the release skill. It checks that the working tree holds exactly that, commits it to
-`release/vVERSION`, pushes, and opens a PR assigned to RELEASE_REVIEWER, with REASON (why
-Claude picked the version) and PREVIOUS (the last tag) in its body. A PR that GITHUB_TOKEN
+`open` runs in a clean checkout, in a job apart from Claude's, after Claude picked VERSION
+and wrote its NOTES following the release skill. It checks them, adds the notes to
+`CHANGELOG.md`, sets the version with scripts/set-version.py, commits to `release/vVERSION`,
+pushes, and opens a PR assigned to RELEASE_REVIEWER, with REASON (why Claude picked the
+version) and PREVIOUS (the last tag) in its body. A PR that GITHUB_TOKEN
 opens runs no CI on its own, so it then dispatches CI on the branch, which gives the PR's
 head commit the `check` status that the default branch requires.
 """
 
 import json
+import math
 import os
+import re
 import sys
+from datetime import datetime, timedelta, timezone
 
 import release
 from report import ROOT, run
@@ -37,6 +41,11 @@ USER_FACING = [
     "README.md",
     "docs/",
 ]
+# The workflow runs at 17:00 in this zone, so a release is dated with its day there.
+RELEASE_TZ = timezone(timedelta(hours=-7))
+# Credentials that Claude's job could read: GitHub tokens, Anthropic tokens and keys, and
+# JWTs such as an OIDC token. Notes that hold one would publish it in the PR.
+SECRET = re.compile(r"gh[pousr]_[A-Za-z0-9]{20,}|github_pat_\w{20,}|sk-ant-[\w-]{20,}|eyJ[\w-]{10,}\.eyJ")
 RELEASE_FILES = {p.relative_to(ROOT).as_posix() for p in [*release.VERSIONED, release.CHANGELOG]}
 
 
@@ -123,28 +132,79 @@ def gate() -> int:
     return 0
 
 
+def escape(text: str) -> str:
+    """Text for a workflow command's message, on one line."""
+    return text.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
+
+def version_key(version: str) -> tuple[int, int, int, float]:
+    """Sorts versions: a candidate sorts below its release, as the release skill says."""
+    match = release.VERSION.fullmatch(version)
+    if not match:
+        raise ValueError(version)
+    major, minor, patch = (int(part) for part in match.group(1).split("."))
+    return major, minor, patch, int(match.group(2)) if match.group(2) else math.inf
+
+
+def with_section(changelog: str, version: str, notes: str) -> str:
+    """CHANGELOG.md's text with a section for version on top, below the HTML comments.
+
+    It replaces a candidate's section at the top, as the release skill does.
+    """
+    today = datetime.now(RELEASE_TZ).date().isoformat()
+    section = f"# Version {version} ({today})\n\n{notes.strip()}\n\n"
+    top = re.search(r"^# Version (\S+).*\n", changelog, re.MULTILINE)
+    if not top:
+        return changelog.rstrip("\n") + "\n\n" + section.rstrip("\n") + "\n"
+    start = top.start()
+    if "-rc." in top.group(1):
+        following = re.search(r"^# ", changelog[top.end() :], re.MULTILINE)
+        end = top.end() + following.start() if following else len(changelog)
+        rest = changelog[end:]
+    else:
+        rest = changelog[start:]
+    return (changelog[:start] + section + rest).rstrip("\n") + "\n"
+
+
 def open_pr(version: str) -> int:
+    """Write Claude's notes and the version from a clean checkout, and open the PR.
+
+    Claude's job can't write to the repository: it returns the version, its reason and the
+    notes, and this checks them, so nothing Claude touched runs here.
+    """
     tag = f"v{version}"
+    notes = os.environ.get("NOTES", "").strip()
+    reason = os.environ.get("REASON", "").strip()
+    if not version:
+        # Claude stopped at a failed check. Escaped, so its text can't start a workflow command.
+        print(f"::error title=No release::{escape(reason) or 'Claude picked no version'}")
+        return 1
+    current = release.version_in(release.CANONICAL, release.CANONICAL.read_text()) or ""
     failures = []
     match = release.VERSION.fullmatch(version)
     if not match or match.group(2):
         failures.append(f"{version!r} is not MAJOR.MINOR.PATCH")
-    changed = set(out("git", "diff", "--name-only", "HEAD").splitlines())
-    changed |= set(out("git", "ls-files", "--others", "--exclude-standard").splitlines())
-    if stray := sorted(changed - RELEASE_FILES):
-        failures.append(f"files outside the release changed: {', '.join(stray)}")
-    if release.CHANGELOG.relative_to(ROOT).as_posix() not in changed:
-        failures.append("CHANGELOG.md didn't change")
-    for path in release.VERSIONED:
-        if (found := release.version_in(path, path.read_text())) != version:
-            failures.append(f"{path.relative_to(ROOT)} is at {found}, not {version}")
-    if not release.section(release.CHANGELOG.read_text(), version):
-        failures.append(f"CHANGELOG.md has no notes for {version}")
+    elif version_key(version) <= version_key(current):
+        failures.append(f"{version} is not above the current version, {current}")
+    if not notes:
+        failures.append("Claude wrote no notes")
+    if re.search(r"^# ", notes, re.MULTILINE):
+        failures.append("the notes have a top-level heading, which would split the section")
+    for text in (notes, reason):
+        if found := SECRET.search(text):
+            failures.append(f"the notes or reason hold what looks like a credential: {found[0][:8]}…")
     if out("git", "tag", "-l", tag):
         failures.append(f"{tag} already exists")
-    for failure in failures:
-        print(f"::error title=Release PR::{failure}")
     if failures:
+        for failure in failures:
+            print(f"::error title=Release PR::{escape(failure)}")
+        return 1
+
+    release.CHANGELOG.write_text(with_section(release.CHANGELOG.read_text(), version, notes))
+    out("scripts/set-version.py", version)
+    out("scripts/set-version.py", "--check")
+    if not release.section(release.CHANGELOG.read_text(), version):
+        print(f"::error title=Release PR::CHANGELOG.md has no notes for {version}")
         return 1
 
     branch = f"release/{tag}"
@@ -168,7 +228,7 @@ def open_pr(version: str) -> int:
     previous = os.environ["PREVIOUS"]
     body = (
         f"Releases antithesis plugin {version}. The notes cover what changed since "
-        f"{previous}. {os.environ.get('REASON', '').strip()}\n\n"
+        f"{previous}. {reason}\n\n"
         "The Release PR workflow opened this PR on its own: Claude picked the version and "
         "wrote the notes by following the `release` skill. To change the version, run "
         "`scripts/set-version.py` and rename the `CHANGELOG.md` heading. Merging ships the "

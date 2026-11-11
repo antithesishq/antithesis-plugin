@@ -4,6 +4,11 @@ name: Release PR
 # CI passed and the plugin changed since the last release. Claude picks the version and
 # writes the notes by following the release skill, and the PR is assigned for review. Once
 # it merges, tag-release.yml tags it and runs release.yml.
+#
+# Claude reads text that others wrote, such as merged diffs, so its job can't write to the
+# repository and can't reach the network beyond GitHub's API. It hands back only the version,
+# its reason and the notes, and a separate job checks them and opens the PR from a clean
+# checkout, so nothing Claude could have changed runs with a write token.
 on:
   schedule:
     # 00:00 UTC, Tuesday to Saturday, is 17:00 GMT-7, Monday to Friday, all year round.
@@ -16,23 +21,23 @@ concurrency:
 env:
   MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
 
+permissions: {}
+
 jobs:
-  release-pr:
+  gate:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
-      # To dispatch CI on the release branch.
-      actions: write
-      # Claude authenticates to the Claude API with the workflow's OIDC token.
-      id-token: write
+      contents: read
+      pull-requests: read
+      actions: read
+    outputs:
+      release: ${{ steps.gate.outputs.release }}
+      previous: ${{ steps.gate.outputs.previous }}
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.repository.default_branch }}
-          # The release skill reads the diff since the last tag.
           fetch-depth: 0
-          # Claude works in this checkout and must not push: release-pr.py pushes.
           persist-credentials: false
       - uses: jdx/mise-action@v5
         with:
@@ -42,8 +47,35 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: scripts/release-pr.py gate
+
+  notes:
+    needs: gate
+    if: needs.gate.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Claude authenticates to the Claude API with the workflow's OIDC token.
+      id-token: write
+    outputs:
+      version: ${{ fromJSON(steps.claude.outputs.structured_output).version }}
+      reason: ${{ fromJSON(steps.claude.outputs.structured_output).reason }}
+      notes: ${{ fromJSON(steps.claude.outputs.structured_output).notes }}
+      # The commit Claude read, so the PR releases exactly that.
+      commit: ${{ steps.head.outputs.commit }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          # The release skill reads the diff since the last tag.
+          fetch-depth: 0
+          persist-credentials: false
+      - id: head
+        run: echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: jdx/mise-action@v5
+        with:
+          version: 2026.10.24
+          install_args: uv
       - id: claude
-        if: steps.gate.outputs.release == 'true'
         uses: anthropics/claude-code-action@v1
         with:
           github_token: ${{ github.token }}
@@ -56,31 +88,47 @@ jobs:
           anthropic_workspace_id: wrkspc_01J1wcfqkKJ5ey1wBmqnYb9D
           prompt: |
             You're preparing a release of the Antithesis plugin, unattended, in GitHub Actions.
-            Read `.claude/skills/release/SKILL.md`, and follow only its "Pick and check the
-            version", "Write the notes" and "Bump the version" sections. Pick the version
-            yourself, and never a release candidate.
+            Read `.claude/skills/release/SKILL.md`, and do what its "Pick and check the
+            version" and "Write the notes" sections say. Pick the version yourself, and never
+            a release candidate. The workflow already checked that no release PR is open.
 
-            Change only `CHANGELOG.md` and the files `scripts/set-version.py` writes. Don't
-            create a branch, commit, push or open a PR: the workflow does that from your
-            changes to the working tree.
+            Don't change any file: you can't, and the workflow writes `CHANGELOG.md` and sets
+            the version. Instead, answer with:
 
-            Answer with the version, and the reason: one or two sentences, for the PR body,
-            on why you picked it. If a check fails, change nothing, and answer with an empty
-            version and the failure as the reason.
+            - version: the version you picked
+            - reason: one or two sentences, for the PR body, on why you picked it
+            - notes: the body of the version's `CHANGELOG.md` section, without its
+              `# Version` heading
+
+            If a check fails, answer with an empty version, and the failure as the reason.
           claude_args: >-
             --model claude-opus-5-5
-            --allowedTools "Read,Edit,Write,Glob,Grep,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git status:*),Bash(git tag -l:*),Bash(git fetch:*),Bash(git rev-parse:*),Bash(grep:*),Bash(head:*),Bash(gh release view:*),Bash(gh pr list:*),Bash(gh repo view:*),Bash(scripts/set-version.py:*),Bash(scripts/changelog-section.py:*)"
-            --json-schema '{"type":"object","properties":{"version":{"type":"string"},"reason":{"type":"string"}},"required":["version","reason"]}'
-      - if: steps.gate.outputs.release == 'true'
-        env:
+            --allowedTools "Read,Glob,Grep,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git status:*),Bash(git tag -l:*),Bash(git rev-parse:*),Bash(grep:*),Bash(head:*),Bash(gh release view:*),Bash(gh repo view:*)"
+            --json-schema '{"type":"object","properties":{"version":{"type":"string"},"reason":{"type":"string"},"notes":{"type":"string"}},"required":["version","reason","notes"]}'
+
+  pr:
+    needs: [gate, notes]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      # To dispatch CI on the release branch.
+      actions: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.notes.outputs.commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: jdx/mise-action@v5
+        with:
+          version: 2026.10.24
+          install_args: uv
+      - env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ fromJSON(steps.claude.outputs.structured_output).version }}
-          REASON: ${{ fromJSON(steps.claude.outputs.structured_output).reason }}
-          PREVIOUS: ${{ steps.gate.outputs.previous }}
+          VERSION: ${{ needs.notes.outputs.version }}
+          REASON: ${{ needs.notes.outputs.reason }}
+          NOTES: ${{ needs.notes.outputs.notes }}
+          PREVIOUS: ${{ needs.gate.outputs.previous }}
           RELEASE_REVIEWER: carlsverre
-        run: |
-          if [ -z "$VERSION" ]; then
-            echo "::error title=No release::$REASON"
-            exit 1
-          fi
-          scripts/release-pr.py open "$VERSION"
+        run: scripts/release-pr.py open "$VERSION"
