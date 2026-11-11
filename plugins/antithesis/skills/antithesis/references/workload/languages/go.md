@@ -26,7 +26,7 @@ RUN go build -toolexec=antithesis-go-toolexec -o /out/driver .
 
 ## Local coverage
 
-- Build with `go build -cover -covermode=atomic -coverpkg=./...`, and set `GOCOVERDIR=/coverage/<service>`.
+- Build with `ANTITHESIS_SKIP_COVERAGE=true go build -toolexec=antithesis-go-toolexec -cover -covermode=atomic -coverpkg=./...`, and set `GOCOVERDIR=/coverage/<service>`. The toolexec still catalogs the assertions, so the local loop lists one that's never reached.
 - Go writes counters only when `main` returns or the program calls `os.Exit`.
 - Read it with `go tool cover`.
 
