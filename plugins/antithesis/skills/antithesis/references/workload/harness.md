@@ -66,7 +66,7 @@ A new volume takes the ownership of its mount point in the image. If the node ru
 
 ## 4. Pick the faults, and exclude the driver
 
-Launch every run of the workload with the `basic_test` launcher, following `references/launch/MODULE.md`, and these flags:
+Launch every run of the workload with the `basic_test` launcher, unless the user names another, following `references/launch/MODULE.md`, and these flags:
 
 ```bash
 --fault-tolerance high_availability
