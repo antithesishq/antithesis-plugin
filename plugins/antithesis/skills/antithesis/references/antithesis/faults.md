@@ -17,7 +17,7 @@ Faults act on nodes: containers in Docker Compose, pods in Kubernetes. Everythin
 | Level               | Faults                                                                                                   |
 | ------------------- | -------------------------------------------------------------------------------------------------------- |
 | `none`              | None.                                                                                                    |
-| `resilient`         | Baseline latency, `Slowed` and `Jammed` clogs, node pauses, CPU modulation, thread pausing, clock skips. |
+| `resilient`         | Baseline latency, `Slowed` and `Jammed` clogs, node pauses, node throttling, CPU modulation, thread pausing, clock skips. |
 | `high_availability` | Everything in `resilient`, plus partitions, `Stopped` clogs, and node termination.                       |
 | `legacy`            | All network faults and thread pausing, nothing else.                                                     |
 
@@ -37,7 +37,7 @@ A partition or clog disrupts packets in one of three ways: `Stopped` drops them,
 ## Node faults
 
 - **Pause.** The node freezes, still on the network, so other nodes see timeouts. It resumes after a set time.
-- **Throttle.** The node's CPU is limited, so it runs as if under heavy load. No fault tolerance level lists it, so expect it only from a launcher that enables it.
+- **Throttle.** The node's CPU is limited, so it runs as if under heavy load.
 - **Termination.** The node stops gracefully (`stop`) or crashes (`kill`), and Antithesis restarts it, usually after a set time, though some restarts have no set time. It may come back with a new IP address, and with or without the changes it hadn't durably synced. Give containers no `restart:` policy: Compose would restart them at once and cancel the fault. Antithesis can't restart a Kubernetes pod, so Kubernetes manages that.
 
 Only one node fault runs on a node at a time. Another one aimed at it while one runs is skipped.
