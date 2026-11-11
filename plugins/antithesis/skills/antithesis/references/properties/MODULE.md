@@ -38,7 +38,12 @@ If an assertion fails without a change, read the system's code. A broken promise
 
 ### 4. Check it in a short run
 
-Launch a short run as `references/workload/run-loop.md` describes, and read it with the triage module. Its guarantee assertions should pass, and the exploration assertions for the situations leading up to it should be reached, unless they need conditions rare enough for a short run to miss.
+Launch a short run as `references/workload/run-loop.md` describes, and read it with the triage module. Then check each guarantee you added or changed:
+
+1. Trace the exploration assertions on the situations leading up to it, and confirm each one passes: the run reached that situation.
+2. Confirm the guarantee's own assertions pass.
+
+If the run never reaches the guarantee, it hasn't tested it. Launch a longer run, or change the workload so it reaches those situations more often, and check again.
 
 Treat early failures as "Check it locally" says. To find a failure's cause, use the triage module's `root-cause` mode.
 
