@@ -4,7 +4,7 @@ Input: a system to test in Antithesis, and optionally the behaviors to focus on.
 
 ## Compute budget
 
-Ask for a compute budget up front. If the user gives none, use 60 compute hours as your budget for runs launched while working on the workload. Launch nothing beyond the workload without a budget from the user.
+Runs launched while working on the workload spend the task's compute budget, from the user or the default in `SKILL.md`. Launch nothing beyond the workload unless the task asks for it.
 
 ## What a workload is
 
