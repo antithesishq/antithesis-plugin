@@ -2,7 +2,7 @@
 
 ## 1. Launch a run
 
-Start with a short run, `--max-compute-hours 12` on the standard tier. As the workload passes the checks below and you trust it more, raise it toward 24. A longer run shows whether the workload holds up with more compute. You're done iterating when a 24-hour run passes these checks. Follow `references/launch/MODULE.md` with the launcher and fault flags in `references/workload/harness.md`, and follow the run live with the triage module's monitor mode.
+Start with a short run, `--max-compute-hours 12` on the standard tier. As the workload passes the checks below and you trust it more, raise it toward 24. A longer run shows whether the workload holds up with more compute. You're done iterating when a 24-compute-hour run passes these checks. Follow `references/launch/MODULE.md` with the launcher and fault flags in `references/workload/harness.md`, and follow the run live with the triage module's monitor mode.
 
 ## 2. Keep setup fast
 

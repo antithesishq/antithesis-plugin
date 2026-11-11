@@ -27,5 +27,5 @@ The SUT itself is built with Antithesis coverage instrumentation.
 7. **Wire up the harness:** the `driver` container with its `first_` test command, any shared volumes, the fault flags, and debug tools in every image. Follow `references/workload/harness.md`.
 8. **Build and validate.** Build the images, run the instrumentation checks, then run `snouty validate <config_dir>`. Commit every file the images build from, and check `git status --ignored`, since ignore rules can drop harness files.
 9. **Iterate locally** on coverage and the exploration assertions (`references/properties/assertions.md`). Follow `references/workload/local-loop.md`.
-10. **Iterate on Antithesis runs** until a 24-hour run passes its checks. Follow `references/workload/run-loop.md`.
+10. **Iterate on Antithesis runs** until a 24-compute-hour run passes its checks. Follow `references/workload/run-loop.md`.
 11. **Update the README and scripts, and report to the user,** including which patterns you adopted and why, and any step you skipped or changed, and why.
