@@ -8,7 +8,7 @@ Antithesis injects faults throughout every timeline, interleaved with the worklo
 
 ## Scope
 
-Faults act on nodes: containers in Docker Compose, pods in Kubernetes. Everything in a node shares its fate, so two services in one container never see a network fault between them. Put services in separate containers to fault them independently. Three faults act on the whole machine instead: clock skips, CPU modulation and thread pausing.
+Faults act on nodes: containers in Docker Compose, pods in Kubernetes. Everything in a node shares its fate, so two services in one container never see a network fault between them. Put services in separate containers to fault them independently. Two faults act on the whole machine instead: clock skips and CPU modulation. Thread pausing acts on one thread at a time, in any node.
 
 ## Fault tolerance levels
 
@@ -45,7 +45,7 @@ Only one node fault runs on a node at a time. Another one aimed at it while one 
 ## Other faults
 
 - **Clock skips.** The clock jumps forward or back, on every node at once. There are two kinds. A jitter jumps by an offset, then jumps back by the same amount after a while. An offset never jumps back. Jumps add up. Pausing faults stops new jumps, but not a jitter in progress: the clock can still jump back during the pause. Intrinsics such as `__rdtsc()` aren't affected.
-- **Thread pausing.** Single threads pause briefly, so threads interleave in unexpected orders. It needs Antithesis instrumentation, and no container can be excluded from it.
+- **Thread pausing.** One thread at a time pauses briefly, so threads interleave in unexpected orders. It needs Antithesis instrumentation, and no machine, node or process can be excluded from it.
 - **CPU modulation.** The simulated processor's speed, and the relative speed of its instructions, change. That reorders concurrent threads, without needing instrumentation.
 - **Custom faults.** A script of yours that the fault injector runs at random times, such as a call to an admin API. Talk to Antithesis to add one.
 
