@@ -44,7 +44,7 @@ Only one node fault runs on a node at a time. Another one aimed at it while one 
 
 ## Other faults
 
-- **Clock skips.** The clock jumps forward or back, on every node at once. A jump is temporary, reversed after a set time, or permanent, and jumps add up. Intrinsics such as `__rdtsc()` aren't affected.
+- **Clock skips.** The clock jumps forward or back, on every node at once. A jump is temporary, reversed after a set time, or permanent, and jumps add up. Pausing faults clears temporary jumps, but a permanent one keeps applying: a clock moved back 5 seconds is still 5 seconds behind during the pause. Intrinsics such as `__rdtsc()` aren't affected.
 - **Thread pausing.** Single threads pause briefly, so threads interleave in unexpected orders. It needs Antithesis instrumentation, and no container can be excluded from it.
 - **CPU modulation.** The simulated processor's speed, and the relative speed of its instructions, change. That reorders concurrent threads, without needing instrumentation.
 - **Custom faults.** A script of yours that the fault injector runs at random times, such as a call to an admin API. Talk to Antithesis to add one.
@@ -60,7 +60,7 @@ The log records no event for thread pausing or CPU modulation.
 `$ANTITHESIS_STOP_FAULTS <seconds>` pauses faults on every node for that long:
 
 - Network faults end, and Antithesis restarts killed and stopped containers, which take a while to become ready.
-- No new faults start, clock skips included. A permanent clock skip that already happened keeps applying, and a temporary one is cleared: a clock a permanent skip moved back 5 seconds is still 5 seconds behind during the pause.
+- No new faults start.
 - Faults resume on their own when the time is up. A pause can't end early, and overlapping pauses merge into the longest.
 
 An `eventually_` or `finally_` test command also pauses faults, and ends its timeline after it runs.
