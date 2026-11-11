@@ -2,8 +2,6 @@
 
 Input: a workload to run in Antithesis, and optionally the launcher, compute budget or other parameters to use.
 
-Always run `snouty launch` with `SNOUTY_UNSTABLE_FEATURES=teams` set, including `snouty launch --help`, for example `SNOUTY_UNSTABLE_FEATURES=teams snouty launch --help`.
-
 ## Steps
 
 1. **Pick the workload.** Work out from context which workload to launch and where its config directory is. If it's unclear, ask.
@@ -16,7 +14,7 @@ Always run `snouty launch` with `SNOUTY_UNSTABLE_FEATURES=teams` set, including 
 
 ## Compute budget
 
-The task's compute budget, from the user or the default in `SKILL.md`, covers every run and debug run you start for the task. Before each launch, add up:
+The task's compute budget, from the user or the default in `SKILL.md`, covers every test run you start for the task. Debugging sessions don't count against it. Before each launch, add up:
 
 - the compute hours of your runs that have ended, from `snouty runs usage --after <when the task started>`. It lists every run on the tenant, so count only your run IDs;
 - the `--max-compute-hours` of your runs still going, which `runs usage` doesn't list until they end;

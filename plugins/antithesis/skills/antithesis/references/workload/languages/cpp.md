@@ -39,4 +39,4 @@ Hegel's frontend is C++ only.
 | Generate only               | the setting `.phases = {hegel::Phase::Generate}`                                 |
 | Weighted boolean draw       | no generator: draw an integer in a range, and compare it with a threshold        |
 
-The build compiles hegel's engine with `cargo`, so base the build stage on the "Rust build image" row in `references/workload/images.md`, and install `cmake` and the latest clang the image offers.
+The build compiles hegel's engine with `cargo`, so base the build stage on the "Rust build image" row in `references/workload/images.md`, install `cmake` and `clang-22`, and build with `CC=clang-22 CXX=clang++-22`. Debian's `clang` is 19, and clang 17–20 can't link assertions that share a message or location across files.

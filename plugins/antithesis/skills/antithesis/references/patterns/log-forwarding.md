@@ -36,7 +36,7 @@ Run the system's command through a wrapper, `driver/forward-logs`, which:
 - once the system exits, lets the forwarder drain for up to 5 s, so the last lines, often a crash message, aren't lost, but a leftover child holding the pipe can't keep the container up;
 - exits with the system's status.
 
-In each system service's Antithesis Dockerfile, build the forwarder statically, on the "Rust build image" row in `references/workload/images.md`, so it runs on any base image, and put the wrapper, which needs bash, in front of the system's command:
+In each system service's Antithesis Dockerfile, build the forwarder statically, on the "Rust build image" row in `references/workload/images.md`, so it runs on any base image. Don't instrument it: it's plumbing, not code under test. Put the wrapper, which needs bash, in front of the system's command:
 
 ```dockerfile
 FROM <Rust build image> AS log-forward
@@ -105,9 +105,9 @@ Guarantee checks on node state, such as at most one leader per term, go in `reco
 - **Share state both ways.** Rules read the node states, for example to send reads to a lagging follower. Give the receiving thread the model too, so assertions that combine the logs with the model are checked when the line arrives. Never hold a model lock and the node-state lock at once: copy what you need from one, release it, then take the other.
 - **Don't depend on arrival order across containers.** One container's lines arrive in `seq` order, but a paused container's arrive late. The latest state of several nodes is a mix of times: use it only for `assert_sometimes` assertions.
 - **Mark combinations worth exploring from,** with exploration assertions (`references/properties/assertions.md`): a leader change while a follower lags, a node rejoining with a stale term. Use rich assertions when there's a distance to the state ("Rich assertions" in `references/properties/assertions.md`).
-- **Assert that every kind of line you parse arrives,** with an `assert_reachable` per kind. Otherwise a changed format or a disabled log level looks like a quiet system.
+- **Assert that every kind of line you parse arrives,** with an assertion for each kind. Otherwise a changed format or a disabled log level looks like a quiet system.
 
 ## Checking it
 
-- **Locally,** every kind of line you parse arrives, its `assert_reachable` is met in the local loop (`references/workload/local-loop.md`), and `the driver receives every forwarded log line` holds. Check it under a burst: restart every system container at once while the workload runs.
+- **Locally,** every kind of line you parse arrives, its assertion is met in the local loop (`references/workload/local-loop.md`), and `the driver receives every forwarded log line` holds. Check it under a burst: restart every system container at once while the workload runs.
 - **In a short run,** the exploration assertions on node state are reached.

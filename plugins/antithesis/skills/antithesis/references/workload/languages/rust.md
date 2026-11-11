@@ -11,7 +11,7 @@
 
 ## Instrumentation
 
-Follow `snouty docs show /docs/reference/sdk/rust/instrumentation/`: add the latest `antithesis-instrumentation` crate, reference it once with `use antithesis_instrumentation as _;`, and put the page's build flags in the crate's `.cargo/config.toml`. Copy the flags from the page, not from memory. They set the build target, so the binary lands under `target/<target>/release/`. Keep an unstripped copy of each binary in `/symbols` of its runtime image.
+Follow `snouty docs show /docs/reference/sdk/rust/instrumentation/`: add the latest `antithesis-instrumentation` crate, reference it once with `use antithesis_instrumentation as _;`, and pass the page's build flags as `--config` options of `cargo build` in the Antithesis Dockerfile, as the page's command-line option shows. Copy the flags from the page, not from memory. They set the build target, so the binary lands under `target/<target>/release/`. Keep an unstripped copy of each binary in `/symbols` of its runtime image.
 
 A build stage, on the "Rust build image" row in `references/workload/images.md`, that leaves the binary in `/out` and its symbols in `/symbols`:
 
@@ -20,6 +20,8 @@ FROM <Rust build image> AS build
 WORKDIR /src
 COPY driver/ .
 RUN cargo build --release \
+      --config 'build.target = "x86_64-unknown-linux-gnu"' \
+      --config '<the page's target.x86_64-unknown-linux-gnu.rustflags>' \
  && mkdir -p /out /symbols \
  && cp target/x86_64-unknown-linux-gnu/release/driver /out/ \
  && cp /out/driver /symbols/
@@ -27,7 +29,7 @@ RUN cargo build --release \
 
 ## Local coverage
 
-- In the build stage, run `rustup component add llvm-tools-preview` and build with `RUSTFLAGS="-Cinstrument-coverage -Cllvm-args=-runtime-counter-relocation"`. This overrides the Antithesis flags in `.cargo/config.toml`.
+- In the build stage, run `rustup component add llvm-tools-preview` and build with the same command and `RUSTFLAGS="-Cinstrument-coverage -Cllvm-args=-runtime-counter-relocation"` set. `RUSTFLAGS` replaces the Antithesis rustflags, and the build target, so the binary's path, stays the same.
 - Set `LLVM_PROFILE_FILE=/coverage/<service>/%c%m.profraw`. `%c` writes counters as they change, so the data survives a killed process. `%m` merges restarts into one file. Don't use `%p`: every container's process is PID 1, so a restart overwrites the data.
 - Read it with `llvm-cov`.
 

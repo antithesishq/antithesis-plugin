@@ -12,9 +12,9 @@ Runs launched while working on the workload spend the task's compute budget, fro
 - **Exploration assertions,** in the driver and in the system's own code, which show Antithesis the states worth reaching. Put an assertion on a node's internal state in that node's code, where you can change it, so it fires at the moment the state occurs.
 - **Patterns,** only for systems that need them: running the system's stateful client library in faulted client containers, or forwarding the system's logs to the driver. `references/patterns/MODULE.md` says when each applies.
 
-The driver binary is the main process of its own fault-excluded container. It waits for the system, reports setup complete, then waits for `/workload-active`, which the container's one `first_` test command creates when fuzzing starts. Every decision is made in the driver.
+The driver program is the main process of its own fault-excluded container. It waits for the system, reports setup complete, then waits for `/workload-active`, which the container's one `first_` test command creates when fuzzing starts. Every decision is made in the driver.
 
-The SUT and the driver are built with Antithesis coverage instrumentation.
+The SUT and the driver are built with Antithesis coverage instrumentation, wherever their language allows.
 
 ## Steps
 
@@ -28,5 +28,5 @@ The SUT and the driver are built with Antithesis coverage instrumentation.
 8. **Wire up the harness:** the `driver` container with its `first_` test command, any shared volumes, the fault flags, and debug tools in every image. Follow `references/workload/harness.md`.
 9. **Build and validate.** Build the images, run the instrumentation checks, then run `snouty validate <config_dir>`. Commit every file the images build from, and check `git status --ignored`, since ignore rules can drop harness files.
 10. **Iterate locally** on coverage and the exploration assertions (`references/properties/assertions.md`). Follow `references/workload/local-loop.md`.
-11. **Iterate on Antithesis runs** until a 24-hour run passes its checks. Follow `references/workload/run-loop.md`.
+11. **Iterate on Antithesis runs** until a 24-compute-hour run passes its checks. Follow `references/workload/run-loop.md`.
 12. **Update the README and scripts, and report to the user,** including the driver's language, which patterns you adopted and why, and any step you skipped or changed, and why.

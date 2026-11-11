@@ -8,10 +8,10 @@ Read `snouty runs logs --help` first. Download the whole timeline, from the root
 mkdir -p /tmp/triage
 LOG=/tmp/triage/log_${INPUT_HASH}.ndjson
 PART=$(mktemp /tmp/triage/part.XXXXXX)
-snouty runs --json logs "$RUN_ID" "$INPUT_HASH" > "$PART" && mv "$PART" "$LOG"
+snouty runs logs "$RUN_ID" --json "$INPUT_HASH" > "$PART" && mv "$PART" "$LOG"
 ```
 
-Pass `INPUT_HASH` verbatim, even when it is negative. Put every option before `RUN_ID` and never use `--`, which makes every later option positional. Never start a file name with the hash: commands read a name like `-123.ndjson` as options.
+Pass `INPUT_HASH` verbatim, even when it is negative. Never use `--`, which makes every later option positional. Never start a file name with the hash: commands read a name like `-123.ndjson` as options.
 
 Every moment on the branch is in the file, including the failure moment, so reuse `$LOG` for any moment with the same input hash. Other agents may be downloading the same timeline, so download to a `mktemp` file and rename it only when complete; `$LOG` exists only once a download has finished. Find a moment in it by its `moment.vtime`.
 
@@ -37,7 +37,7 @@ Keep the incomplete `$PART` file if you cancel; it never takes the final name, s
 ```bash
 SLICE=/tmp/triage/log_${INPUT_HASH}_from_${BEGIN_VTIME}.ndjson
 PART=$(mktemp /tmp/triage/part.XXXXXX)
-snouty runs --json logs --begin-vtime "$BEGIN_VTIME" "$RUN_ID" "$INPUT_HASH" \
+snouty runs logs "$RUN_ID" --json --begin-vtime "$BEGIN_VTIME" "$INPUT_HASH" \
   > "$PART" && mv "$PART" "$SLICE"
 ```
 
@@ -81,7 +81,7 @@ Events with a `fault` field come from `fault_injector`. Its fields: `name`, `typ
 - **Network Clog** (`clog`/`network`): Links of containers in `affected_nodes` experience the `disruption_type` for `max_duration` seconds.
 - **Network Restore** (`restore`/`network`): Restores all faulted network links.
 - `disruption_type` values: `Stopped` (packets dropped), `Slowed` (packets delayed), `Jammed` (packets queued until a future delivery time).
-- **Container Kill / Stop** (`kill`|`stop`/`node`): The container is killed or stopped for `max_duration` seconds, then restarted by Antithesis. `max_duration` may be `"0"` (a string), meaning the restart has no controlled end. A restart policy may restart the container sooner.
+- **Container Kill / Stop** (`kill`|`stop`/`node`): The container is killed or stopped for `max_duration` seconds, then restarted by Antithesis. `max_duration` is `"0"` (a string) for a Kubernetes pod, which Kubernetes restarts, not Antithesis. A restart policy may restart the container sooner.
 - **Container Pause** (`pause`/`node`): The container is frozen for `max_duration` seconds. It stays on the network but processes nothing, so other containers see timeouts.
 - **CPU Throttle** (`throttle`/`node`): The container's CPU is slowed for `max_duration` seconds.
 - **Clock Skew** (`skip`/`clock`): The system clock jumps forward or backward by `details.offset` seconds. With `max_duration`, the offset is temporary (jitter) and reversed afterwards; without it, permanent. Offsets are cumulative.
@@ -109,7 +109,7 @@ Snouty adds `active_faults` to every event, a dictionary of the fault windows op
 
 Windows with `max_duration` expire at `start + max_duration`. A `restore` clears all network windows. A fault injector `paused: true` status event clears all network and node windows; clock windows survive it.
 
-Not tracked: `kill` and `stop` (they may have no controlled end; the container goes down and comes back), and thread pausing (it produces no fault injector events).
+Not tracked: `kill` and `stop` (the container goes down and comes back, and a Kubernetes pod's restart has no set end), and thread pausing (it produces no fault injector events).
 
 ### Bug probability events (causal-analysis runs only)
 

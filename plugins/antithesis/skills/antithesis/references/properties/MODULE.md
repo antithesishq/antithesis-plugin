@@ -32,13 +32,24 @@ Then add exploration assertions on the situations that lead up to the guarantee 
 
 ### 3. Check it locally
 
-Run the local loop in `references/workload/local-loop.md`. Its assertions should pass. Then break the condition on purpose, for example by applying a transfer's debit without its credit, and confirm they fail. Undo the change.
+The local check makes the short run count. It confirms that each assertion is implemented correctly, matches a real guarantee of the system, and should be reachable in Antithesis. Many assertions, such as those that need faults, can't be reached locally, and that's expected.
 
-If an assertion fails without a change, read the system's code. A broken promise is a real bug: keep the assertion. A check stricter than the guarantee, such as treating a transfer whose response timed out as never applied, needs fixing. Otherwise, keep the assertion, and report the failure to the user as a possible bug for them to judge.
+Run the local loop in `references/workload/local-loop.md`, and check:
+
+- **It's correct.** If the guarantee's check runs locally, break the condition on purpose, for example by applying a transfer's debit without its credit, confirm its assertion fails, and undo the change. If it doesn't run locally, read the check against the code whose output it judges.
+- **It matches the guarantee.** If an assertion fails without a change, read the system's code. A broken promise is a real bug: keep the assertion. A check stricter than the guarantee, such as treating a transfer whose response timed out as never applied, needs fixing. Otherwise, keep the assertion, and report the failure to the user as a possible bug for them to judge.
+- **It should be reachable.** The exploration assertions leading up to it that don't need faults are met, and the workload sends the requests that lead to the rest.
+
+As soon as the local loop proves inconclusive, stop iterating locally and go on to a short run.
 
 ### 4. Check it in a short run
 
-Launch a short run as `references/workload/run-loop.md` describes, and read it with the triage module. Its properties should pass, including those for the situations leading up to it.
+Launch a short run as `references/workload/run-loop.md` describes, and read it with the triage module. Then check each guarantee you added or changed:
+
+1. Trace the exploration assertions on the situations leading up to it, and confirm each one passes: the run reached that situation.
+2. Confirm the guarantee's own assertions pass.
+
+If the run never reaches the guarantee, it hasn't tested it. Launch a longer run, or change the workload so it reaches those situations more often, and check again.
 
 Treat early failures as "Check it locally" says. To find a failure's cause, use the triage module's `root-cause` mode.
 
@@ -51,7 +62,7 @@ Work in batches of up to 10 guarantees, unless the request says otherwise.
 1. List the guarantees the source states or implies that apply to this system. For a past bug, confirm its cause from the fix, not only the report.
 2. Show the user the most important batch, and ask which to add, unless the request already says which.
 3. Define each chosen guarantee by following "Make it checkable", "Add the check" and "Check it locally", then check them all in one short run, as "Check it in a short run" says.
-4. If the source has more, ask the user whether to import the next batch, unless the request already says.
+4. If the source has more, say so in the report, and offer to import the next batch.
 
 ### Template property catalogs
 

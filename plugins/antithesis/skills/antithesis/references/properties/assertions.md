@@ -1,6 +1,6 @@
 # Assertions
 
-An assertion is an Antithesis SDK call in the driver or the SUT's code. Each assertion, identified by its message, becomes one property in the run, judged by the default property for its type (`references/antithesis/explainer.md`). A failing assertion doesn't stop the program. For how each language's SDK works, see `snouty docs tree sdk`; for its exact API, at the latest version, see the language's page, listed in `references/workload/languages.md`.
+An assertion is an Antithesis SDK call in the driver or the SUT's code. Each assertion, identified by its message, becomes one property in the run, judged by the default property for its type (`references/antithesis/explainer.md`). A failing assertion doesn't stop the program. For how each language's SDK works, see `snouty docs tree sdk`; for its exact API, at the version the project uses, see the language's page, listed in `references/workload/languages.md`.
 
 This skill names each assertion type in snake_case with an `assert_` prefix, such as `assert_always` and `assert_sometimes`. Each SDK spells them its own way, such as `assert_always!` in Rust, `assert.Always` in Go and `always` in Python. In a run's results, each type's default property is named in CapitalCase, such as `Always`.
 
@@ -14,7 +14,7 @@ This skill names each assertion type in snake_case with an `assert_` prefix, suc
 | `assert_unreachable` | code that must never run | reached at least once |
 | `assert_always_or_unreachable` | avoid it: it passes silently when never reached | reached and false at least once |
 
-Every type except `assert_unreachable` and `assert_always_or_unreachable` fails if it's never reached, so its passing already proves it ran. Never add an `assert_reachable` or `assert_sometimes` next to another assertion just to show the check ran: it adds nothing. Rather than `assert_always_or_unreachable`, improve the workload so it reaches the check, or fuzz for longer.
+Every type except `assert_unreachable` and `assert_always_or_unreachable` fails if it's never reached, so its passing already proves it ran. Don't add an `assert_reachable` or `assert_sometimes` next to another assertion only to show that the same check ran, such as `assert_reachable("foo was checked")` beside `assert_always(foo, "foo is true")`: the `assert_always` already fails if it's never reached. One that marks something else, such as a kind of log line arriving, is fine. Rather than `assert_always_or_unreachable`, improve the workload so it reaches the check, or fuzz for longer.
 
 ## Rich assertions
 

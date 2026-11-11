@@ -95,14 +95,12 @@ An eventually stops faults for good, waits for the system to recover, asserts th
 Write it as a normal rule, so swarm testing leaves it out of some timelines. Leave its weight at the default: the draw below sets how often it fires. Consider adding it to other groups too, so it can also fire while other actions run. The rule returns at once unless a rare weighted boolean draw passes, then calls an `eventually` method. The draw starts eventuallys at varied depths, from right after `/workload-active` to deep into the timeline. The method:
 
 1. Takes a global lock, so no other eventually can start.
-2. Stops faults for good, by running `$ANTITHESIS_STOP_FAULTS <seconds>` for far longer than the rest of the timeline can take, such as an hour.
+2. Stops faults for good, by running `$ANTITHESIS_STOP_FAULTS <seconds>` for far longer than the rest of the timeline can take, such as an hour. Skip this when `ANTITHESIS_STOP_FAULTS` is unset, as it is in the local loop.
 3. Waits, up to a deadline, until every node serves requests again. Restarted containers take a while to come back. The "Wait until every node is up" step can share this per-node check.
 4. Logs that its assertions start, then asserts that the system recovered, and asserts each guarantee that must hold once faults stop ("After faults stop" in `references/properties/checks.md`). Each assertion becomes a property in the run.
-5. Logs that it's ending the timeline, then exits the driver with status 0. Antithesis can't end a timeline explicitly. Once the driver exits, the timeline goes idle, and Antithesis stops spending fuzzing effort on it.
+5. Logs that it's ending the timeline, then exits the driver with status 0. No SDK call ends a timeline the way an `eventually_` test command does. Once the driver exits, the timeline goes idle, and Antithesis stops spending fuzzing effort on it, which ends it in effect.
 
 Decide how an eventually treats the other actions from what it asserts. Some assertions hold while actions continue. Others need a quiet system: the eventually can wait for actions in flight to finish, for example with a lock that every other rule holds while it acts, or interrupt them by cancelling them.
-
-A pause stops new clock faults, but it doesn't undo a clock shift that already happened. A node whose clock a fault moved back 5 seconds is still 5 seconds behind during the checks.
 
 For the local loop, give the driver two environment variables: one that turns the eventually rule off, and one that calls the `eventually` method directly after a given number of seconds of workload, whatever swarm testing and the draw decide.
 

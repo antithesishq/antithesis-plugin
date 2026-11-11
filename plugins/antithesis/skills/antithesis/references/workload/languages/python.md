@@ -8,15 +8,11 @@
 - **Init:** none.
 - **Setup complete:** `antithesis.lifecycle.setup_complete(details)`.
 - **Assertions:** functions in `antithesis.assertions`, such as `always`, `sometimes`, `reachable` and `sometimes_greater_than`.
-- **Cataloging:** the SDK reports an assertion only when it runs, so one that's never reached is missing rather than failing. In a run, Antithesis catalogs the code in `/opt/antithesis/catalog/` ("Instrumentation"). For the local loop, `python -m antithesis.catalog <src-dir> -o catalog.json` writes the catalog, and the SDK registers it at startup when `ANTITHESIS_ASSERTION_CATALOG` names that file.
+- **Cataloging:** the SDK reports an assertion only when it runs, so one that's never reached is missing rather than failing. In a run, Antithesis catalogs the Python code placed in `/opt/antithesis/catalog/` of an image (`snouty docs show /docs/reference/sdk/python/`), so link the code's directory there: `RUN mkdir -p /opt/antithesis && ln -s /driver /opt/antithesis/catalog`. For the local loop, `python -m antithesis.catalog <src-dir> -o catalog.json` writes the catalog, and the SDK registers it at startup when `ANTITHESIS_ASSERTION_CATALOG` names that file.
 
 ## Instrumentation
 
-Antithesis catalogs and instruments the Python code placed in `/opt/antithesis/catalog/` of an image: `snouty docs show /docs/reference/sdk/python/`. Link the code's directory there:
-
-```dockerfile
-RUN mkdir -p /opt/antithesis && ln -s /driver /opt/antithesis/catalog
-```
+Python isn't among the languages Antithesis instruments.
 
 ## Local coverage
 

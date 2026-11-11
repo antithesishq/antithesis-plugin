@@ -14,17 +14,16 @@ Plugin version: `0.0.10`
    - Devin: `references/platforms/devin.md`
    - Replit: `references/platforms/replit.md`
 2. Read `references/antithesis/explainer.md`.
-3. Check the dependencies below.
 
 ### Dependencies
 
 Every module needs:
 
-- **snouty 0.9.0 or later**, installed and configured for the Antithesis tenant. If it's missing or not configured, follow `references/antithesis/snouty-setup.md`. If it's older, run `snouty update`, or reinstall it if it wasn't installed with the installer script
+- **snouty 0.10.0 or later**, installed and configured for the Antithesis tenant. If it's missing or not configured, follow `references/antithesis/snouty-setup.md`. If it's older, run `snouty update`, or reinstall it if it wasn't installed with the installer script
 - **Docker or Podman, with Docker Compose**
 - **jq**
 
-Assume that dependencies are setup. If any command fails, check dependencies and `snouty doctor` first.
+Assume that dependencies are set up. If any command fails, check dependencies and `snouty doctor` first.
 
 ## Modules
 

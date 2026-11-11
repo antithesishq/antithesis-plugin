@@ -9,6 +9,7 @@
 - **Setup complete:** `lifecycle.SetupComplete(details)`.
 - **Assertions:** functions in the `assert` package, such as `assert.Always`, `assert.Sometimes`, `assert.Reachable` and `assert.SometimesGreaterThan`.
 - **Cataloging:** build with the SDK's `antithesis-go-toolexec`, which catalogs the assertions, so one that's never reached still fails. Install the latest with `go install github.com/antithesishq/antithesis-sdk-go/tools/antithesis-go-toolexec@latest`, and pass `-toolexec=antithesis-go-toolexec` to `go build`.
+- **Cgo:** build with cgo enabled, `CGO_ENABLED=1`, and a C compiler in the build image. Without cgo, the SDK still reports assertions, but Antithesis gets no coverage from the binary.
 
 ## Instrumentation
 
@@ -26,7 +27,7 @@ RUN go build -toolexec=antithesis-go-toolexec -o /out/driver .
 
 ## Local coverage
 
-- Build with `go build -cover -covermode=atomic -coverpkg=./...`, and set `GOCOVERDIR=/coverage/<service>`.
+- Build with `ANTITHESIS_SKIP_COVERAGE=true go build -toolexec=antithesis-go-toolexec -cover -covermode=atomic -coverpkg=./...`, and set `GOCOVERDIR=/coverage/<service>`. The toolexec still catalogs the assertions, so the local loop lists one that's never reached.
 - Go writes counters only when `main` returns or the program calls `os.Exit`.
 - Read it with `go tool cover`.
 

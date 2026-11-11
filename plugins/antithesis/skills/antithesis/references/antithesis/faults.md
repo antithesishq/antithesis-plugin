@@ -8,18 +8,18 @@ Antithesis injects faults throughout every timeline, interleaved with the worklo
 
 ## Scope
 
-Faults act on nodes: containers in Docker Compose, pods in Kubernetes. Everything in a node shares its fate, so two services in one container never see a network fault between them. Put services in separate containers to fault them independently. Two faults act on the whole machine instead: clock skips, and thread pausing.
+Faults act on nodes: containers in Docker Compose, pods in Kubernetes. Everything in a node shares its fate, so two services in one container never see a network fault between them. Put services in separate containers to fault them independently. Two faults act on the whole machine instead: clock skips and CPU modulation. Thread pausing acts on one thread at a time, in any node.
 
 ## Fault tolerance levels
 
 `--fault-tolerance` picks which faults run:
 
-| Level               | Faults                                                                                                   |
-| ------------------- | -------------------------------------------------------------------------------------------------------- |
-| `none`              | None.                                                                                                    |
-| `resilient`         | Baseline latency, `Slowed` and `Jammed` clogs, node pauses, CPU modulation, thread pausing, clock skips. |
-| `high_availability` | Everything in `resilient`, plus partitions, `Stopped` clogs, and node termination.                       |
-| `legacy`            | All network faults and thread pausing, nothing else.                                                     |
+| Level               | Faults                                                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `none`              | None.                                                                                                                     |
+| `resilient`         | Baseline latency, `Slowed` and `Jammed` clogs, node pauses, node throttling, CPU modulation, thread pausing, clock skips. |
+| `high_availability` | Everything in `resilient`, plus partitions, `Stopped` clogs, and node termination.                                        |
+| `legacy`            | All network faults and thread pausing, nothing else.                                                                      |
 
 `legacy` is the server's default for `basic_test`, so always pass `--fault-tolerance`.
 
@@ -27,7 +27,7 @@ Faults act on nodes: containers in Docker Compose, pods in Kubernetes. Everythin
 
 Incoming and outgoing packets are faulted independently, so any network fault may be asymmetric: one direction fails while the other works.
 
-- **Baseline latency.** Always on: normal variation in delivery time, and a low rate of dropped packets.
+- **Baseline latency.** Normal variation in delivery time, and a low rate of dropped packets.
 - **Partitions.** Nodes split into groups that can't reach each other. Within a group, traffic is normal.
 - **Clogs.** One or more nodes lose inbound traffic, outbound traffic, or both.
 - **Restore.** Ends every network fault on every link.
@@ -44,8 +44,8 @@ Only one node fault runs on a node at a time. Another one aimed at it while one 
 
 ## Other faults
 
-- **Clock skips.** The clock jumps forward or back, on every node at once. A jump is temporary, reversed after a set time, or permanent, and jumps add up. Intrinsics such as `__rdtsc()` aren't affected.
-- **Thread pausing.** Single threads pause briefly, so threads interleave in unexpected orders. It needs Antithesis instrumentation, and no container can be excluded from it.
+- **Clock skips.** The clock jumps forward or back, on every node at once. There are two kinds. A jitter jumps by an offset, then jumps back by the same amount after a while. An offset never jumps back. Jumps add up. Pausing faults stops new jumps, but not a jitter in progress: the clock can still jump back during the pause. Intrinsics such as `__rdtsc()` aren't affected.
+- **Thread pausing.** One thread at a time pauses briefly, so threads interleave in unexpected orders. It needs Antithesis instrumentation, and no machine, node or process can be excluded from it.
 - **CPU modulation.** The simulated processor's speed, and the relative speed of its instructions, change. That reorders concurrent threads, without needing instrumentation.
 - **Custom faults.** A script of yours that the fault injector runs at random times, such as a call to an admin API. Talk to Antithesis to add one.
 
@@ -53,14 +53,14 @@ The log records no event for thread pausing or CPU modulation.
 
 ## Excluding containers
 
-`--fault-exclusions` is a regex over container or pod names. An excluded container gets no faults of its own, but thread pausing and clock skips still reach it, and the nodes it talks to are still faulted. Unix sockets in a volume that containers share are never faulted.
+`--fault-exclusions` is a regex over container or pod names. An excluded container gets no faults of its own, but thread pausing, CPU modulation and clock skips still reach it, and the nodes it talks to are still faulted. Unix sockets in a volume that containers share are never faulted.
 
 ## Pausing faults
 
 `$ANTITHESIS_STOP_FAULTS <seconds>` pauses faults on every node for that long:
 
 - Network faults end, and Antithesis restarts killed and stopped containers, which take a while to become ready.
-- No new faults start, clock skips included. A clock shift that already happened stays: a clock a fault moved back 5 seconds is still 5 seconds behind during the pause.
+- No new faults start.
 - Faults resume on their own when the time is up. A pause can't end early, and overlapping pauses merge into the longest.
 
 An `eventually_` or `finally_` test command also pauses faults, and ends its timeline after it runs.

@@ -11,7 +11,7 @@ Don't read the other pages in `references/triage/` up front. Read each one only 
 Get the run's status with `snouty runs show <run_id>`.
 
 - If the run can't be found, wait 10 seconds and retry. A run can take a while to appear in the API after it starts.
-- If the status is `starting`, wait for it with `snouty runs wait --until ready <run_id>`.
+- If the status is `starting`, wait for it with `snouty runs wait <run_id> --until ready`.
 - If the status is `incomplete`, also follow "Diagnose an incomplete run" below.
 
 ## Pick a mode
@@ -40,7 +40,7 @@ Whoever downloads a log reads `references/triage/logs.md` first. In `monitor` an
 
 1. Pick the first failing example and find its moment. If the counterexample has no `moment` (properties that report a value, see `references/triage/properties.md`), the counterexample value is the evidence; skip to "Cross-reference the evidence".
 2. Download the log for that moment and analyze it locally.
-3. If there is an available ready run, run commands at the failing moment. See `references/debug/MODULE.md`.
+3. Run commands at the failing moment. `references/debug/MODULE.md` says which run to use.
 4. If you aren't sure what caused the failure, find more moments for the same property with `snouty runs search -n 999` and compare them. Passing examples are useful for finding what differs between success and failure.
 5. **Cross-reference the evidence:** check the log and command output against the source code of the system under test and the workload.
 6. Work out the timeline of events that led up to the failure and its root cause.
