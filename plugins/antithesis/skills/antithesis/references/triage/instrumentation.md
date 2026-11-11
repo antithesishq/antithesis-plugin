@@ -5,9 +5,9 @@ Use this guide to verify that the system under test (SUT) and its client program
 ## Step 1: check the setup properties
 
 ```bash
-snouty runs properties --detail --name "software was instrumented" "${RUN_ID}"
-snouty runs properties --detail --name "every instrumented module has symbols" "${RUN_ID}"
-snouty runs properties --detail --name "thread pausing was enabled" "${RUN_ID}"
+snouty runs properties "${RUN_ID}" --detail --name "software was instrumented"
+snouty runs properties "${RUN_ID}" --detail --name "every instrumented module has symbols"
+snouty runs properties "${RUN_ID}" --detail --name "thread pausing was enabled"
 ```
 
 All three are default properties: their examples carry values, not moments.

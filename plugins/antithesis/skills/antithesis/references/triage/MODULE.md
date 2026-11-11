@@ -11,7 +11,7 @@ Don't read the other pages in `references/triage/` up front. Read each one only 
 Get the run's status with `snouty runs show <run_id>`.
 
 - If the run can't be found, wait 10 seconds and retry. A run can take a while to appear in the API after it starts.
-- If the status is `starting`, wait for it with `snouty runs wait --until ready <run_id>`.
+- If the status is `starting`, wait for it with `snouty runs wait <run_id> --until ready`.
 - If the status is `incomplete`, also follow "Diagnose an incomplete run" below.
 
 ## Pick a mode
@@ -26,7 +26,7 @@ If no mode is given, use `monitor` for an `in_progress` run and `summary` for a 
 
 ## Read the properties
 
-List the failing ones, with their example counts and a sample of their moments, with `snouty runs properties --failing --detail <run_id>`. For an overview of every property, the table without `--detail` is enough. Read `references/triage/properties.md` for the assertion types and what pass/fail ratios suggest.
+List the failing ones, with their example counts and a sample of their moments, with `snouty runs properties <run_id> --failing --detail`. For an overview of every property, the table without `--detail` is enough. Read `references/triage/properties.md` for the assertion types and what pass/fail ratios suggest.
 
 If the run is `in_progress`, don't wait for it to finish. Follow `snouty runs stream --help` to get the current results and new ones as they arrive.
 

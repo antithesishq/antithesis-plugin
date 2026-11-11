@@ -1,6 +1,6 @@
 # Property queries
 
-Read `snouty runs properties --help` first. `snouty runs properties --detail "${RUN_ID}"` lists each property with its example and counterexample counts, and a few of its example and counterexample moments.
+Read `snouty runs properties --help` first. `snouty runs properties "${RUN_ID}" --detail` lists each property with its example and counterexample counts, and a few of its example and counterexample moments.
 
 The counts are exact, not a sample: they count every example and counterexample found in the run. They count hits of the property, not timelines: a timeline that never reaches the property adds nothing to either count, so the counts don't tell you how many timelines ran or what share of them hit the property. On an `in_progress` run, the counts are the hits so far and grow as the run goes on. The table's ✓ and ✗ columns and the `Examples` line of `--detail` report the same counts. Any listed moments are a sample. Don't infer counts from the number of moments listed, and don't treat the counts as estimates. To find more moments, use `snouty runs search`.
 

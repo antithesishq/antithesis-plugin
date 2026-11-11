@@ -14,7 +14,7 @@ For a property failure, find its passing and failing moments with `snouty runs s
 
 Any ready run can execute commands, but a run that already has the moment warm saves rewarming time:
 
-1. Prefer a ready run that has already rewarmed the moment. Check with `snouty runs search --count <run_id> 'filter(ev => ev.moment.input_hash == "<hash>")'`; non-zero means every moment of that branch is warm.
+1. Prefer a ready run that has already rewarmed the moment. Check with `snouty runs search <run_id> --count 'filter(ev => ev.moment.input_hash == "<hash>")'`; non-zero means every moment of that branch is warm.
 2. Prefer reusing a ready run over starting a new one.
 3. If no run is ready, start a debugging session with `snouty debug`.
 
@@ -24,10 +24,10 @@ Executing commands doesn't keep a run alive. If the run exits while you debug, p
 
 ## Executing commands
 
-Run a bash command at a moment with `snouty runs exec`. Put every option before `RUN_ID`, and pass a negative input hash as it is. Never use `--`: everything after it is positional, so a later `--container client1` fails with `unexpected argument 'client1'`.
+Run a bash command at a moment with `snouty runs exec`. Write the run ID, then every option, then `--`, then the input hash, vtime and command. Everything after `--` is positional, so a negative input hash passes as it is, and an option after it fails with `unexpected argument`.
 
 ```bash
-snouty runs exec --container client1 --timeout 5m "$RUN_ID" -1469731053185852001 38.52 'ps aux'
+snouty runs exec "$RUN_ID" --container client1 --timeout 5m -- -1469731053185852001 38.52 'ps aux'
 ```
 
 - **With `--container <name>`,** the command runs in that container and can use the tools available in its image. You cannot install additional tools, as access to the internet is blocked in the Antithesis environment.
