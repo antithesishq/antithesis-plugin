@@ -2,9 +2,9 @@
 
 Antithesis can run scripts at any Moment in the Multiverse. Start by choosing the moment(s) and run(s) to investigate.
 
-Running commands shows the system's real state, so always do it when investigating any kind of failure. In a ready run you already have, even one from an unrelated source, it costs nothing extra, so prefer that to starting a debug run, which bills compute.
+Running commands shows the system's real state, so always do it when investigating any kind of failure. In a ready run you already have, even one from an unrelated source, it costs nothing extra, so prefer that to starting a debugging session, which bills compute.
 
-If the run you are using to run commands finishes, you can continue debugging by pulling the moments you need into another run. If no ready run exists, start a debug run.
+If the run you are using to run commands finishes, you can continue debugging by pulling the moments you need into another run. If no ready run exists, start a debugging session.
 
 ## Finding moments
 
@@ -16,9 +16,9 @@ Any ready run can execute commands, but a run that already has the moment warm s
 
 1. Prefer a ready run that has already rewarmed the moment. Check with `snouty runs search --count <run_id> 'filter(ev => ev.moment.input_hash == "<hash>")'`; non-zero means every moment of that branch is warm.
 2. Prefer reusing a ready run over starting a new one.
-3. If no run is ready, start a debug run with `snouty debug`.
+3. If no run is ready, start a debugging session with `snouty debug`.
 
-When an example or counterexample appears in a run still in progress, the moment is warm there, so run commands in that run. Once the run ends, pick a run with the policy above. A new debug run takes minutes to get ready, so don't block on it: wait with `snouty runs wait --until ready` in the background, and meanwhile read the timeline's logs with `snouty runs logs` and start on a reproducer.
+When an example or counterexample appears in a run still in progress, the moment is warm there, so run commands in that run. Once the run ends, pick a run with the policy above. A new debugging session takes minutes to get ready, so don't block on it: wait with `snouty runs wait --until ready` in the background, and meanwhile read the timeline's logs with `snouty runs logs` and start on a reproducer.
 
 Executing commands doesn't keep a run alive. If the run exits while you debug, pick a new one with this policy and continue.
 
@@ -38,4 +38,4 @@ snouty runs exec --container client1 --timeout 5m "$RUN_ID" -1469731053185852001
 
 ## When you're done
 
-A debug run started with `snouty debug` bills compute for as long as it stays available. As soon as you have what you need, cancel each debug run you started with `snouty runs cancel <run_id>`. A subagent reports the debug runs it started and leaves them running, because another subagent may be using them. The agent that launched the subagents cancels those runs once they have all finished. Never cancel a run that you or your subagents didn't start.
+A debugging session started with `snouty debug` bills compute for as long as it stays available. As soon as you have what you need, cancel each debugging session you started with `snouty runs cancel <run_id>`. A subagent reports the debugging sessions it started and leaves them running, because another subagent may be using them. The agent that launched the subagents cancels those sessions once they have all finished. Never cancel a run that you or your subagents didn't start.

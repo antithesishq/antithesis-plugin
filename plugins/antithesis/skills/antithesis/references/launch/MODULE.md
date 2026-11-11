@@ -16,7 +16,7 @@ Always run `snouty launch` with `SNOUTY_UNSTABLE_FEATURES=teams` set, including 
 
 ## Compute budget
 
-If the user gave a compute budget, or the module sets a default, it covers every run and debug run you start for the task. Before each launch, add up:
+If the user gave a compute budget, or the module sets a default, it covers every run and debugging session you start for the task. Before each launch, add up:
 
 - the compute hours of your runs that have ended, from `snouty runs usage --after <when the task started>`. It lists every run on the tenant, so count only your run IDs;
 - the `--max-compute-hours` of your runs still going, which `runs usage` doesn't list until they end;

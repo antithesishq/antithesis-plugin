@@ -31,13 +31,13 @@ A launcher starts a test run. It deploys the Config image to the Antithesis fuzz
 
 Every tenant has two default launchers: `basic_test` and `basic_k8s_test`. Tenants may have additional launchers.
 
-## Debugger runs
+## Debugging sessions
 
-A debugger run takes a source run and moment as input and rewarms it into a deterministic virtual machine. Like any run, it can rewarm more moments from one or more source runs.
+A debugging session is a run that takes a source run and moment as input and rewarms it into a deterministic virtual machine. Like any run, it can rewarm more moments from one or more source runs.
 
 ## Run readiness
 
-snouty's run commands work on any ready run: status `in_progress:ready` in `snouty runs show`, or wait with `snouty runs wait --until ready`. All except `snouty runs exec` also work on completed runs. To exec at a moment when no run is ready, start a debug run with `snouty debug`.
+snouty's run commands work on any ready run: status `in_progress:ready` in `snouty runs show`, or wait with `snouty runs wait --until ready`. All except `snouty runs exec` also work on completed runs. To exec at a moment when no run is ready, start a debugging session with `snouty debug`.
 
 ## snouty
 
