@@ -1,0 +1,125 @@
+name: Release PR
+
+# Every weekday at 17:00 GMT-7, opens a PR that releases the default branch's head, when its
+# CI passed and the plugin changed since the last release. Claude picks the version and
+# writes the notes by following the release skill, and the PR is assigned for review. Once
+# it merges, tag-release.yml tags it and runs release.yml.
+#
+# Claude reads text that others wrote, such as merged diffs, so its job can't write to the
+# repository and can't reach the network beyond GitHub's API. It hands back only the version,
+# its reason and the notes, and a separate job checks them and opens the PR from a clean
+# checkout, so nothing Claude could have changed runs with a write token.
+on:
+  schedule:
+    # 00:00 UTC, Tuesday to Saturday, is 17:00 GMT-7, Monday to Friday, all year round.
+    - cron: "0 0 * * 2-6"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to release, such as 0.2.0 or 0.2.0-rc.1. Leave it empty to have Claude pick one.
+        required: false
+        default: ""
+
+concurrency:
+  group: release-pr
+
+env:
+  MISE_TRUSTED_CONFIG_PATHS: ${{ github.workspace }}
+
+permissions: {}
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: read
+    outputs:
+      release: ${{ steps.gate.outputs.release }}
+      previous: ${{ steps.gate.outputs.previous }}
+      requested: ${{ steps.gate.outputs.requested }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: jdx/mise-action@v5
+        with:
+          version: 2026.10.24
+          install_args: uv
+      - id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED_VERSION: ${{ inputs.version }}
+        run: scripts/release-pr.py gate
+
+  notes:
+    needs: gate
+    if: needs.gate.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Claude authenticates to the Claude API with the workflow's OIDC token.
+      id-token: write
+    outputs:
+      version: ${{ steps.claude.outputs.version }}
+      reason: ${{ steps.claude.outputs.reason }}
+      notes: ${{ steps.claude.outputs.notes }}
+      # The commit Claude read, so the PR releases exactly that.
+      commit: ${{ steps.head.outputs.commit }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The release skill reads the diff since the last tag.
+          fetch-depth: 0
+          persist-credentials: false
+      - id: head
+        run: echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: jdx/mise-action@v5
+        with:
+          version: 2026.10.24
+          install_args: uv
+      - id: claude
+        env:
+          # Workload identity federation: identifiers, not credentials. The rule, in the
+          # Claude Console under Settings, Workload identity, accepts only the schedule and
+          # workflow_dispatch events on refs/heads/main of this repository.
+          ANTHROPIC_FEDERATION_RULE_ID: fdrl_01Us1LZr8HnSXM1C8ucSFNK6
+          ANTHROPIC_ORGANIZATION_ID: 93f004c5-9d07-4352-b0d1-1730ec1c4b28
+          ANTHROPIC_SERVICE_ACCOUNT_ID: svac_01T1yc3UbfvpQnE3KLTfJ6bB
+          ANTHROPIC_WORKSPACE_ID: wrkspc_01J1wcfqkKJ5ey1wBmqnYb9D
+          CLAUDE_CODE: claude@2.1.316
+          # Read-only, for `gh release list`, which runs before Claude, without it.
+          GH_TOKEN: ${{ github.token }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+          REQUESTED_VERSION: ${{ needs.gate.outputs.requested }}
+        run: scripts/release-notes.py
+
+  pr:
+    needs: [gate, notes]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      # To dispatch CI on the release branch, and approve the PR's own CI run.
+      actions: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.notes.outputs.commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: jdx/mise-action@v5
+        with:
+          version: 2026.10.24
+          install_args: uv
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.notes.outputs.version }}
+          REASON: ${{ needs.notes.outputs.reason }}
+          NOTES: ${{ needs.notes.outputs.notes }}
+          PREVIOUS: ${{ needs.gate.outputs.previous }}
+          REQUESTED_VERSION: ${{ needs.gate.outputs.requested }}
+          RELEASE_REVIEWER: carlsverre
+        run: scripts/release-pr.py open "$VERSION"

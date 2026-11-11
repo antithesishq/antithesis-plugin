@@ -1,0 +1,33 @@
+name: Tag release
+
+# When a release PR, from a `release/` branch, merges, tags its merge commit with the version
+# it set, and runs release.yml for the tag.
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  tag:
+    if: >-
+      github.event.pull_request.merged &&
+      startsWith(github.event.pull_request.head.ref, 'release/') &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      # To dispatch release.yml: a tag pushed with GITHUB_TOKEN starts no workflow.
+      actions: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          fetch-depth: 0
+      - uses: jdx/mise-action@v5
+        with:
+          version: 2026.10.24
+          install_args: uv
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          MERGE_COMMIT: ${{ github.event.pull_request.merge_commit_sha }}
+        run: scripts/tag-release.py "$MERGE_COMMIT"
