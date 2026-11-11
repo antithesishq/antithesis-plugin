@@ -1,6 +1,6 @@
 # Images
 
-Take every base image a workload builds on from this table. Each is the latest of its kind for the current Debian stable release, so build and runtime images share one release, and a binary built in one finds the libraries it was linked against in the other. A Dockerfile on another page names its image by role, such as `<Rust build image>`: substitute the image from this row.
+Use these images when you have to choose one, such as for the driver or a build stage you add. When the SUT already builds its own images, build on those instead. Each image here is on the current Debian stable release, so a binary built on one runs on another. A Dockerfile on another page names an image by its row, such as `<Rust build image>`: substitute the image from that row.
 
 <!-- images:start -->
 Debian stable: 13 (trixie)
@@ -13,5 +13,3 @@ Debian stable: 13 (trixie)
 | Python image      | `python:3-slim-trixie` |
 | OCaml build image | `ocaml/opam:debian-13` |
 <!-- images:end -->
-
-Use another release only for a strong reason, such as a system that doesn't build on this one, and then use it for every image.

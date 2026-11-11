@@ -13,7 +13,7 @@
 
 Follow `snouty docs show /docs/reference/sdk/rust/instrumentation/`: add the latest `antithesis-instrumentation` crate, reference it once with `use antithesis_instrumentation as _;`, and put the page's build flags in the crate's `.cargo/config.toml`. Copy the flags from the page, not from memory. They set the build target, so the binary lands under `target/<target>/release/`. Keep an unstripped copy of each binary in `/symbols` of its runtime image.
 
-A build stage, on the Rust build image in `references/workload/images.md`, that leaves the binary in `/out` and its symbols in `/symbols`:
+A build stage, on the "Rust build image" row in `references/workload/images.md`, that leaves the binary in `/out` and its symbols in `/symbols`:
 
 ```dockerfile
 FROM <Rust build image> AS build

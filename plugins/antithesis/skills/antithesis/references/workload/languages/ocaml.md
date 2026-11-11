@@ -31,4 +31,4 @@ Use the standard coverage tool for OCaml.
 
 - Workers run on OCaml threads by default (`Concurrency.threads`). State the rules share must be safe to use from several threads.
 
-Build stage: base it on the OCaml build image in `references/workload/images.md`, install the dependencies with `opam`, build with `dune build --release`, and copy the driver binary to `/out/driver`.
+Build stage: base it on the "OCaml build image" row in `references/workload/images.md`, install the dependencies with `opam`, build with `dune build --release`, and copy the driver binary to `/out/driver`.

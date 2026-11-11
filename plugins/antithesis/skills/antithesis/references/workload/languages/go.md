@@ -14,7 +14,7 @@
 
 Build with `antithesis-go-toolexec`, as "Cataloging" says. It also adds coverage instrumentation, and writes the symbol tables to `/symbols`, which a multi-stage build carries into the runtime image: `snouty docs show /docs/reference/sdk/go/instrumentation/`.
 
-A build stage, on the Go build image in `references/workload/images.md`, that leaves the binary in `/out` and its symbols in `/symbols`:
+A build stage, on the "Go build image" row in `references/workload/images.md`, that leaves the binary in `/out` and its symbols in `/symbols`:
 
 ```dockerfile
 FROM <Go build image> AS build
