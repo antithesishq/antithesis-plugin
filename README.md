@@ -30,11 +30,11 @@ In addition, Snouty must be authenticated with your Antithesis tenant: `snouty l
 
 The Antithesis plugin provides a skill called `/antithesis` (or `$antithesis` in some harnesses). The skill should be invoked automatically for Antithesis related prompts.
 
-When a request doesn't name a specific task, the skill picks one of three workflows, each a chain of the tasks below. You can also name one, as in `/antithesis test`:
+Given a free-form prompt, such as `/antithesis test the latest release of my system`, the skill picks one of three workflows, each a chain of the tasks below:
 
-- `setup`: build a workload for a system end to end.
-- `heal`: update a workload to cover the latest changes to its system, and validate it.
-- `test`: run the workload (building one first if needed), triage failures live, root-cause the likely bugs, and summarize.
+- Setup: build a workload for a system end to end.
+- Heal: update a workload to cover the latest changes to its system, and validate it.
+- Test: run the workload (building one first if needed), triage failures live, root-cause the likely bugs, and summarize.
 
 Or prompt the agent with one of these tasks:
 

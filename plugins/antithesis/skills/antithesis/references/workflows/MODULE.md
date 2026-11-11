@@ -2,13 +2,15 @@
 
 A workflow chains other modules to reach a common goal. It adds no steps of its own: follow each module it names, read only when you reach it, as that module says. If the user gave a compute budget, it covers the whole workflow, across every module.
 
+Pick the workflow that fits the user's prompt:
+
 | Workflow | Use when                                                                       |
 | -------- | ------------------------------------------------------------------------------ |
-| `setup`  | The system has no workload yet, and the user wants one.                        |
-| `heal`   | The system changed since its workload was last updated, and the workload lags. |
-| `test`   | The user wants the system tested, and found bugs triaged.                      |
+| Setup    | The system has no workload yet, and the user wants one.                        |
+| Heal     | The system changed since its workload was last updated, and the workload lags. |
+| Test     | The user wants the system tested, and found bugs triaged.                      |
 
-If the request fits none, pick the module from `SKILL.md` instead.
+If the prompt fits none, because it asks for one module's task, such as triaging a run, pick that module from the table in `SKILL.md` instead.
 
 ## Setup
 
