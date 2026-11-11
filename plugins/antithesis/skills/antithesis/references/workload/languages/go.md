@@ -12,7 +12,17 @@
 
 ## Instrumentation
 
-The same `antithesis-go-toolexec` adds coverage instrumentation, and writes the symbol tables to `/symbols`: `snouty docs show /docs/reference/sdk/go/instrumentation/`.
+Build with `antithesis-go-toolexec`, as "Cataloging" says. It also adds coverage instrumentation, and writes the symbol tables to `/symbols`, which a multi-stage build carries into the runtime image: `snouty docs show /docs/reference/sdk/go/instrumentation/`.
+
+A build stage, on the Go build image in `references/workload/images.md`, that leaves the binary in `/out` and its symbols in `/symbols`:
+
+```dockerfile
+FROM <Go build image> AS build
+WORKDIR /src
+RUN go install github.com/antithesishq/antithesis-sdk-go/tools/antithesis-go-toolexec@latest
+COPY driver/ .
+RUN go build -toolexec=antithesis-go-toolexec -o /out/driver .
+```
 
 ## Local coverage
 
@@ -40,14 +50,3 @@ The same `antithesis-go-toolexec` adds coverage instrumentation, and writes the 
 
 - **Rules have no weights.** To make an action rarer than the others, guard it with a weighted boolean draw.
 - `hegel.Workload` runs test cases without limit, rather than one. With an unbounded step count the first never ends, so this makes no difference.
-
-Build stage:
-
-```dockerfile
-FROM golang:1-trixie AS build
-WORKDIR /src
-RUN go install github.com/antithesishq/antithesis-sdk-go/tools/antithesis-go-toolexec@latest
-COPY driver/ .
-# Instruments the driver, catalogs its assertions, and writes /symbols.
-RUN go build -toolexec=antithesis-go-toolexec -o /out/driver .
-```

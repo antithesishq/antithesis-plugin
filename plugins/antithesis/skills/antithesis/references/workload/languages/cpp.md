@@ -12,7 +12,7 @@
 
 ## Instrumentation
 
-`snouty docs show /docs/reference/sdk/cpp/instrumentation/`.
+Follow `snouty docs show /docs/reference/sdk/cpp/instrumentation/`: include `antithesis_instrumentation.h` in exactly one translation unit, such as the file that defines `main`, and build with the page's compile and link flags, using clang. Leave each binary in `/out`, and an unstripped copy in `/symbols` of its runtime image.
 
 ## Local coverage
 
@@ -39,4 +39,4 @@ Hegel's frontend is C++ only.
 | Generate only               | the setting `.phases = {hegel::Phase::Generate}`                                 |
 | Weighted boolean draw       | no generator: draw an integer in a range, and compare it with a threshold        |
 
-Build stage: base it on `rust:1-trixie`, so `cargo` is there for the engine, and install `cmake` and the latest clang the image offers, which the SDK needs. Instrument it as "Instrumentation" says: include `antithesis_instrumentation.h` in the file that defines `main`, and build with the docs page's compile and link flags. Build with CMake, copy the driver binary to `/out/driver`, and copy it to `/symbols/` too, unstripped, for symbolization.
+The build compiles hegel's engine with `cargo`, so base the build stage on the Rust build image in `references/workload/images.md`, and install `cmake` and the latest clang the image offers.

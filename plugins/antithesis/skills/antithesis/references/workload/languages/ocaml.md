@@ -6,7 +6,7 @@ None. Write assertions and setup complete as JSON lines, following `references/w
 
 ## Instrumentation
 
-OCaml isn't among the languages Antithesis instruments, so OCaml code is a black box to its search. `references/workload/languages/fallback.md` says what to check.
+OCaml isn't among the languages Antithesis instruments, so OCaml code is a black box to its search. `references/workload/languages/fallback.md` says what to check. A build stage that the harness copies symbols from leaves `/symbols` empty.
 
 ## Local coverage
 
@@ -31,4 +31,4 @@ Use the standard coverage tool for OCaml.
 
 - Workers run on OCaml threads by default (`Concurrency.threads`). State the rules share must be safe to use from several threads.
 
-Build stage: base it on `ocaml/opam:debian-13`, which matches the `debian:trixie-slim` runtime in `references/workload/harness.md` and carries the latest OCaml, install the dependencies with `opam`, build with `dune build --release`, copy the driver binary to `/out/driver`, and create an empty `/symbols`, since there's nothing to symbolize.
+Build stage: base it on the OCaml build image in `references/workload/images.md`, install the dependencies with `opam`, build with `dune build --release`, and copy the driver binary to `/out/driver`.

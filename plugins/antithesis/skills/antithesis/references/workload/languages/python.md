@@ -12,7 +12,11 @@
 
 ## Instrumentation
 
-Antithesis catalogs and instruments the Python code placed in `/opt/antithesis/catalog/` of an image: `snouty docs show /docs/reference/sdk/python/`.
+Antithesis catalogs and instruments the Python code placed in `/opt/antithesis/catalog/` of an image: `snouty docs show /docs/reference/sdk/python/`. Link the code's directory there:
+
+```dockerfile
+RUN mkdir -p /opt/antithesis && ln -s /driver /opt/antithesis/catalog
+```
 
 ## Local coverage
 
@@ -39,8 +43,4 @@ Use `coverage.py`.
 - Rules run on worker threads. Requests overlap while they wait on the network, but Python code itself runs one thread at a time, so keep the model's checks cheap.
 - Hegel doesn't run `async` functions. Write rules as plain functions, with a blocking client.
 
-Image: Python needs no build stage. Base the driver image on `python:3-slim-trixie`, install the latest `hegeltest` and `antithesis` with `pip`, link the driver's source into `/opt/antithesis/catalog/` so Antithesis instruments it and catalogs its assertions, and run the script as `CMD`:
-
-```dockerfile
-RUN mkdir -p /opt/antithesis && ln -s /driver /opt/antithesis/catalog
-```
+Image: Python needs no build stage. Base the driver image on the Python image in `references/workload/images.md`, install the latest `hegeltest` and `antithesis` with `pip`, and run the script as `CMD`.

@@ -11,7 +11,19 @@
 
 ## Instrumentation
 
-`snouty docs show /docs/reference/sdk/rust/instrumentation/`.
+Follow `snouty docs show /docs/reference/sdk/rust/instrumentation/`: add the latest `antithesis-instrumentation` crate, reference it once with `use antithesis_instrumentation as _;`, and put the page's build flags in the crate's `.cargo/config.toml`. Copy the flags from the page, not from memory. They set the build target, so the binary lands under `target/<target>/release/`. Keep an unstripped copy of each binary in `/symbols` of its runtime image.
+
+A build stage, on the Rust build image in `references/workload/images.md`, that leaves the binary in `/out` and its symbols in `/symbols`:
+
+```dockerfile
+FROM <Rust build image> AS build
+WORKDIR /src
+COPY driver/ .
+RUN cargo build --release \
+ && mkdir -p /out /symbols \
+ && cp target/x86_64-unknown-linux-gnu/release/driver /out/ \
+ && cp /out/driver /symbols/
+```
 
 ## Local coverage
 
@@ -36,17 +48,3 @@
 | Generate only               | `#[hegel::main(phases = [hegel::Phase::Generate])]`      |
 | Weighted boolean draw       | `tc.draw(gs::weighted_booleans(p))`                      |
 | Hegel's repeat              | `tc.repeat`                                              |
-
-Build stage:
-
-Instrument it as "Instrumentation" says: add the latest `antithesis-instrumentation` crate, reference it with `use antithesis_instrumentation as _;`, and put the docs page's build flags in `driver/.cargo/config.toml`. Copy the flags from the docs page, not from memory: they set the build target, which moves the binary under `target/<target>/`.
-
-```dockerfile
-FROM rust:1-trixie AS build
-WORKDIR /src
-COPY driver/ .
-RUN cargo build --release \
- && mkdir -p /out /symbols \
- && cp target/x86_64-unknown-linux-gnu/release/driver /out/ \
- && cp /out/driver /symbols/
-```

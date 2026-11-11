@@ -89,6 +89,14 @@ run = "{{vars.check}} versions"
 description = "A new version has changelog notes"
 run = "{{vars.check}} changelog"
 
+[tasks."check:images"]
+description = "The workload's image table is current for Debian stable, and Docker Hub has every tag (skipped when CHECK_OFFLINE is set)"
+run = "{{vars.check}} images"
+
+[tasks."fix:images"]
+description = "Rewrite the workload's image table for the current Debian stable release"
+run = "uv run --quiet --locked scripts/images.py --write"
+
 [tasks."check:schema"]
 description = "The Agent Plugins manifest matches its schema (skipped when CHECK_OFFLINE is set)"
 run = "{{vars.check}} schema"

@@ -36,10 +36,10 @@ Run the system's command through a wrapper, `driver/forward-logs`, which:
 - once the system exits, lets the forwarder drain for up to 5 s, so the last lines, often a crash message, aren't lost, but a leftover child holding the pipe can't keep the container up;
 - exits with the system's status.
 
-In each system service's Antithesis Dockerfile, build the forwarder statically, so it runs on any base image, and put the wrapper, which needs bash, in front of the system's command:
+In each system service's Antithesis Dockerfile, build the forwarder statically, on the Rust build image in `references/workload/images.md`, so it runs on any base image, and put the wrapper, which needs bash, in front of the system's command:
 
 ```dockerfile
-FROM rust:1-trixie AS log-forward
+FROM <Rust build image> AS log-forward
 RUN rustup target add x86_64-unknown-linux-musl
 COPY driver/log-forward/ /src/
 RUN cd /src && cargo build --release --target x86_64-unknown-linux-musl
