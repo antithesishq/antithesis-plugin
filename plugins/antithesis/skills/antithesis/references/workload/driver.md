@@ -1,20 +1,20 @@
 # Write the driver
 
-The driver is a hegel concurrent state machine run from `#[hegel::main]`. Each `#[rule]` is one action: it draws its inputs, sends a request, and records the outcome in the model. Hegel runs the rules on several worker threads, in rounds. The next round starts only when every worker is done, so one slow rule stalls them all.
+The driver is a hegel concurrent state machine, run as one test case from hegel's main entry point. Each rule is one action: it draws its inputs, sends a request, and records the outcome in the model. Hegel runs the rules on several workers, in rounds. The next round starts only when every worker is done, so one slow rule stalls them all.
 
-Dependencies: `hegeltest` with `features = ["static-engine"]`, and the latest `antithesis_sdk`. Read its API following `references/workload/sdk.md`.
+This page describes the driver in hegel's terms, which every language shares. The page for the driver's language, `references/workload/languages/<language>.md`, gives the dependencies, the Antithesis SDK's calls, how that language spells each term here, and where hegel documents it.
 
 ## Starting up
 
 `main` does this, in order:
 
-1. **Call `antithesis_init()`.**
+1. **Initialize the Antithesis SDK,** if the language's SDK has an init call.
 2. **Wait until every node is up:** it answers requests, even if only to say the cluster isn't formed yet. An open port isn't enough.
 3. **Run admin setup, if any:** creating the cluster, a schema, users, buckets or topics, when that's easier here than in the system's containers. Retry each until it succeeds, and treat "already exists" as success, since a retried request may have taken effect.
 4. **Wait until the system serves the workload's requests:** a read answers, the cluster has a leader, all members joined.
-5. **Report setup complete** with `antithesis_sdk::lifecycle::setup_complete(&details)`. Antithesis takes the first setup complete from any process, so remove any other reporter, such as one in the system's containers.
+5. **Report setup complete** with the SDK's lifecycle call. Antithesis takes the first setup complete from any process, so remove any other reporter, such as one in the system's containers.
 6. **Wait for `/workload-active`,** polling every 100 ms; this wait is outside the state machine, so a sleep loop is fine. The driver container's `first_` command creates it (`references/workload/harness.md`).
-7. **Mark the start** with `assert_reachable!("the workload starts", ...)`.
+7. **Mark the start** with a `assert_reachable` assertion, "the workload starts".
 8. **Run the state machine** forever.
 
 A pattern you adopted (`references/patterns/MODULE.md`) may add to these steps.
@@ -55,9 +55,9 @@ Exploration assertions on the rules mark what's worth reaching, such as a read t
 
 ## Rules
 
-- **Run forever.** Call `.steps(i64::MAX)`. The default stops after 50 rounds, and the binary exits. Don't use `tc.repeat`.
+- **Run forever.** Set the state machine's step count to the largest value the language takes. The default stops after 50 rounds, and the driver exits. Don't use hegel's repeat.
 - **Use Antithesis SDK assertions, never panics.** Put the values you'd need to debug in the details.
-- **Generate only.** Keep `phases = [hegel::Phase::Generate]` on `#[hegel::main]`.
+- **Generate only.** Set hegel's `phases` setting to the generate phase alone.
 - **Let requests contend.** Don't serialize requests per key to keep the model simple. Record when each request was sent and when its outcome arrived, so an assertion can allow every outcome consistent with what overlapped it. If the system orders operations itself (log positions, sequence numbers), record that order too.
 - **Record unknown outcomes as unknown.** A request that timed out or lost its connection may or may not have taken effect, now or later.
 - **Keep memory bounded.** Keep only what the checks need, and prune it as `KeyHistory` does, so long runs don't grow without limit.
@@ -71,7 +71,7 @@ Exploration assertions on the rules mark what's worth reaching, such as a read t
 
 **Weight actions toward what's hard to reach,** so options and rare interactions happen many times across timelines.
 
-**Use `#[invariant(always_run)]`.** With `.steps(i64::MAX)`, a plain `#[invariant]` effectively never runs. An `always_run` invariant runs after every round, while no rules run, and every round waits for it.
+**Make every invariant always-run.** With an unbounded step count, a sampled invariant effectively never runs. An always-run invariant runs after every round, while no rules run, and every round waits for it.
 
 ## Guiding exploration
 
@@ -82,7 +82,7 @@ Add exploration assertions to the driver, following "Exploration assertions" in 
 - **Groups control overlap, not frequency.** Each round hegel picks one group, and every worker runs only its rules. Use separate groups only for rules that must never overlap. Groups can't be weighted.
 - **Each timeline runs a random subset of the rules.** hegel's swarm testing disables a random subset of each worker's rules for the whole test case, keeping at least one rule per group. Some timelines never run a given rule. In others, it's one of a few enabled rules, and runs far more often than its weight suggests. This is how swarm testing finds bugs that need an action to be absent.
 - **Weights are a hint** for the mix among a worker's enabled rules, not a guarantee.
-- **Explicit draws set exact probabilities per call.** Use `tc.draw(gs::weighted_booleans(p))` when a rate matters.
+- **Explicit draws set exact probabilities per call.** Draw a weighted boolean when a rate matters.
 - **The driver's state sets timing.** When an action must wait for something, or must not repeat too soon, record what it needs in the driver's state, such as a counter or the time it last ran, and check that before it acts.
 - **Pace disruptive actions by time, not weight.** An action that disrupts the system, such as a leader stepdown, a membership change or a forced snapshot, can run every round in a timeline where it's the only enabled rule. Give it a cooldown in the driver's state, and skip it until enough time has passed since it last ran.
 
@@ -92,7 +92,7 @@ Put a rare action in the main group behind a rare draw. A group of its own would
 
 An eventually stops faults for good, waits for the system to recover, asserts the guarantees that must hold once faults stop, like every node serving again or acknowledged writes being readable, and then ends its timeline. It is the driver's version of an Antithesis `eventually_` test command.
 
-Write it as a normal rule, so swarm testing leaves it out of some timelines. Leave its weight at the default: the draw below sets how often it fires. Consider adding it to other groups too, so it can also fire while other actions run. The rule returns at once unless a rare `tc.draw(gs::weighted_booleans(p))` passes, then calls an `eventually` method. The draw starts eventuallys at varied depths, from right after `/workload-active` to deep into the timeline. The method:
+Write it as a normal rule, so swarm testing leaves it out of some timelines. Leave its weight at the default: the draw below sets how often it fires. Consider adding it to other groups too, so it can also fire while other actions run. The rule returns at once unless a rare weighted boolean draw passes, then calls an `eventually` method. The draw starts eventuallys at varied depths, from right after `/workload-active` to deep into the timeline. The method:
 
 1. Takes a global lock, so no other eventually can start.
 2. Stops faults for good, by running `$ANTITHESIS_STOP_FAULTS <seconds>` for far longer than the rest of the timeline can take, such as an hour.
@@ -106,4 +106,4 @@ A pause stops new clock faults, but it doesn't undo a clock shift that already h
 
 For the local loop, give the driver two environment variables: one that turns the eventually rule off, and one that calls the `eventually` method directly after a given number of seconds of workload, whatever swarm testing and the draw decide.
 
-For the rest of hegel's API, see <https://hegel.dev/> (Rust: <https://docs.rs/hegeltest/latest/hegel/>).
+For the rest of hegel's API, follow the links on the language page. <https://hegel.dev/> explains how hegel works.

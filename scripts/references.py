@@ -7,15 +7,19 @@ from SKILL.md by following references, at any depth.
 
 It also checks section references, a heading or a list item's bold label in double quotes,
 such as "Starting up" in `references/workload/driver.md`: each must name a heading or label
-on the page it points at. Steps are referred to by name, so a step number such as "step 2"
+on the page it points at, or a table row's first cell. An image placeholder such as
+`<Rust build image>` must name a row of the skill's image table. Steps are referred to by name, so a step number such as "step 2"
 fails, since reordering a list would silently change what it points at.
 """
 
+import re
 from pathlib import Path
 
 from report import ROOT, error, say
 from skills import (
     BUNDLED_DIRS,
+    IMAGES_PAGE,
+    image_placeholders,
     is_internal,
     references,
     section_names,
@@ -45,13 +49,39 @@ def check_sections(skill: Path, source: Path, by_name: dict[str, Path]) -> int:
             where = f"`{page}`"
         else:
             target, where = source, "this page"
+        if target is not None and "<" in str(target):
+            # A placeholder, as in `references/workload/languages/<language>.md`, names
+            # every page that fits it, and the section must be on each of them.
+            matches = sorted(target.parent.glob(re.sub(r"<[^>]*>", "*", target.name)))
+            missing = [m for m in matches if name not in section_names(m.read_text())]
+            if not matches or missing:
+                pages = ", ".join(f"`{m.relative_to(skill)}`" for m in missing) or "no page"
+                error(
+                    "check-references",
+                    f'"{name}" is not a heading, list label or table row on {pages}',
+                    source,
+                    line,
+                )
+                problems += 1
+            continue
         if target is None or not target.is_file():
             error(
                 "check-references", f'"{name}" points at {where}, which this skill can\'t reach', source, line
             )
             problems += 1
         elif name not in section_names(target.read_text()):
-            error("check-references", f'"{name}" is not a heading or list label on {where}', source, line)
+            error(
+                "check-references",
+                f'"{name}" is not a heading, list label or table row on {where}',
+                source,
+                line,
+            )
+            problems += 1
+    images = skill / IMAGES_PAGE
+    rows = section_names(images.read_text()) if images.is_file() else set()
+    for line, row in image_placeholders(text):
+        if row not in rows:
+            error("check-references", f"`<{row}>` is not a row in `{IMAGES_PAGE}`", source, line)
             problems += 1
     for line, match in step_numbers(text):
         error(
