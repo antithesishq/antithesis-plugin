@@ -14,7 +14,6 @@ Plugin version: `0.0.9`
    - Devin: `references/platforms/devin.md`
    - Replit: `references/platforms/replit.md`
 2. Read `references/antithesis/explainer.md`.
-3. Check the dependencies below.
 
 ### Dependencies
 
@@ -24,7 +23,7 @@ Every module needs:
 - **Docker or Podman, with Docker Compose**
 - **jq**
 
-Assume that dependencies are setup. If any command fails, check dependencies and `snouty doctor` first.
+Assume that dependencies are set up. If any command fails, check dependencies and `snouty doctor` first.
 
 ## Modules
 
