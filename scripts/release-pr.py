@@ -7,7 +7,8 @@
 `gate` decides whether to release the default branch's head, HEAD. It releases only when:
 
 - no release PR, from a `release/` branch, is open
-- the latest CI run on HEAD completed and passed
+- the latest CI run on HEAD completed and passed, waiting up to 30 minutes for one that's
+  still running
 - something users get changed since the last release reachable from HEAD, skipping
   release candidates, unless REQUESTED_VERSION names a version to release
 
@@ -53,6 +54,10 @@ RELEASE_TZ = timezone(timedelta(hours=-7))
 # JWTs such as an OIDC token. Notes that hold one would publish it in the PR.
 SECRET = re.compile(r"gh[pousr]_[A-Za-z0-9]{20,}|github_pat_\w{20,}|sk-ant-[\w-]{20,}|eyJ[\w-]{10,}\.eyJ")
 # How long to wait for the PR's CI run to appear, so it can be approved.
+# How long the gate waits for CI on HEAD that's still running, such as after a merge
+# just before the scheduled run.
+CI_WAIT_SECONDS = 30 * 60
+CI_POLL_SECONDS = 30
 APPROVE_POLLS = 12
 APPROVE_WAIT_SECONDS = 5
 RELEASE_FILES = {p.relative_to(ROOT).as_posix() for p in [*release.VERSIONED, release.CHANGELOG]}
@@ -91,16 +96,32 @@ FLAKY_CHECK = "check:lychee"
 SUMMARY_CHECK = "check"
 
 
+def latest_ci(sha: str) -> dict | None:
+    """The latest CI run on sha once it completes, waiting up to CI_WAIT_SECONDS for it.
+
+    None when no run has completed by then: one that's still going, or none at all, such
+    as right after a merge, before CI starts.
+    """
+    deadline = time.monotonic() + CI_WAIT_SECONDS
+    while True:
+        runs = json.loads(
+            out("gh", "api", f"repos/{{owner}}/{{repo}}/actions/workflows/ci.yml/runs?head_sha={sha}")
+        )["workflow_runs"]
+        latest = max(runs, key=lambda r: r["created_at"]) if runs else None
+        if latest and latest["status"] == "completed":
+            return latest
+        if time.monotonic() >= deadline:
+            return None
+        state = f"is {latest['status']}" if latest else "hasn't started"
+        print(f"CI on {sha[:12]} {state}: checking again in {CI_POLL_SECONDS}s", flush=True)
+        time.sleep(CI_POLL_SECONDS)
+
+
 def ci_passed(sha: str) -> str | None:
     """None when the latest CI run on sha passed, otherwise why not."""
-    runs = json.loads(
-        out("gh", "api", f"repos/{{owner}}/{{repo}}/actions/workflows/ci.yml/runs?head_sha={sha}")
-    )["workflow_runs"]
-    if not runs:
-        return f"CI hasn't run on {sha[:12]}"
-    latest = max(runs, key=lambda r: r["created_at"])
-    if latest["status"] != "completed":
-        return f"CI on {sha[:12]} is still {latest['status']}: {latest['html_url']}"
+    latest = latest_ci(sha)
+    if not latest:
+        return f"CI on {sha[:12]} didn't complete within {CI_WAIT_SECONDS // 60} minutes"
     if latest["conclusion"] == "success":
         return None
     jobs = json.loads(
@@ -132,19 +153,22 @@ def gate() -> int:
         return 1
     output(requested=requested)
 
+    # Whoever asked for a version decides whether there's enough to release.
+    unchanged = (
+        not requested and run("git", "diff", "--quiet", previous, sha, "--", *USER_FACING).returncode == 0
+    )
+    # The cheap checks go first, so the gate waits for CI only when it would release.
     if prs := open_release_prs():
         reason = f"a release PR is already open: {', '.join(prs)}"
+    elif unchanged:
+        reason = f"nothing users get has changed since {previous}"
     elif failed := ci_passed(sha):
         reason = failed
-    elif requested:
-        # Whoever asked for the version decides whether there's enough to release.
-        print(f"Releasing {sha[:12]} as {requested}, as asked: CI passed")
-        output(release="true")
-        return 0
-    elif run("git", "diff", "--quiet", previous, sha, "--", *USER_FACING).returncode == 0:
-        reason = f"nothing users get has changed since {previous}"
     else:
-        print(f"Releasing {sha[:12]}: CI passed, and it changes the plugin since {previous}")
+        if requested:
+            print(f"Releasing {sha[:12]} as {requested}, as asked: CI passed")
+        else:
+            print(f"Releasing {sha[:12]}: CI passed, and it changes the plugin since {previous}")
         output(release="true")
         return 0
     print(f"::notice title=No release today::{reason}")
