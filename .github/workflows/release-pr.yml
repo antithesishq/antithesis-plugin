@@ -83,8 +83,9 @@ jobs:
           ANTHROPIC_SERVICE_ACCOUNT_ID: svac_01T1yc3UbfvpQnE3KLTfJ6bB
           ANTHROPIC_WORKSPACE_ID: wrkspc_01J1wcfqkKJ5ey1wBmqnYb9D
           CLAUDE_CODE: claude@2.1.316
-          # Read-only, for `gh release view`.
+          # Read-only, for `gh release list`, which runs before Claude, without it.
           GH_TOKEN: ${{ github.token }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
         run: scripts/release-notes.py
 
   pr:

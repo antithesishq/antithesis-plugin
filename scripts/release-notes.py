@@ -4,16 +4,20 @@
     scripts/release-notes.py
 
 Runs Claude Code, pinned by `claude@VERSION` in CLAUDE_CODE, on the release skill's "Pick
-and check the version" and "Write the notes" sections. Claude can only read: its tools
-are read-only, and the job's token can't write. It answers with the version, its reason
-and the notes, which this writes to GITHUB_OUTPUT for the job that opens the PR.
+and check the version" and "Write the notes" sections. It answers with the version, its
+reason and the notes, which this writes to GITHUB_OUTPUT for the job that opens the PR.
+
+Claude reads text that others wrote, so it gets no shell and can only read. This runs the
+commands those sections name first, and saves their output in a context directory. Claude
+Code then runs `--restricted`: with only Read, Glob and Grep, confined to the checkout and
+that directory. So it can't reach the job's credentials, such as the OIDC request token in
+this process's environment, or the identity token file.
 
 Claude Code authenticates with workload identity federation, from the
 ANTHROPIC_FEDERATION_RULE_ID, ANTHROPIC_ORGANIZATION_ID, ANTHROPIC_SERVICE_ACCOUNT_ID and
 ANTHROPIC_WORKSPACE_ID in the environment. This fetches the job's GitHub OIDC token into
 ANTHROPIC_IDENTITY_TOKEN_FILE, and fetches a fresh one every minute: each lives about five
-minutes, and Anthropic accepts each only once. Claude doesn't get the request token that
-fetches them.
+minutes, and Anthropic accepts each only once.
 """
 
 import json
@@ -31,15 +35,16 @@ from report import ROOT
 AUDIENCE = "https://api.anthropic.com"
 REFRESH_SECONDS = 60
 MODEL = "claude-opus-5-5"
-TOOLS = [
-    "Read",
-    "Glob",
-    "Grep",
-    *(f"Bash(git {c}:*)" for c in ("diff", "log", "show", "status", "tag -l", "rev-parse")),
-    "Bash(grep:*)",
-    "Bash(head:*)",
-    "Bash(gh release view:*)",
-    "Bash(gh repo view:*)",
+TOOLS = "Read,Glob,Grep"
+# What users get from the plugin, as "Write the notes" diffs it.
+SKILLS = ["plugins/antithesis/skills/"]
+INSTALL = [
+    "plugins/antithesis/*.json",
+    "plugins/antithesis/.*-plugin/",
+    ".claude-plugin/",
+    ".agents/plugins/",
+    "README.md",
+    "docs/",
 ]
 SCHEMA = {
     "type": "object",
@@ -54,7 +59,11 @@ PROMPT = """\
 You're preparing a release of the Antithesis plugin, unattended, in GitHub Actions.
 Read `.claude/skills/release/SKILL.md`, and do what its "Pick and check the version" and
 "Write the notes" sections say. Pick the version yourself, and never a release candidate.
-The workflow already checked that no release PR is open.
+The workflow already checked that no release PR is open, and that the checkout is clean.
+
+You can't run commands. The workflow ran the ones those sections name, and saved their
+output in {context}: its `README.md` says which file holds which command's output. Read
+those files wherever the skill says to run a command.
 
 Don't change any file: you can't, and the workflow writes `CHANGELOG.md` and sets the
 version. Instead, answer with:
@@ -87,6 +96,55 @@ def refresh(url: str, bearer: str, path: Path, stop: threading.Event) -> None:
             print(f"::warning title=OIDC token::refresh failed: {e}", flush=True)
 
 
+def git(*args: str) -> str:
+    result = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, check=True)
+    return result.stdout
+
+
+def write_context(directory: Path) -> None:
+    """Save the output of each command the skill's sections name, for Claude to read."""
+    tags = git("tag", "-l", "v[0-9]*", "--sort=-v:refname")
+    previous = next((t for t in tags.split() if "-rc" not in t), None)
+    files = {
+        "tags.txt": ("git tag -l 'v[0-9]*' --sort=-v:refname", tags),
+        "releases.txt": (
+            "gh release list --limit 100",
+            subprocess.run(
+                ["gh", "release", "list", "--limit", "100"],
+                cwd=ROOT,
+                capture_output=True,
+                text=True,
+                check=True,
+            ).stdout,
+        ),
+        "repo-url.txt": ("gh repo view --json url -q .url", os.environ["REPO_URL"] + "\n"),
+    }
+    if previous:
+        span = f"{previous}..HEAD"
+        files |= {
+            "previous.txt": ("the first tag in tags.txt that isn't a candidate", previous + "\n"),
+            "skills.diff": (f"git diff {span} -- {' '.join(SKILLS)}", git("diff", span, "--", *SKILLS)),
+            "install.diff": (f"git diff {span} -- {' '.join(INSTALL)}", git("diff", span, "--", *INSTALL)),
+            "log.txt": (f"git log --oneline {span}", git("log", "--oneline", span)),
+            "commits.patch": (
+                f"git log --stat -p {span}",
+                git("log", "--stat", "-p", span),
+            ),
+        }
+    readme = [
+        "# Command output for the release skill",
+        "",
+        "`commits.patch` holds every commit as `git show` prints it.",
+        "",
+    ]
+    if not previous:
+        readme += ["There is no previous release, so there are no diffs.", ""]
+    for name, (command, text) in files.items():
+        (directory / name).write_text(text)
+        readme.append(f"- `{name}`: {command}")
+    (directory / "README.md").write_text("\n".join(readme) + "\n")
+
+
 def output(**values: str) -> None:
     """Write values to GITHUB_OUTPUT, each with a delimiter Claude's text can't contain."""
     with open(os.environ["GITHUB_OUTPUT"], "a") as f:
@@ -96,7 +154,10 @@ def output(**values: str) -> None:
 
 
 def main() -> int:
-    env = dict(os.environ)
+    context = Path(tempfile.mkdtemp(prefix="release-context-"))
+    write_context(context)
+    # Claude can't reach these anyway: this keeps them out of its process too.
+    env = {k: v for k, v in os.environ.items() if k not in ("GH_TOKEN", "GITHUB_TOKEN")}
     url = env.pop("ACTIONS_ID_TOKEN_REQUEST_URL")
     bearer = env.pop("ACTIONS_ID_TOKEN_REQUEST_TOKEN")
     token_file = Path(tempfile.mkdtemp()) / "oidc-token"
@@ -110,9 +171,13 @@ def main() -> int:
             [
                 *("mise", "exec", os.environ["CLAUDE_CODE"], "--", "claude", "--print"),
                 *("--model", MODEL, "--output-format", "json"),
-                *("--allowedTools", ",".join(TOOLS)),
+                # No shell, and file tools only in the checkout and the context directory.
+                *("--restricted", "--tools", TOOLS, "--allowedTools", TOOLS),
+                *("--add-dir", str(context)),
+                # --restricted ignores project settings: this keeps the repo's Stop hook.
+                *("--settings", str(ROOT / ".claude" / "settings.json")),
                 *("--json-schema", json.dumps(SCHEMA)),
-                PROMPT,
+                PROMPT.format(context=context),
             ],
             cwd=ROOT,
             env=env,
