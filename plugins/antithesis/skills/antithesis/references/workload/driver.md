@@ -102,7 +102,7 @@ Write it as a normal rule, so swarm testing leaves it out of some timelines. Lea
 
 Decide how an eventually treats the other actions from what it asserts. Some assertions hold while actions continue. Others need a quiet system: the eventually can wait for actions in flight to finish, for example with a lock that every other rule holds while it acts, or interrupt them by cancelling them.
 
-A pause stops new clock faults, but it doesn't undo a clock shift that already happened. A node whose clock a fault moved back 5 seconds is still 5 seconds behind during the checks.
+Clock skips carry on during a pause, so the checks must not depend on clocks agreeing.
 
 For the local loop, give the driver two environment variables: one that turns the eventually rule off, and one that calls the `eventually` method directly after a given number of seconds of workload, whatever swarm testing and the draw decide.
 
