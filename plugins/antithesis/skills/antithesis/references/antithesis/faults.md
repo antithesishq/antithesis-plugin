@@ -14,12 +14,12 @@ Faults act on nodes: containers in Docker Compose, pods in Kubernetes. Everythin
 
 `--fault-tolerance` picks which faults run:
 
-| Level               | Faults                                                                                                   |
-| ------------------- | -------------------------------------------------------------------------------------------------------- |
-| `none`              | None.                                                                                                    |
+| Level               | Faults                                                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `none`              | None.                                                                                                                     |
 | `resilient`         | Baseline latency, `Slowed` and `Jammed` clogs, node pauses, node throttling, CPU modulation, thread pausing, clock skips. |
-| `high_availability` | Everything in `resilient`, plus partitions, `Stopped` clogs, and node termination.                       |
-| `legacy`            | All network faults and thread pausing, nothing else.                                                     |
+| `high_availability` | Everything in `resilient`, plus partitions, `Stopped` clogs, and node termination.                                        |
+| `legacy`            | All network faults and thread pausing, nothing else.                                                                      |
 
 `legacy` is the server's default for `basic_test`, so always pass `--fault-tolerance`.
 
