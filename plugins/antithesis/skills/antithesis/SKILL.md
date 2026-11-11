@@ -1,7 +1,7 @@
 ---
 name: antithesis
 description: Entry point to Antithesis. Use for any task that involves Antithesis.
-argument-hint: "[triage [monitor|summary|root-cause]|debug|workload|launch|properties] [target]"
+argument-hint: "[triage|debug|workload|launch|properties] <prompt>"
 ---
 
 # Antithesis
@@ -28,7 +28,7 @@ Assume that dependencies are setup. If any command fails, check dependencies and
 
 ## Modules
 
-Pick the module from the first argument, then read only that module's `MODULE.md`.
+If the first argument names a module, read only that module's `MODULE.md`.
 
 | Argument     | Module                            | Use when                                                      |
 | ------------ | --------------------------------- | ------------------------------------------------------------- |
@@ -38,6 +38,6 @@ Pick the module from the first argument, then read only that module's `MODULE.md
 | `launch`     | `references/launch/MODULE.md`     | Launching a new run of a workload with `snouty launch`.       |
 | `properties` | `references/properties/MODULE.md` | Importing the SUT's guarantees or defining a new one.         |
 
-If there is no argument, infer the module from the request. If it is still ambiguous, ask.
+Otherwise the request is a free-form prompt: read `references/workflows/MODULE.md`, and derive a workflow from it.
 
 Once you've read the module's `MODULE.md`, if the task will run unattended for a long time, such as building a workload or launching and following runs, ask the user up front, in one message, for anything you can foresee needing: a compute budget, permission to change their code, the scope, where to report issues, and any choice the module leaves to the user. Then keep working toward the user's goal, within the budget, until it is met or you are blocked on something only the user can decide. A module's steps are a means to the goal, not its end. While other work remains, don't end your turn on a question: write it in a file the user will see, tell them where, and keep working.
