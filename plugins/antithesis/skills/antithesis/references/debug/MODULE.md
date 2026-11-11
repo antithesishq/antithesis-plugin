@@ -16,7 +16,7 @@ Any ready run can execute commands, but a run that already has the moment warm s
 
 1. Prefer a ready run that has already rewarmed the moment. Check with `snouty runs search <run_id> --count 'filter(ev => ev.moment.input_hash == "<hash>")'`; non-zero means every moment of that branch is warm.
 2. Prefer reusing a ready run over starting a new one.
-3. If no run is ready, start a debugging session with `snouty debug`. Always run `snouty debug` with `SNOUTY_UNSTABLE_FEATURES=teams` set, including `snouty debug --help`.
+3. If no run is ready, start a debugging session with `snouty debug`.
 
 When an example or counterexample appears in a run still in progress, the moment is warm there, so run commands in that run. Once the run ends, pick a run with the policy above. A new debugging session takes minutes to get ready, so don't block on it: wait with `snouty runs wait --until ready` in the background, and meanwhile read the timeline's logs with `snouty runs logs` and start on a reproducer.
 

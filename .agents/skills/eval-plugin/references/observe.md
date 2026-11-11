@@ -29,7 +29,6 @@ Earlier evals found these. Check whether each still happens.
 - The hegel and SDK pages aren't enough to write a driver, so agents read crate source.
 - Billing exceeds `--max-compute-hours` by about 2.5 per run. Agents count the cap as the spend.
 - `snouty runs usage` lags run end by an hour or more, and shows 10 rows by default. On a busy tenant, agents miss their runs and report "never listed".
-- `--max-compute-hours` is hidden unless `SNOUTY_UNSTABLE_FEATURES=teams` is set.
 - Agents judge a run from its property table while the run is still going, and miss later failures.
 - Summary mode skips the duplicates check with `I don't know where issues are reported`, even when the git remote names the upstream repository.
 - Workload agents triage their own runs in parallel with the triage sessions, and reach different conclusions.
