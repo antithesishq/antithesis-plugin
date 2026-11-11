@@ -6,7 +6,7 @@ None. Write assertions and setup complete as JSON lines, following `references/w
 
 ## Instrumentation
 
-OCaml isn't among the languages Antithesis instruments, so OCaml code is a black box to its search. `references/workload/languages/fallback.md` says what to check. A build stage that the harness copies symbols from leaves `/symbols` empty.
+OCaml isn't among the languages Antithesis instruments. `references/workload/languages/fallback.md` says what to check. A build stage that the harness copies symbols from leaves `/symbols` empty.
 
 ## Local coverage
 
