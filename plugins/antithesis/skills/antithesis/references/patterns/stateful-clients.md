@@ -90,7 +90,7 @@ Never hold a model lock while sending or waiting.
 - **Under `high_availability`, mark restarts:** `assert_reachable("a client restarts", ...)` in `lost`, once the workload is active, so restarts during setup don't count. Under `resilient`, nothing kills a client, so leave it out.
 - **Actions always go through the clients.** A direct connection to the servers is a client that never fails. Use one only for the startup waits, admin setup, and read-only checks in an eventually.
 
-**Startup.** In step 2 of "Starting up" in `references/workload/driver.md`, also wait until every client answers `health`, so a client that can't start fails setup loudly.
+**Startup.** In the "Wait until every node is up" step in `references/workload/driver.md`, also wait until every client answers `health`, so a client that can't start fails setup loudly.
 
 **Eventually.** A hang that outlasts the faults is a bug, in the library or the system. Once faults stop and the servers recover, wait, up to the eventually's deadline, until every client has nothing outstanding and answers a real request. Assert it: `every client answers once faults stop`, with each client's outstanding operations and their ages in the details.
 

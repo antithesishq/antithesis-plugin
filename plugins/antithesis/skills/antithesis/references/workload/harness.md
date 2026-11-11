@@ -19,7 +19,7 @@ driver:
     KV_URLS: http://kv1:8000,http://kv2:8000
 ```
 
-`driver/Dockerfile`, for a driver that compiles to one binary. Instrument the driver like any other component ("Instrument the software" in `references/workload/languages.md`): its build stage, from "Instrumentation" on its language page, leaves the instrumented binary at `/out/driver` and its symbol files in `/symbols`. Take every base image from `references/workload/images.md`. An interpreted driver keeps its runtime in the final image and runs its script as `CMD`; the test template lines stay the same:
+`driver/Dockerfile`, for a driver that compiles to one binary. Instrument the driver like any other component ("Instrument the software" in `references/workload/languages.md`): its build stage, from "Instrumentation" in `references/workload/languages/<language>.md`, leaves the instrumented binary at `/out/driver` and its symbol files in `/symbols`. Take every base image from `references/workload/images.md`. An interpreted driver keeps its runtime in the final image and runs its script as `CMD`; the test template lines stay the same:
 
 ```dockerfile
 # The build stage from "Instrumentation" in references/workload/languages/<language>.md

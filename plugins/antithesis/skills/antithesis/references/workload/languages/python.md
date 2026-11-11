@@ -26,7 +26,7 @@ Use `coverage.py`.
 
 - **Package:** `hegeltest` on PyPI, imported as `hegel`.
 - **Latest version:** `curl -s https://pypi.org/pypi/hegeltest/json | jq -r '.info.version, .info.requires_python'`, which also prints the Python versions it supports.
-- **Docs:** <https://hegel.readthedocs.io>. Read "Run tests on Antithesis", the stateful testing tutorial and reference, and the how-to on threads.
+- **Docs:** <https://hegel.readthedocs.io>. Read `Run tests on Antithesis`, the stateful testing tutorial and reference, and the how-to on threads.
 - **Example workload:** <https://github.com/hegeldev/hegel/tree/main/frontends/python/examples/sqlite_bank>, a concurrent bank workload run from `@hegel.main`.
 
 | In `driver.md`              | In Python                                                           |

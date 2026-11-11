@@ -70,7 +70,7 @@ volumes:
 
 ## 3. Parse the lines
 
-Start the receiver in `main` right after step 1, and before step 2, of "Starting up" in `references/workload/driver.md`, so node states learned during setup are in the root snapshot. It binds `/logs/driver.sock`, after removing a stale one, and makes it writable by any user, since forwarders may run as any user. The kernel queues only a few datagrams, so one thread does nothing but receive, and hands each datagram over a bounded channel, of about 1000, to a thread that parses and records it. A full channel drops the datagram, which shows up as a `seq` gap.
+Start the receiver in `main` between the "Initialize the Antithesis SDK" step in `references/workload/driver.md` and its "Wait until every node is up" step in `references/workload/driver.md`, so node states learned during setup are in the root snapshot. It binds `/logs/driver.sock`, after removing a stale one, and makes it writable by any user, since forwarders may run as any user. The kernel queues only a few datagrams, so one thread does nothing but receive, and hands each datagram over a bounded channel, of about 1000, to a thread that parses and records it. A full channel drops the datagram, which shows up as a `seq` gap.
 
 The node states, `NodeStates`, hold each container's last `boot` and `seq`, and its current boot's latest state. For the key-value store in `references/workload/driver.md`, if its nodes log `msg=raft-state term=3 role=leader commit=42`:
 

@@ -4,7 +4,7 @@
 
 Antithesis instrumentation records nothing locally, so measure local coverage with the language's own tool. Add a `docker-compose.coverage.yaml` that overrides each system service with a coverage Dockerfile and a shared `coverage` volume, one directory per service. Client containers, if a pattern adds them, count as system services: the client library is code under test.
 
-Build each service as "Local coverage" on its language's page says (`references/workload/languages.md`). Check that the data survives `docker compose stop` and a container restart before trusting it.
+Build each service as "Local coverage" in `references/workload/languages/<language>.md` says, for its language. Check that the data survives `docker compose stop` and a container restart before trusting it.
 
 ## 2. Run the workload
 

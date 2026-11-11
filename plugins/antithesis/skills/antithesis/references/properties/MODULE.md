@@ -23,10 +23,10 @@ Pick the assertion type for each condition from "Types" in `references/propertie
 
 Put the check where it can see the condition, following `references/properties/checks.md`:
 
-- **A driver rule**, for what clients see. See "Responses, against the model". With the stateful-clients pattern (`references/patterns/stateful-clients.md`), put it in the model's `complete` instead, which also sees outcomes that arrive after the rule stopped waiting.
-- **An eventually**, for what must hold once faults stop. See "After faults stop".
+- **A driver rule**, for what clients see. See "Responses, against the model" in `references/properties/checks.md`. With the stateful-clients pattern (`references/patterns/stateful-clients.md`), put it in the model's `complete` instead, which also sees outcomes that arrive after the rule stopped waiting.
+- **An eventually**, for what must hold once faults stop. See "After faults stop" in `references/properties/checks.md`.
 - **The system's code**, for one node's internal state, or when nothing outside it can see the condition, if you can change that code. Tell the user, since it changes their code. Read the SDK's API from the system's language page (`references/workload/languages.md`).
-- **The log thread**, for a condition on node state that needs several nodes, such as at most one leader per term, or the driver's model, or a system whose code can't take assertions, such as a third-party binary. It needs the log-forwarding pattern (`references/patterns/log-forwarding.md`). See "Node state, from forwarded logs".
+- **The log thread**, for a condition on node state that needs several nodes, such as at most one leader per term, or the driver's model, or a system whose code can't take assertions, such as a third-party binary. It needs the log-forwarding pattern (`references/patterns/log-forwarding.md`). See "Node state, from forwarded logs" in `references/properties/checks.md`.
 
 Then add exploration assertions on the situations that lead up to the guarantee being tested, such as an account balance reaching zero ("Exploration assertions" in `references/properties/assertions.md`). Don't add one just to show the guarantee's check ran: its assertion already fails if it's never reached.
 
@@ -40,7 +40,7 @@ If an assertion fails without a change, read the system's code. A broken promise
 
 Launch a short run as `references/workload/run-loop.md` describes, and read it with the triage module. Its properties should pass, including those for the situations leading up to it.
 
-Treat early failures as in step 3. To find a failure's cause, use the triage module's `root-cause` mode.
+Treat early failures as "Check it locally" says. To find a failure's cause, use the triage module's `root-cause` mode.
 
 ## Import guarantees
 
@@ -50,7 +50,7 @@ Work in batches of up to 10 guarantees, unless the request says otherwise.
 
 1. List the guarantees the source states or implies that apply to this system. For a past bug, confirm its cause from the fix, not only the report.
 2. Show the user the most important batch, and ask which to add, unless the request already says which.
-3. Define each chosen guarantee with steps 1 to 3 of "Define a guarantee", then check them all in one short run (step 4).
+3. Define each chosen guarantee by following "Make it checkable", "Add the check" and "Check it locally", then check them all in one short run, as "Check it in a short run" says.
 4. If the source has more, ask the user whether to import the next batch, unless the request already says.
 
 ### Template property catalogs

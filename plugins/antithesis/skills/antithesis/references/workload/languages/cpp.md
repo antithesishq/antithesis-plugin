@@ -26,7 +26,7 @@ Hegel's frontend is C++ only.
 
 - **Package:** the `hegel` CMake library, fetched with `FetchContent` from `https://github.com/hegeldev/hegel.git`, at the latest `frontends/cpp/<version>` tag, with `SOURCE_SUBDIR frontends/cpp`. The build compiles the engine with `cargo`, so the build stage needs a Rust toolchain, unless you pass a prebuilt engine with `-DHEGEL_LIBHEGEL_LIBRARY`. See the frontend's README: <https://github.com/hegeldev/hegel/tree/main/frontends/cpp>.
 - **Latest version:** `git ls-remote --tags --refs https://github.com/hegeldev/hegel.git 'frontends/cpp/*' | sed 's#.*refs/tags/##' | sort -V | tail -1`.
-- **Docs:** <https://hegel.dev/cpp>. "Write a workload program" covers `HEGEL_MAIN`.
+- **Docs:** <https://hegel.dev/cpp>. `Write a workload program` covers `HEGEL_MAIN`.
 - **Example workload:** <https://github.com/hegeldev/hegel/tree/main/frontends/cpp/examples/sqlite_bank>, a concurrent bank workload run from `HEGEL_MAIN`, with its `CMakeLists.txt`.
 
 | In `driver.md`              | In C++                                                                           |

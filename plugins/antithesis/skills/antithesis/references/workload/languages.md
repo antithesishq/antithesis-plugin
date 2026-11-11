@@ -20,7 +20,7 @@ Use the latest release of the Antithesis SDK, of hegel and of every build tool a
 
 ## Pick the driver's language
 
-Hegel has one engine, shared by a frontend for each language, so the driver in `references/workload/driver.md` behaves the same in all of them. Pick the first that applies and whose page has a "Hegel driver" section that supports it:
+Hegel has one engine, shared by a frontend for each language, so the driver in `references/workload/driver.md` behaves the same in all of them. Pick the first that applies and that "Hegel driver" in `references/workload/languages/<language>.md` supports:
 
 1. The language the user asks for.
 2. The language of the system's client library, so the driver calls the real client in-process.
@@ -32,7 +32,7 @@ If the user asks for a language hegel can't write the driver in, tell them why, 
 
 Build every binary in the workload with Antithesis coverage instrumentation, the driver's as well as the SUT's, wherever its language allows. It's required: without it, Antithesis can't guide exploration by coverage or pause threads. An uninstrumented component is a black box: Antithesis can't see its branch points, so it can't include them in its search.
 
-- Follow "Instrumentation" on the language's page, including the docs page's validation step. If the project builds with link-time optimization, use the docs page's link-time instructions. Compile-time instrumentation doesn't survive LTO.
+- Follow "Instrumentation" in `references/workload/languages/<language>.md`, for the code's language, including the docs page's validation step. If the project builds with link-time optimization, use the docs page's link-time instructions. Compile-time instrumentation doesn't survive LTO.
 - Instrument the binaries that run in the SUT's containers, and make sure the runtime image runs the instrumented build.
 - The client library is code under test too. If the workload runs it in client containers (the stateful-clients pattern, `references/patterns/stateful-clients.md`), instrument the client program with it.
 - Put symbol files in `/symbols` of the runtime image where the language needs them, or artifacts in `/opt/antithesis/catalog/` for languages Antithesis instruments itself.
