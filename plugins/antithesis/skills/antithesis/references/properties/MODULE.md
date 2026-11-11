@@ -62,7 +62,7 @@ Work in batches of up to 10 guarantees, unless the request says otherwise.
 1. List the guarantees the source states or implies that apply to this system. For a past bug, confirm its cause from the fix, not only the report.
 2. Show the user the most important batch, and ask which to add, unless the request already says which.
 3. Define each chosen guarantee by following "Make it checkable", "Add the check" and "Check it locally", then check them all in one short run, as "Check it in a short run" says.
-4. If the source has more, ask the user whether to import the next batch, unless the request already says.
+4. If the source has more, say so in the report, and offer to import the next batch.
 
 ### Template property catalogs
 
