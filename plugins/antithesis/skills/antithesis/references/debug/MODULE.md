@@ -16,7 +16,7 @@ Any ready run can execute commands, but a run that already has the moment warm s
 
 1. Prefer a ready run that has already rewarmed the moment. Check with `snouty runs search <run_id> --count 'filter(ev => ev.moment.input_hash == "<hash>")'`; non-zero means every moment of that branch is warm.
 2. Prefer reusing a ready run over starting a new one.
-3. If no run is ready, start a debugging session with `snouty debug`.
+3. If no run is ready, start a debugging session with `snouty debug`. Always run `snouty debug` with `SNOUTY_UNSTABLE_FEATURES=teams` set, including `snouty debug --help`.
 
 When an example or counterexample appears in a run still in progress, the moment is warm there, so run commands in that run. Once the run ends, pick a run with the policy above. A new debugging session takes minutes to get ready, so don't block on it: wait with `snouty runs wait --until ready` in the background, and meanwhile read the timeline's logs with `snouty runs logs` and start on a reproducer.
 
@@ -38,4 +38,4 @@ snouty runs exec "$RUN_ID" --container client1 --timeout 5m -1469731053185852001
 
 ## When you're done
 
-A debugging session started with `snouty debug` bills compute for as long as it stays available. As soon as you have what you need, cancel each debugging session you started with `snouty runs cancel <run_id>`. A subagent reports the debugging sessions it started and leaves them running, because another subagent may be using them. The agent that launched the subagents cancels those sessions once they have all finished. Never cancel a run that you or your subagents didn't start.
+A debugging session started with `snouty debug` bills compute for as long as it stays available, up to its `--duration`. As soon as you have what you need, cancel each debugging session you started with `snouty runs cancel <run_id>`. A subagent reports the debugging sessions it started and leaves them running, because another subagent may be using them. The agent that launched the subagents cancels those sessions once they have all finished. Never cancel a run that you or your subagents didn't start.
