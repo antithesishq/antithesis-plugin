@@ -44,7 +44,7 @@ Only one node fault runs on a node at a time. Another one aimed at it while one 
 
 ## Other faults
 
-- **Clock skips.** The clock jumps forward or back, on every node at once. There are two kinds. A jitter jumps by an offset, then jumps back by the same amount after a while. An offset, which only custom fault settings use, never jumps back. Jumps add up. Pausing faults stops new jumps, but not a jitter in progress: the clock can still jump back during the pause. Intrinsics such as `__rdtsc()` aren't affected.
+- **Clock skips.** The clock jumps forward or back, on every node at once. There are two kinds. A jitter jumps by an offset, then jumps back by the same amount after a while. An offset never jumps back. Jumps add up. Pausing faults stops new jumps, but not a jitter in progress: the clock can still jump back during the pause. Intrinsics such as `__rdtsc()` aren't affected.
 - **Thread pausing.** Single threads pause briefly, so threads interleave in unexpected orders. It needs Antithesis instrumentation, and no container can be excluded from it.
 - **CPU modulation.** The simulated processor's speed, and the relative speed of its instructions, change. That reorders concurrent threads, without needing instrumentation.
 - **Custom faults.** A script of yours that the fault injector runs at random times, such as a call to an admin API. Talk to Antithesis to add one.
