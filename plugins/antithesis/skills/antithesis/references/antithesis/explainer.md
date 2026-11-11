@@ -5,8 +5,8 @@ Antithesis is a simulation platform for finding bugs that traditional testing mi
 ## Definitions
 
 - **Tenant**: An organization's Antithesis instance, at `<tenant>.antithesis.com`.
-- **Launcher**: An Antithesis workflow such as testing or debug.
-- **Run**: A running instance of a Launcher, identified by a run ID (for example: `1d0b6331ec02e8268fee157346701f01-64-0`).
+- **Launcher**: The kind of Antithesis run to start, such as a test (`basic_test`) or a debugging session.
+- **Run**: A running instance of a launcher, identified by a run ID (for example: `1d0b6331ec02e8268fee157346701f01-64-0`).
 - **Compute hour**: The unit Antithesis bills by: one core running for one hour. A run's compute budget and performance tier set how long it fuzzes.
 - **System under test (SUT)**: The system that is being tested by Antithesis.
 - **Fault**: A disruption Antithesis injects, such as a network partition, a killed or paused container, or a thread pause.
