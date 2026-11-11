@@ -4,7 +4,7 @@ Antithesis can run scripts at any Moment in the Multiverse. Start by choosing th
 
 Running commands shows the system's real state, so always do it when investigating any kind of failure. In a ready run you already have, even one from an unrelated source, it costs nothing extra, so prefer that to starting a debug run, which bills compute.
 
-If the run you are using to run commands finishes, you can continue debugging by pulling the moments you need into another run. If no ready run exists, start a new debugging session.
+If the run you are using to run commands finishes, you can continue debugging by pulling the moments you need into another run. If no ready run exists, start a debug run.
 
 ## Finding moments
 
