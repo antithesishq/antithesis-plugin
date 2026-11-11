@@ -81,7 +81,7 @@ Events with a `fault` field come from `fault_injector`. Its fields: `name`, `typ
 - **Network Clog** (`clog`/`network`): Links of containers in `affected_nodes` experience the `disruption_type` for `max_duration` seconds.
 - **Network Restore** (`restore`/`network`): Restores all faulted network links.
 - `disruption_type` values: `Stopped` (packets dropped), `Slowed` (packets delayed), `Jammed` (packets queued until a future delivery time).
-- **Container Kill / Stop** (`kill`|`stop`/`node`): The container is killed or stopped for `max_duration` seconds, then restarted by Antithesis. `max_duration` is `0` for a Kubernetes pod, which Kubernetes restarts, not Antithesis. A restart policy may restart the container sooner.
+- **Container Kill / Stop** (`kill`|`stop`/`node`): The container is killed or stopped for `max_duration` seconds, then restarted by Antithesis. `max_duration` is `"0"` (a string) for a Kubernetes pod, which Kubernetes restarts, not Antithesis. A restart policy may restart the container sooner.
 - **Container Pause** (`pause`/`node`): The container is frozen for `max_duration` seconds. It stays on the network but processes nothing, so other containers see timeouts.
 - **CPU Throttle** (`throttle`/`node`): The container's CPU is slowed for `max_duration` seconds.
 - **Clock Skew** (`skip`/`clock`): The system clock jumps forward or backward by `details.offset` seconds. With `max_duration`, the offset is temporary (jitter) and reversed afterwards; without it, permanent. Offsets are cumulative.
