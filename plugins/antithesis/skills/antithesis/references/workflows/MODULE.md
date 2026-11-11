@@ -1,37 +1,25 @@
 # Workflows
 
-A workflow chains other modules to reach a common goal. It adds no steps of its own: follow each module it names, read only when you reach it, as that module says. If the user gave a compute budget, it covers the whole workflow, across every module.
-
-Pick the workflow that fits the user's prompt:
+A workflow is a saved prompt that chains other modules toward a common goal. Pick the one that fits the user's prompt, fill its placeholders from the prompt and the project, and follow it as if the user had written it. Read each module only when you reach it.
 
 | Workflow | Use when                                                                       |
 | -------- | ------------------------------------------------------------------------------ |
 | Setup    | The system has no workload yet, and the user wants one.                        |
 | Heal     | The system changed since its workload was last updated, and the workload lags. |
-| Test     | The user wants the system tested, and found bugs triaged.                      |
+| Test     | The user wants the system tested, and its findings triaged.                    |
 
 If the prompt fits none, because it asks for one module's task, such as triaging a run, pick that module from the table in `SKILL.md` instead.
 
+Keep what the user's prompt adds, such as the behaviors to focus on, where to report, or a compute budget. A budget covers the whole workflow, across every module. If the prompt gives none, ask for one up front, as `SKILL.md` says.
+
 ## Setup
 
-Build a workload for the system end to end: follow every step of `references/workload/MODULE.md`. If the user named guarantees or a source of them, add them with `references/properties/MODULE.md` before the run loop (step 10).
+> Write a new workload for `<system>` (`references/workload/MODULE.md`). Define its current guarantees as properties (`references/properties/MODULE.md`) before the run loop. Work autonomously within `<budget>` compute hours. Report the workload, its properties, and anything the runs found.
 
 ## Heal
 
-Input: an existing workload, and the system it tests.
-
-1. **Find what changed.** List the system's changes since the workload last changed, from the version control history of both, and the release notes for a release. Note new or changed APIs, configuration, behaviors and guarantees, and removed ones.
-2. **Update the workload** to cover them. Follow `references/workload/MODULE.md` from step 1, but change only what the changes touch: the surface map, the model, instrumentation, exploration assertions, the driver and the harness. Update the properties that the changed guarantees affect with `references/properties/MODULE.md`.
-3. **Validate and report** with steps 8 to 11 of the workload module.
+> The workload for `<system>` lags `<version or recent changes>`. Find what changed since the workload last changed, from the version control history of both and any release notes: new, changed and removed APIs, configuration, behaviors and guarantees. Update the workload to cover them (`references/workload/MODULE.md`), changing only what the changes touch, and update the properties of the changed guarantees (`references/properties/MODULE.md`). Validate it with steps 8 to 11 of the workload module. Work autonomously within `<budget>` compute hours. Report what changed in the workload, and anything the runs found.
 
 ## Test
 
-Input: a system, and optionally a workload, a version to test and the behaviors to focus on.
-
-1. **Get a workload.** If the system has none, run "Setup". If a version to test is given and the workload lags it, run "Heal".
-2. **Launch** a run of the workload with `references/launch/MODULE.md`.
-3. **Triage it live** with `references/triage/MODULE.md`, in `monitor` mode. Don't wait for the run to finish.
-4. **Root-cause each failure** that the triage judges likely to be a real bug of the system, in `root-cause` mode.
-5. **Summarize** with the triage module's `summary` mode once the run ends: what passed, what failed, the root causes, and what's new.
-
-Launch more runs only within the budget, and only when they can answer something the last run couldn't.
+> Test `<system>` at `<version>`, and its current guarantees, including the features new in that version. If it has no workload, write one first, as in Setup. If its workload lags the version, heal it first. Launch a run (`references/launch/MODULE.md`), and as findings appear, triage them live to verify they are real, and root-cause the likely bugs (`references/triage/MODULE.md`). Work autonomously within `<budget>` compute hours. Report your findings here.
