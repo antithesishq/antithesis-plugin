@@ -37,7 +37,7 @@ A partition or clog disrupts packets in one of three ways: `Stopped` drops them,
 ## Node faults
 
 - **Pause.** The node freezes, still on the network, so other nodes see timeouts. It resumes after a set time.
-- **Throttle.** The node's CPU is limited, so it runs as if under heavy load.
+- **Throttle.** The node's CPU is limited, so it runs as if under heavy load: CPU modulation for one node.
 - **Termination.** The node stops gracefully (`stop`) or crashes (`kill`), and Antithesis restarts it after a set time. It may come back with a new IP address, and with or without the changes it hadn't durably synced. Give containers no `restart:` policy: Compose would restart them at once and cancel the fault. Antithesis can't restart a Kubernetes pod, so Kubernetes manages that.
 
 Only one node fault runs on a node at a time. Another one aimed at it while one runs is skipped.
