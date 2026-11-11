@@ -104,15 +104,21 @@ def latest_ci(sha: str) -> dict | None:
     """
     deadline = time.monotonic() + CI_WAIT_SECONDS
     while True:
-        runs = json.loads(
-            out("gh", "api", f"repos/{{owner}}/{{repo}}/actions/workflows/ci.yml/runs?head_sha={sha}")
-        )["workflow_runs"]
+        listed = run(
+            *("gh", "api", f"repos/{{owner}}/{{repo}}/actions/workflows/ci.yml/runs?head_sha={sha}"),
+            capture_output=True,
+        )
+        # One failed poll among many is likely transient: try again until the deadline.
+        runs = json.loads(listed.stdout)["workflow_runs"] if listed.returncode == 0 else None
         latest = max(runs, key=lambda r: r["created_at"]) if runs else None
         if latest and latest["status"] == "completed":
             return latest
         if time.monotonic() >= deadline:
             return None
-        state = f"is {latest['status']}" if latest else "hasn't started"
+        if runs is None:
+            state = f"couldn't be read ({listed.stderr.strip()})"
+        else:
+            state = f"is {latest['status']}" if latest else "hasn't started"
         print(f"CI on {sha[:12]} {state}: checking again in {CI_POLL_SECONDS}s", flush=True)
         time.sleep(CI_POLL_SECONDS)
 
@@ -164,6 +170,9 @@ def gate() -> int:
         reason = f"nothing users get has changed since {previous}"
     elif failed := ci_passed(sha):
         reason = failed
+    # Someone may have opened one while the gate waited for CI.
+    elif prs := open_release_prs():
+        reason = f"a release PR opened while CI ran: {', '.join(prs)}"
     else:
         if requested:
             print(f"Releasing {sha[:12]} as {requested}, as asked: CI passed")
@@ -312,8 +321,13 @@ def open_pr(version: str) -> int:
         *("commit", "-m", f"{title}\n\nCo-Authored-By: Claude <noreply@anthropic.com>"),
     )
     out("gh", "auth", "setup-git")
-    # The gate found no open release PR, so a branch already there is left from one that
-    # closed without merging. A merged one would have tagged the version.
+    # Claude took minutes, and the gate may have waited for CI: someone may have opened a
+    # release PR since. Never push over its branch, or open a second one.
+    if prs := open_release_prs():
+        print(f"::error title=Release PR::a release PR opened meanwhile: {', '.join(prs)}")
+        return 1
+    # No release PR is open, so a branch already there is left from one that closed
+    # without merging. A merged one would have tagged the version.
     if run("git", "ls-remote", "--exit-code", "--heads", "origin", branch).returncode == 0:
         print(f"Replacing {branch}, left from a closed release PR")
     out("git", "push", "--force", "-u", "origin", branch)
