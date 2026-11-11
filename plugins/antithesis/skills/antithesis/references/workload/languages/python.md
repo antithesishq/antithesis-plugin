@@ -12,7 +12,7 @@
 
 ## Instrumentation
 
-Antithesis catalogs and instruments the Python code placed in `/opt/antithesis/catalog/` of an image: `snouty docs show /docs/reference/sdk/python/`. Link the code's directory there:
+Antithesis doesn't coverage-instrument Python, so Python code is a black box to its search. It does catalog the assertions in the Python code placed in `/opt/antithesis/catalog/` of an image: `snouty docs show /docs/reference/sdk/python/`. Link the code's directory there:
 
 ```dockerfile
 RUN mkdir -p /opt/antithesis && ln -s /driver /opt/antithesis/catalog

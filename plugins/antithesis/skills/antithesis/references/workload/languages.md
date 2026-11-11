@@ -26,7 +26,7 @@ Hegel has one engine, shared by a frontend for each language, so the driver in `
 2. The language of the system's client library, so the driver calls the real client in-process.
 3. Rust.
 
-If the user asks for a language hegel can't write the driver in, tell them why, and use the next that applies. If Antithesis can't instrument the language you pick, as for OCaml, tell the user that the driver will be a black box to its search.
+If the user asks for a language hegel can't write the driver in, tell them why, and use the next that applies. If Antithesis can't instrument the language you pick, as for OCaml or Python, tell the user that the driver will be a black box to its search.
 
 ## Instrument the software
 
