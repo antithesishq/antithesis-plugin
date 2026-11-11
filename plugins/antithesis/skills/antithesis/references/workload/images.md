@@ -9,6 +9,7 @@ Debian stable: 13 (trixie)
 | ----------------- | ---------------------- |
 | Runtime image     | `debian:trixie-slim`   |
 | Rust build image  | `rust:1-trixie`        |
+| C++ build image   | `rust:1-slim-trixie`   |
 | Go build image    | `golang:1-trixie`      |
 | Python image      | `python:3-slim-trixie` |
 | OCaml build image | `ocaml/opam:debian-13` |
