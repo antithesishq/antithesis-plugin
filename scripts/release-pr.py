@@ -221,12 +221,6 @@ def open_pr(version: str) -> int:
         "which runs Release to create the GitHub release.\n\n"
         "🤖 Generated with [Claude Code](https://claude.com/claude-code)\n"
     )
-    if os.environ.get("RELEASE_DRY_RUN") == "true":
-        # TEMPORARY, to test the workflow from its PR branch: show the release, open nothing.
-        print(out("git", "diff"))
-        print(f"\nWould open {branch}: {title}, for {reviewer}\n\n{body}")
-        return 0
-
     bot = "github-actions[bot]"
     out("git", "switch", "-c", branch)
     out("git", "add", *sorted(RELEASE_FILES))
