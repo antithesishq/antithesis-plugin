@@ -11,7 +11,7 @@
 
 ## Instrumentation
 
-Follow `snouty docs show /docs/reference/sdk/rust/instrumentation/`: add the latest `antithesis-instrumentation` crate, reference it once with `use antithesis_instrumentation as _;`, and pass the page's build flags as `--config` options of `cargo build` in the Antithesis Dockerfile, as the page's command-line option shows, not in the crate's `.cargo/config.toml`. Copy the flags from the page, not from memory. They set the build target, so the binary lands under `target/<target>/release/`. Keep an unstripped copy of each binary in `/symbols` of its runtime image.
+Follow `snouty docs show /docs/reference/sdk/rust/instrumentation/`: add the latest `antithesis-instrumentation` crate, reference it once with `use antithesis_instrumentation as _;`, and pass the page's build flags as `--config` options of `cargo build` in the Antithesis Dockerfile, as the page's command-line option shows. Copy the flags from the page, not from memory. They set the build target, so the binary lands under `target/<target>/release/`. Keep an unstripped copy of each binary in `/symbols` of its runtime image.
 
 A build stage, on the "Rust build image" row in `references/workload/images.md`, that leaves the binary in `/out` and its symbols in `/symbols`:
 
