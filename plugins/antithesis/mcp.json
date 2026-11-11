@@ -4,8 +4,7 @@
     "snouty": {
       "type": "stdio",
       "command": "snouty",
-      "args": ["mcp"],
-      "env": { "SNOUTY_UNSTABLE_FEATURES": "mcp" }
+      "args": ["mcp"]
     }
   }
 }
