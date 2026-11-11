@@ -22,7 +22,6 @@ DEBIAN_RELEASE = "https://deb.debian.org/debian/dists/stable/Release"
 ROLES = [
     ("Runtime image", "debian:{codename}-slim"),
     ("Rust build image", "rust:1-{codename}"),
-    ("C++ build image", "rust:1-slim-{codename}"),
     ("Go build image", "golang:1-{codename}"),
     ("Python image", "python:3-slim-{codename}"),
     ("OCaml build image", "ocaml/opam:debian-{major}"),
