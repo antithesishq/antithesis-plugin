@@ -38,7 +38,7 @@ If an assertion fails without a change, read the system's code. A broken promise
 
 ### 4. Check it in a short run
 
-Launch a short run as `references/workload/run-loop.md` describes, and read it with the triage module. Its properties should pass, including those for the situations leading up to it.
+Launch a short run as `references/workload/run-loop.md` describes, and read it with the triage module. Its guarantee assertions should pass, and the exploration assertions for the situations leading up to it should be reached, unless they need conditions rare enough for a short run to miss.
 
 Treat early failures as "Check it locally" says. To find a failure's cause, use the triage module's `root-cause` mode.
 
