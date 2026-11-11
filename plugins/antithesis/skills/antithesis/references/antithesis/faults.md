@@ -60,7 +60,7 @@ The log records no event for thread pausing or CPU modulation.
 `$ANTITHESIS_STOP_FAULTS <seconds>` pauses faults on every node for that long:
 
 - Network faults end, and Antithesis restarts killed and stopped containers, which take a while to become ready.
-- No new faults start, except clock skips, which carry on during the pause.
+- No new faults start, clock skips included. A permanent clock skip that already happened keeps applying, and a temporary one is cleared: a clock a permanent skip moved back 5 seconds is still 5 seconds behind during the pause.
 - Faults resume on their own when the time is up. A pause can't end early, and overlapping pauses merge into the longest.
 
 An `eventually_` or `finally_` test command also pauses faults, and ends its timeline after it runs.
