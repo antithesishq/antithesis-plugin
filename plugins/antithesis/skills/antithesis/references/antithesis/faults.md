@@ -27,7 +27,7 @@ Faults act on nodes: containers in Docker Compose, pods in Kubernetes. Everythin
 
 Incoming and outgoing packets are faulted independently, so any network fault may be asymmetric: one direction fails while the other works.
 
-- **Baseline latency.** On in every level but `none`: normal variation in delivery time, and a low rate of dropped packets.
+- **Baseline latency.** Normal variation in delivery time, and a low rate of dropped packets.
 - **Partitions.** Nodes split into groups that can't reach each other. Within a group, traffic is normal.
 - **Clogs.** One or more nodes lose inbound traffic, outbound traffic, or both.
 - **Restore.** Ends every network fault on every link.
