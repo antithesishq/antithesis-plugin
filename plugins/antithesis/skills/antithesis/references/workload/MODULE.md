@@ -14,7 +14,7 @@ Runs launched while working on the workload spend the task's compute budget, fro
 
 The driver program is the main process of its own fault-excluded container. It waits for the system, reports setup complete, then waits for `/workload-active`, which the container's one `first_` test command creates when fuzzing starts. Every decision is made in the driver.
 
-The SUT and the driver are built with Antithesis coverage instrumentation.
+The SUT and the driver are built with Antithesis coverage instrumentation, wherever their language allows.
 
 ## Steps
 
