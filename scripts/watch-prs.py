@@ -60,6 +60,7 @@ import json
 import os
 import re
 import subprocess
+import tempfile
 import time
 from collections.abc import Iterator
 from itertools import count
@@ -145,11 +146,12 @@ ALLOWED_ACCOUNT_IDS = {
 }
 
 
-def trusted(slug: str, user: dict[str, Any], write_access: dict[int, bool]) -> bool | None:
+def trusted(slug: str, user: dict[str, Any], write_access: dict[int, bool | None]) -> bool | None:
     """Whether an account is allowlisted or can write to the repo. None
     means the lookup failed: the caller retries on the next poll.
     `write_access` caches lookups by account id for one poll only, so a
-    revoked writer loses trust at the next poll.
+    revoked writer loses trust at the next poll, and an author whose lookup
+    fails costs one call per poll.
     """
     uid = user.get("id")
     if uid in ALLOWED_ACCOUNT_IDS:
@@ -166,6 +168,7 @@ def trusted(slug: str, user: dict[str, Any], write_access: dict[int, bool]) -> b
             ]
         )
         if perm is None:
+            write_access[uid] = None
             return None
         # The lookup goes by login; the id check proves the login still
         # names the same account.
@@ -306,7 +309,7 @@ def poll_pr(
             for rc in paginate(f"repos/{slug}/pulls/{pr}/comments")
         ]
     )
-    write_access: dict[int, bool] = {}
+    write_access: dict[int, bool | None] = {}
     for key, item, line in events:
         if key in seen:
             continue
@@ -314,13 +317,17 @@ def poll_pr(
             seen.add(key)
             continue
         ok = trusted(slug, item.get("user") or {}, write_access)
-        seen.add(key)
-        # A lookup that fails can fail on every poll, so the event prints now,
-        # and the reader treats it as untrusted.
         if ok is None:
-            emit(f"{line} [write access unknown]")
-        else:
-            emit(line if ok else f"{line} [no write access]")
+            # The event prints at once, as untrusted, so that a lookup that
+            # fails for good hides nothing. The watcher keeps trying, and
+            # prints the event again when a lookup gives its real trust.
+            if f"unknown:{key}" not in seen:
+                seen.add(f"unknown:{key}")
+                emit(f"{line} [write access unknown]")
+            continue
+        seen.add(key)
+        seen.discard(f"unknown:{key}")
+        emit(line if ok else f"{line} [no write access]")
 
     failure_results = {
         "failure",
@@ -383,9 +390,15 @@ def default_state_dir() -> Path:
     directories. Watchers in other checkouts keep their own state, so each of
     them prints every event.
     """
-    top = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=False
-    ).stdout.strip()
+    try:
+        top = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=False,
+        ).stdout.strip()
+    except OSError:  # no git on PATH
+        top = ""
     checkout = str(Path(top or Path.cwd()).resolve())
     return state_root() / hashlib.sha256(checkout.encode()).hexdigest()[:12]
 
@@ -476,11 +489,11 @@ def main() -> int:
             state[pr] = load(state_file(state_root(), slug, pr))
     # Find an unwritable state directory before the first event prints, with
     # a scratch file, so a --replay run keeps the saved state until it polls.
-    probe = state_dir / ".probe"
     try:
         state_dir.mkdir(parents=True, exist_ok=True)
-        probe.write_text("")
-        probe.unlink()
+        # A name of its own, so watchers that start together do not collide.
+        with tempfile.NamedTemporaryFile(dir=state_dir):
+            pass
     except OSError as e:
         return cannot_save(e)
 
