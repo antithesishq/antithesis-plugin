@@ -102,8 +102,6 @@ Write it as a normal rule, so swarm testing leaves it out of some timelines. Lea
 
 Decide how an eventually treats the other actions from what it asserts. Some assertions hold while actions continue. Others need a quiet system: the eventually can wait for actions in flight to finish, for example with a lock that every other rule holds while it acts, or interrupt them by cancelling them.
 
-A pause stops new clock skips, but a jitter already in progress still jumps the clock back during the checks, so don't make them depend on the clock moving steadily.
-
 For the local loop, give the driver two environment variables: one that turns the eventually rule off, and one that calls the `eventually` method directly after a given number of seconds of workload, whatever swarm testing and the draw decide.
 
 For the rest of hegel's API, follow the links on the language page. <https://hegel.dev/> explains how hegel works.
