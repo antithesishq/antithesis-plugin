@@ -60,9 +60,9 @@ jobs:
       # Claude authenticates to the Claude API with the workflow's OIDC token.
       id-token: write
     outputs:
-      version: ${{ fromJSON(steps.claude.outputs.structured_output).version }}
-      reason: ${{ fromJSON(steps.claude.outputs.structured_output).reason }}
-      notes: ${{ fromJSON(steps.claude.outputs.structured_output).notes }}
+      version: ${{ steps.claude.outputs.version }}
+      reason: ${{ steps.claude.outputs.reason }}
+      notes: ${{ steps.claude.outputs.notes }}
       # The commit Claude read, so the PR releases exactly that.
       commit: ${{ steps.head.outputs.commit }}
     steps:
@@ -78,38 +78,18 @@ jobs:
           version: 2026.10.24
           install_args: uv
       - id: claude
-        uses: anthropics/claude-code-action@v1
         env:
-          # TEMPORARY: the action rejects push events, which the PR branch test uses.
-          GITHUB_EVENT_NAME: ${{ github.event_name == 'push' && 'workflow_dispatch' || github.event_name }}
-        with:
-          github_token: ${{ github.token }}
           # Workload identity federation: identifiers, not credentials. The rule, in the
           # Claude Console under Settings, Workload identity, accepts only the schedule and
           # workflow_dispatch events on refs/heads/main of this repository.
-          anthropic_federation_rule_id: fdrl_01Us1LZr8HnSXM1C8ucSFNK6
-          anthropic_organization_id: 93f004c5-9d07-4352-b0d1-1730ec1c4b28
-          anthropic_service_account_id: svac_01T1yc3UbfvpQnE3KLTfJ6bB
-          anthropic_workspace_id: wrkspc_01J1wcfqkKJ5ey1wBmqnYb9D
-          prompt: |
-            You're preparing a release of the Antithesis plugin, unattended, in GitHub Actions.
-            Read `.claude/skills/release/SKILL.md`, and do what its "Pick and check the
-            version" and "Write the notes" sections say. Pick the version yourself, and never
-            a release candidate. The workflow already checked that no release PR is open.
-
-            Don't change any file: you can't, and the workflow writes `CHANGELOG.md` and sets
-            the version. Instead, answer with:
-
-            - version: the version you picked
-            - reason: one or two sentences, for the PR body, on why you picked it
-            - notes: the body of the version's `CHANGELOG.md` section, without its
-              `# Version` heading
-
-            If a check fails, answer with an empty version, and the failure as the reason.
-          claude_args: >-
-            --model claude-opus-5-5
-            --allowedTools "Read,Glob,Grep,Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git status:*),Bash(git tag -l:*),Bash(git rev-parse:*),Bash(grep:*),Bash(head:*),Bash(gh release view:*),Bash(gh repo view:*)"
-            --json-schema '{"type":"object","properties":{"version":{"type":"string"},"reason":{"type":"string"},"notes":{"type":"string"}},"required":["version","reason","notes"]}'
+          ANTHROPIC_FEDERATION_RULE_ID: fdrl_01Us1LZr8HnSXM1C8ucSFNK6
+          ANTHROPIC_ORGANIZATION_ID: 93f004c5-9d07-4352-b0d1-1730ec1c4b28
+          ANTHROPIC_SERVICE_ACCOUNT_ID: svac_01T1yc3UbfvpQnE3KLTfJ6bB
+          ANTHROPIC_WORKSPACE_ID: wrkspc_01J1wcfqkKJ5ey1wBmqnYb9D
+          CLAUDE_CODE: claude@2.1.316
+          # Read-only, for `gh release view`.
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/release-notes.py
 
   pr:
     needs: [gate, notes]
