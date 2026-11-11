@@ -26,7 +26,7 @@ If no mode is given, use `monitor` for an `in_progress` run and `summary` for a 
 
 ## Read the properties
 
-List the failing ones, with their example counts and a sample of their moments, with `snouty runs properties <run_id> --failing --detail`. For an overview of every property, the table without `--detail` is enough. Read `references/triage/properties.md` for the assertion types and what pass/fail ratios suggest.
+List the failing ones, with their example counts and a sample of their moments, with `snouty runs properties --failing --detail <run_id>`. For an overview of every property, the table without `--detail` is enough. Read `references/triage/properties.md` for the assertion types and what pass/fail ratios suggest.
 
 If the run is `in_progress`, don't wait for it to finish. Follow `snouty runs stream --help` to get the current results and new ones as they arrive.
 
