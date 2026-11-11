@@ -1,7 +1,7 @@
 ---
 name: antithesis
 description: Entry point to Antithesis. Use for any task that involves Antithesis.
-argument-hint: "[triage [monitor|summary|root-cause]|debug|workload|launch|properties] [target]"
+argument-hint: "[triage|workload|launch|properties] <prompt>"
 ---
 
 # Antithesis
