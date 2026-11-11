@@ -14,6 +14,10 @@ on:
     # 00:00 UTC, Tuesday to Saturday, is 17:00 GMT-7, Monday to Friday, all year round.
     - cron: "0 0 * * 2-6"
   workflow_dispatch:
+  # TEMPORARY: test from the PR branch as a dry run, which opens nothing. The federation
+  # rule admits this branch for now. Remove before merging, and point the rule back at main.
+  push:
+    branches: [daily-release-workflow]
 
 concurrency:
   group: release-pr
@@ -131,4 +135,6 @@ jobs:
           NOTES: ${{ needs.notes.outputs.notes }}
           PREVIOUS: ${{ needs.gate.outputs.previous }}
           RELEASE_REVIEWER: carlsverre
+          # TEMPORARY: a push to the PR branch is a dry run.
+          RELEASE_DRY_RUN: ${{ github.event_name == 'push' }}
         run: scripts/release-pr.py open "$VERSION"

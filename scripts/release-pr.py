@@ -209,6 +209,24 @@ def open_pr(version: str) -> int:
 
     branch = f"release/{tag}"
     title = f"Release antithesis plugin {version}"
+    reviewer = os.environ["RELEASE_REVIEWER"]
+    previous = os.environ["PREVIOUS"]
+    body = (
+        f"Releases antithesis plugin {version}. The notes cover what changed since "
+        f"{previous}. {reason}\n\n"
+        "The Release PR workflow opened this PR on its own: Claude picked the version and "
+        "wrote the notes by following the `release` skill. To change the version, run "
+        "`scripts/set-version.py` and rename the `CHANGELOG.md` heading. Merging ships the "
+        "version to every user, and then the Tag release workflow tags the merge commit, "
+        "which runs Release to create the GitHub release.\n\n"
+        "🤖 Generated with [Claude Code](https://claude.com/claude-code)\n"
+    )
+    if os.environ.get("RELEASE_DRY_RUN") == "true":
+        # TEMPORARY, to test the workflow from its PR branch: show the release, open nothing.
+        print(out("git", "diff"))
+        print(f"\nWould open {branch}: {title}, for {reviewer}\n\n{body}")
+        return 0
+
     bot = "github-actions[bot]"
     out("git", "switch", "-c", branch)
     out("git", "add", *sorted(RELEASE_FILES))
@@ -224,18 +242,6 @@ def open_pr(version: str) -> int:
         print(f"Replacing {branch}, left from a closed release PR")
     out("git", "push", "--force", "-u", "origin", branch)
 
-    reviewer = os.environ["RELEASE_REVIEWER"]
-    previous = os.environ["PREVIOUS"]
-    body = (
-        f"Releases antithesis plugin {version}. The notes cover what changed since "
-        f"{previous}. {reason}\n\n"
-        "The Release PR workflow opened this PR on its own: Claude picked the version and "
-        "wrote the notes by following the `release` skill. To change the version, run "
-        "`scripts/set-version.py` and rename the `CHANGELOG.md` heading. Merging ships the "
-        "version to every user, and then the Tag release workflow tags the merge commit, "
-        "which runs Release to create the GitHub release.\n\n"
-        "🤖 Generated with [Claude Code](https://claude.com/claude-code)\n"
-    )
     url = out(
         *("gh", "pr", "create", "--base", "main", "--head", branch, "--title", title),
         *("--body", body, "--assignee", reviewer, "--reviewer", reviewer),
