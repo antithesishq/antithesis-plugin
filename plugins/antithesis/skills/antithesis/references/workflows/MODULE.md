@@ -18,7 +18,7 @@ Keep what the user's prompt adds, such as the behaviors to focus on, where to re
 
 ## Heal
 
-> The workload for `<system>` lags `<version or recent changes>`. Find what changed since the workload last changed, from the version control history of both and any release notes: new, changed and removed APIs, configuration, behaviors and guarantees. Update the workload to cover them (`references/workload/MODULE.md`), changing only what the changes touch, and update the properties of the changed guarantees (`references/properties/MODULE.md`). Validate it with steps 8 to 11 of the workload module. Work autonomously within `<budget>` compute hours. Report what changed in the workload, and anything the runs found.
+> The workload for `<system>` lags `<version or recent changes>`. Find what changed since the workload last changed, from the version control history of both and any release notes: new, changed and removed APIs, configuration, behaviors and guarantees. Update the workload to cover them (`references/workload/MODULE.md`), changing only what the changes touch, and update the properties of the changed guarantees (`references/properties/MODULE.md`). Validate it with the workload module's steps from "Build and validate" in `references/workload/MODULE.md` to the end. Work autonomously within `<budget>` compute hours. Report what changed in the workload, and anything the runs found.
 
 ## Test
 
