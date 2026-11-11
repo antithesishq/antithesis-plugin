@@ -1,6 +1,6 @@
 # Assertions
 
-An assertion is an Antithesis SDK call in the driver or the SUT's code. Each assertion, identified by its message, becomes one property in the run, judged by the default property for its type (`references/antithesis/explainer.md`). A failing assertion doesn't stop the program. For how each language's SDK works, see `snouty docs tree sdk`; for its exact API, at the latest version, see the language's page, listed in `references/workload/languages.md`.
+An assertion is an Antithesis SDK call in the driver or the SUT's code. Each assertion, identified by its message, becomes one property in the run, judged by the default property for its type (`references/antithesis/explainer.md`). A failing assertion doesn't stop the program. For how each language's SDK works, see `snouty docs tree sdk`; for its exact API, at the version the project uses, see the language's page, listed in `references/workload/languages.md`.
 
 This skill names each assertion type in snake_case with an `assert_` prefix, such as `assert_always` and `assert_sometimes`. Each SDK spells them its own way, such as `assert_always!` in Rust, `assert.Always` in Go and `always` in Python. In a run's results, each type's default property is named in CapitalCase, such as `Always`.
 
