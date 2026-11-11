@@ -9,7 +9,10 @@
 - no release PR, from a `release/` branch, is open
 - the latest CI run on HEAD completed and passed
 - something users get changed since the last release reachable from HEAD, skipping
-  release candidates
+  release candidates, unless REQUESTED_VERSION names a version to release
+
+REQUESTED_VERSION is the version someone gave when they started the workflow by hand, with
+or without a leading `v`. It may be a release candidate. `open` checks that Claude used it.
 
 It writes `release=true` or `false`, and the last tag as `previous`, to GITHUB_OUTPUT, and
 exits 0 either way: a day with nothing to release isn't a failure.
@@ -122,11 +125,22 @@ def gate() -> int:
         *("--exclude", "*-rc*", "HEAD"),
     )
     output(previous=previous)
+    # A version someone asked for when they started the workflow, if any.
+    requested = os.environ.get("REQUESTED_VERSION", "").strip().removeprefix("v")
+    if requested and not release.VERSION.fullmatch(requested):
+        print(f"::error title=Version::{escape(requested)} is not MAJOR.MINOR.PATCH[-rc.N]")
+        return 1
+    output(requested=requested)
 
     if prs := open_release_prs():
         reason = f"a release PR is already open: {', '.join(prs)}"
     elif failed := ci_passed(sha):
         reason = failed
+    elif requested:
+        # Whoever asked for the version decides whether there's enough to release.
+        print(f"Releasing {sha[:12]} as {requested}, as asked: CI passed")
+        output(release="true")
+        return 0
     elif run("git", "diff", "--quiet", previous, sha, "--", *USER_FACING).returncode == 0:
         reason = f"nothing users get has changed since {previous}"
     else:
@@ -214,10 +228,15 @@ def open_pr(version: str) -> int:
         print(f"::error title=No release::{escape(reason) or 'Claude picked no version'}")
         return 1
     current = release.version_in(release.CANONICAL, release.CANONICAL.read_text()) or ""
+    requested = os.environ.get("REQUESTED_VERSION", "")
     failures = []
     match = release.VERSION.fullmatch(version)
-    if not match or match.group(2):
+    if requested and version != requested:
+        failures.append(f"Claude answered {version!r}, not the requested {requested}")
+    elif not match:
         failures.append(f"{version!r} is not MAJOR.MINOR.PATCH")
+    elif match.group(2) and not requested:
+        failures.append(f"{version} is a release candidate, which only a requested version can be")
     elif version_key(version) <= version_key(current):
         failures.append(f"{version} is not above the current version, {current}")
     if not notes:

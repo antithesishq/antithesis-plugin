@@ -16,7 +16,7 @@ Only a tag makes a GitHub release. CI never does, whatever version the default b
 
 Users install the plugin from the default branch, and Claude Code and Codex update it when its version changes. So merging the PR ships the version to every user, and the tag and release record it.
 
-The Release PR workflow (`.github/workflows/release-pr.yml`) opens a release PR every weekday on its own, when CI passed on the default branch and the plugin changed since the last release. Claude picks the version and writes the notes as "Pick and check the version" and "Write the notes" say, in a job that can't write to the repository. Another job writes them to `CHANGELOG.md`, sets the version, and opens the PR.
+The Release PR workflow (`.github/workflows/release-pr.yml`) opens a release PR every weekday on its own, when CI passed on the default branch and the plugin changed since the last release. Claude picks the version and writes the notes as "Pick and check the version" and "Write the notes" say, in a job that can't write to the repository. Another job writes them to `CHANGELOG.md`, sets the version, and opens the PR. Started by hand, it takes an optional version, which may be a release candidate: Claude uses it, and the workflow releases even when nothing changed.
 
 A release is `X.Y.Z`. A release candidate is `X.Y.Z-rc.N`, and follows the same steps: its PR bumps the default branch to the candidate, so every user gets it too, and its GitHub release is a pre-release. Below, `X.Y.Z` stands for the whole version, with its `-rc.N` for a candidate.
 

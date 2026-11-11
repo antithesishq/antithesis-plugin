@@ -14,6 +14,15 @@ on:
     # 00:00 UTC, Tuesday to Saturday, is 17:00 GMT-7, Monday to Friday, all year round.
     - cron: "0 0 * * 2-6"
   workflow_dispatch:
+    inputs:
+      version:
+        description: Version to release, such as 0.2.0 or 0.2.0-rc.1. Leave it empty to have Claude pick one.
+        required: false
+        default: ""
+  # TEMPORARY: test from the PR branch, which opens a real release PR. The federation rule
+  # admits this branch for now. Remove before merging, and point the rule back at main.
+  push:
+    branches: [daily-release-workflow]
 
 concurrency:
   group: release-pr
@@ -33,6 +42,7 @@ jobs:
     outputs:
       release: ${{ steps.gate.outputs.release }}
       previous: ${{ steps.gate.outputs.previous }}
+      requested: ${{ steps.gate.outputs.requested }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -45,6 +55,9 @@ jobs:
       - id: gate
         env:
           GH_TOKEN: ${{ github.token }}
+          # TEMPORARY: a push to the PR branch tests a requested release candidate. After
+          # the test, this is `${{ inputs.version }}`.
+          REQUESTED_VERSION: ${{ inputs.version || (github.event_name == 'push' && '0.1.0-rc.1' || '') }}
         run: scripts/release-pr.py gate
 
   notes:
@@ -86,6 +99,7 @@ jobs:
           # Read-only, for `gh release list`, which runs before Claude, without it.
           GH_TOKEN: ${{ github.token }}
           REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+          REQUESTED_VERSION: ${{ needs.gate.outputs.requested }}
         run: scripts/release-notes.py
 
   pr:
@@ -112,5 +126,6 @@ jobs:
           REASON: ${{ needs.notes.outputs.reason }}
           NOTES: ${{ needs.notes.outputs.notes }}
           PREVIOUS: ${{ needs.gate.outputs.previous }}
+          REQUESTED_VERSION: ${{ needs.gate.outputs.requested }}
           RELEASE_REVIEWER: carlsverre
         run: scripts/release-pr.py open "$VERSION"

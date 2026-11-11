@@ -58,7 +58,7 @@ SCHEMA = {
 PROMPT = """\
 You're preparing a release of the Antithesis plugin, unattended, in GitHub Actions.
 Read `.claude/skills/release/SKILL.md`, and do what its "Pick and check the version" and
-"Write the notes" sections say. Pick the version yourself, and never a release candidate.
+"Write the notes" sections say. {version}
 The workflow already checked that no release PR is open, and that the checkout is clean.
 
 You can't run commands. The workflow ran the ones those sections name, and saved their
@@ -94,6 +94,13 @@ def refresh(url: str, bearer: str, path: Path, stop: threading.Event) -> None:
             fetch_identity_token(url, bearer, path)
         except OSError as e:
             print(f"::warning title=OIDC token::refresh failed: {e}", flush=True)
+
+
+def version_instruction() -> str:
+    requested = os.environ.get("REQUESTED_VERSION", "")
+    if requested:
+        return f"The user asked to release version {requested}: use exactly that version."
+    return "Pick the version yourself, and never a release candidate."
 
 
 def git(*args: str) -> str:
@@ -177,7 +184,7 @@ def main() -> int:
                 # --restricted ignores project settings: this keeps the repo's Stop hook.
                 *("--settings", str(ROOT / ".claude" / "settings.json")),
                 *("--json-schema", json.dumps(SCHEMA)),
-                PROMPT.format(context=context),
+                PROMPT.format(context=context, version=version_instruction()),
             ],
             cwd=ROOT,
             env=env,
