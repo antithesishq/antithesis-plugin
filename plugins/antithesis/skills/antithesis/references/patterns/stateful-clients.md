@@ -104,7 +104,7 @@ client1:
   hostname: client1
   platform: linux/amd64
   build:
-    context: .
+    context: ..
     dockerfile: client/Dockerfile
   image: client:latest
   environment:
