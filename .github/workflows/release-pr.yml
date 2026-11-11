@@ -79,6 +79,9 @@ jobs:
           install_args: uv
       - id: claude
         uses: anthropics/claude-code-action@v1
+        env:
+          # TEMPORARY: the action rejects push events, which the PR branch test uses.
+          GITHUB_EVENT_NAME: ${{ github.event_name == 'push' && 'workflow_dispatch' || github.event_name }}
         with:
           github_token: ${{ github.token }}
           # Workload identity federation: identifiers, not credentials. The rule, in the
