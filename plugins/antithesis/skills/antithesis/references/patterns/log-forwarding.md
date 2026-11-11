@@ -81,7 +81,7 @@ record(line):
   else:
     forget this container's state               # a new process
   if the line parses as a raft-state:
-    assert_reachable!                           "the driver reads a node's state from its logs"
+    assert_reachable!                           "the driver reads a node's state from its logs"  # only if no check below is hit on every line
     guarantee checks on node state go here      # see section 4
     store it as the container's latest state
     once active, exploration assertions over every container's latest state:
@@ -105,9 +105,9 @@ Guarantee checks on node state, such as at most one leader per term, go in `reco
 - **Share state both ways.** Rules read the node states, for example to send reads to a lagging follower. Give the receiving thread the model too, so assertions that combine the logs with the model are checked when the line arrives. Never hold a model lock and the node-state lock at once: copy what you need from one, release it, then take the other.
 - **Don't depend on arrival order across containers.** One container's lines arrive in `seq` order, but a paused container's arrive late. The latest state of several nodes is a mix of times: use it only for sometimes assertions.
 - **Mark combinations worth exploring from,** with exploration assertions (`references/properties/assertions.md`): a leader change while a follower lags, a node rejoining with a stale term. Use rich assertions when there's a distance to the state ("Rich assertions" in `references/properties/assertions.md`).
-- **Assert that every kind of line you parse arrives,** with a reachable assertion for each kind that no guarantee check reads. Otherwise a changed format or a disabled log level looks like a quiet system.
+- **Assert that every kind of line you parse arrives,** with a reachable assertion for each kind that no always assertion is hit on for every line. Otherwise a changed format or a disabled log level looks like a quiet system.
 
 ## Checking it
 
-- **Locally,** every kind of line you parse arrives, its reachable assertion is met in the local loop (`references/workload/local-loop.md`), and `the driver receives every forwarded log line` holds. Check it under a burst: restart every system container at once while the workload runs.
+- **Locally,** every kind of line you parse arrives, its reachable or always assertion is met in the local loop (`references/workload/local-loop.md`), and `the driver receives every forwarded log line` holds. Check it under a burst: restart every system container at once while the workload runs.
 - **In a short run,** the exploration assertions on node state are reached.
