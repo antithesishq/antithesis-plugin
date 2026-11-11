@@ -16,7 +16,7 @@ Antithesis is a simulation platform for finding bugs that traditional testing mi
 - **Branch**: A timeline that splits off another timeline at a moment.
 - **Multiverse**: A tree of timelines branched from each other.
 - **Event**: A record logged at a moment: SUT output, an SDK call, or an Antithesis event such as a fault.
-- **Driver**: The program that picks actions, sends them to the SUT, and checks the responses. One binary, the main process of its own container.
+- **Driver**: The program that picks actions, sends them to the SUT, and checks the responses. One program, the main process of its own container.
 - **Workload**: Everything added to the deployment to exercise the SUT. In this skill: the driver, and the patterns a system needs, such as client programs that run the SUT's client library.
 - **Property**: What Antithesis reports for a run: a check evaluated over the whole multiverse, passing or failing with examples (where it held) and counterexamples (where it didn't). `snouty runs properties` lists them. Assertions are the only way to define properties: each assertion, identified by its message, becomes one property. Antithesis also has default properties about the run itself, such as `Software was instrumented`.
 - **Assertion**: An Antithesis SDK call, placed in the workload or the SUT. Each call is an event that Antithesis picks up. The default properties named after each assertion type (`Always`, `Sometimes`, `Reachable`, ...) judge each assertion's events on their own, and report the result as that assertion's property: for example, `Always` passes for an assertion that is hit at least once and true on every hit. A failing SDK assertion doesn't stop the program.

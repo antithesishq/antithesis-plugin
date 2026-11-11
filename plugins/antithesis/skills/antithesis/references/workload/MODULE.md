@@ -12,7 +12,7 @@ Runs launched while working on the workload spend the task's compute budget, fro
 - **Exploration assertions,** in the driver and in the system's own code, which show Antithesis the states worth reaching. Put an assertion on a node's internal state in that node's code, where you can change it, so it fires at the moment the state occurs.
 - **Patterns,** only for systems that need them: running the system's stateful client library in faulted client containers, or forwarding the system's logs to the driver. `references/patterns/MODULE.md` says when each applies.
 
-The driver binary is the main process of its own fault-excluded container. It waits for the system, reports setup complete, then waits for `/workload-active`, which the container's one `first_` test command creates when fuzzing starts. Every decision is made in the driver.
+The driver program is the main process of its own fault-excluded container. It waits for the system, reports setup complete, then waits for `/workload-active`, which the container's one `first_` test command creates when fuzzing starts. Every decision is made in the driver.
 
 The SUT and the driver are built with Antithesis coverage instrumentation.
 

@@ -4,7 +4,7 @@
 
 ## 1. The driver container
 
-Build the driver into its own image, and add it to `docker-compose.yaml` as a service named `driver`. The driver binary is the container's main process (`references/workload/driver.md`). Give it no `restart:` policy: an eventually ends its timeline by exiting the driver with status 0.
+Build the driver into its own image, and add it to `docker-compose.yaml` as a service named `driver`. The driver program is the container's main process (`references/workload/driver.md`). Give it no `restart:` policy: an eventually ends its timeline by exiting the driver with status 0.
 
 ```yaml
 driver:
