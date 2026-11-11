@@ -35,7 +35,7 @@ Build every binary in the workload with Antithesis coverage instrumentation, the
 - Follow "Instrumentation" in `references/workload/languages/<language>.md`, for the code's language, including the docs page's validation step. If the project builds with link-time optimization, use the docs page's link-time instructions. Compile-time instrumentation doesn't survive LTO.
 - Instrument the binaries that run in the SUT's containers, and make sure the runtime image runs the instrumented build.
 - The client library is code under test too. If the workload runs it in client containers (the stateful-clients pattern, `references/patterns/stateful-clients.md`), instrument the client program with it.
-- Put symbol files in `/symbols` of the runtime image where the language needs them, or artifacts in `/opt/antithesis/catalog/` for languages Antithesis instruments itself.
+- Put symbol files in `/symbols` of the runtime image where the language needs them, or code in `/opt/antithesis/catalog/` for languages Antithesis catalogs or instruments itself.
 - Add instrumentation tools and flags in the Antithesis Dockerfiles, not the project's own build. When you choose a base image for them, take it from `references/workload/images.md`.
 - If a component can't be instrumented, instrument the rest.
 - Instrument the driver too, the same way as any other code in its language. Its branches are where the workload decides what to do next, so they're part of the state space Antithesis searches.
