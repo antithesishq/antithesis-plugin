@@ -40,7 +40,7 @@ Whoever downloads a log reads `references/triage/logs.md` first. In `monitor` an
 
 1. Pick the first failing example and find its moment. If the counterexample has no `moment` (properties that report a value, see `references/triage/properties.md`), the counterexample value is the evidence; skip to "Cross-reference the evidence".
 2. Download the log for that moment and analyze it locally.
-3. If there is an available ready run, run commands at the failing moment. See `references/debug/MODULE.md`.
+3. Run commands at the failing moment. `references/debug/MODULE.md` says which run to use.
 4. If you aren't sure what caused the failure, find more moments for the same property with `snouty runs search -n 999` and compare them. Passing examples are useful for finding what differs between success and failure.
 5. **Cross-reference the evidence:** check the log and command output against the source code of the system under test and the workload.
 6. Work out the timeline of events that led up to the failure and its root cause.
