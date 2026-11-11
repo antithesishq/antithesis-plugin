@@ -47,12 +47,13 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           github_token: ${{ github.token }}
-          # Workload identity federation: identifiers, not credentials. See the Claude
-          # Console, under Settings, Workload identity.
-          anthropic_federation_rule_id: ${{ vars.ANTHROPIC_FEDERATION_RULE_ID }}
-          anthropic_organization_id: ${{ vars.ANTHROPIC_ORGANIZATION_ID }}
-          anthropic_service_account_id: ${{ vars.ANTHROPIC_SERVICE_ACCOUNT_ID }}
-          anthropic_workspace_id: ${{ vars.ANTHROPIC_WORKSPACE_ID }}
+          # Workload identity federation: identifiers, not credentials. The rule, in the
+          # Claude Console under Settings, Workload identity, accepts only the schedule and
+          # workflow_dispatch events on refs/heads/main of this repository.
+          anthropic_federation_rule_id: fdrl_01Us1LZr8HnSXM1C8ucSFNK6
+          anthropic_organization_id: 93f004c5-9d07-4352-b0d1-1730ec1c4b28
+          anthropic_service_account_id: svac_01T1yc3UbfvpQnE3KLTfJ6bB
+          anthropic_workspace_id: wrkspc_01J1wcfqkKJ5ey1wBmqnYb9D
           prompt: |
             You're preparing a release of the Antithesis plugin, unattended, in GitHub Actions.
             Read `.claude/skills/release/SKILL.md`, and follow only its "Pick and check the
