@@ -14,7 +14,9 @@
 
 `snouty docs show /docs/reference/sdk/java/how_to_build_with_sdk/`.
 
-**Check instrumentation:** in each runtime image that runs the code, its jars are under `/opt/antithesis/catalog/`, at most one symlink deep. In a run, `Paths found for Antithesis instrumentation` lists that container and directory with the language Java.
+Antithesis's instrumented bytecode calls the SDK's `com.antithesis:ffi` package, so every instrumented program needs it on its classpath at run time, as a dependency of `com.antithesis:sdk` or on its own. Without it the program exits at startup with `NoClassDefFoundError: com/antithesis/ffi/internal/FfiHandler`.
+
+**Check instrumentation:** in each runtime image that runs the code, its jars are under `/opt/antithesis/catalog/`, at most one symlink deep, and the program starts with `com.antithesis:ffi` on its classpath. In a run, each jar registers a module named after the jar file, without `.jar`.
 
 ## Local coverage
 

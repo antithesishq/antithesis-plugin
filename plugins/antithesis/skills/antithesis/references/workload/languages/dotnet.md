@@ -14,7 +14,7 @@
 
 `snouty docs show /docs/reference/sdk/dotnet/instrumentation/`.
 
-**Check instrumentation:** in each runtime image that runs the code, its assemblies are under `/opt/antithesis/catalog/`, at most one symlink deep. In a run, `Paths found for Antithesis instrumentation` lists that container and directory with the language .NET.
+**Check instrumentation:** in each runtime image that runs the code, its assemblies are under `/opt/antithesis/catalog/`, at most one symlink deep. In a run, each assembly registers a module named after it.
 
 ## Local coverage
 
