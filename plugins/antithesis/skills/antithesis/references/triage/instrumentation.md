@@ -37,7 +37,7 @@ The setup normally instruments the SUT binaries, including any client programs t
 A run confirms an expected component when:
 
 - its module appears in `Software was instrumented`, with `has_catalog` true; or
-- for a binary instrumented at build time (Go, Rust, C, C++), a container that runs it appears in `Thread pausing was enabled`; or
+- for a binary instrumented at build time (Go, Rust, C, C++), `Thread pausing was enabled` has an example that names that binary in a container that runs it. Another binary in the same container doesn't confirm it; or
 - for code Antithesis instruments from `/opt/antithesis/catalog/` (Java, .NET), `Paths found for Antithesis instrumentation` lists its container and directory.
 
 Then:

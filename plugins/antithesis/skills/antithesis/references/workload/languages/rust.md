@@ -27,7 +27,7 @@ RUN cargo build --release \
  && cp /out/driver /symbols/
 ```
 
-**Check instrumentation:** as the page's validation section says, in the build stage, for each binary the runtime image gets: `nm <binary> | grep antithesis_load_libvoidstar` shows a `T` symbol, and `readelf -S <binary> | grep sancov` lists the `__sancov_guards` and `__sancov_pcs` sections.
+**Check instrumentation:** as the page's validation section says, in the build stage, for the unstripped copy in `/symbols` of each binary the runtime image gets: `nm <binary> | grep antithesis_load_libvoidstar` shows a `T` symbol, and `readelf -S <binary> | grep sancov` lists the `__sancov_guards` and `__sancov_pcs` sections.
 
 ## Local coverage
 
