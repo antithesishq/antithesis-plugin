@@ -14,7 +14,7 @@ Put this in one small module, with a function for each assertion type the code u
 
 ## Instrumentation
 
-- **Languages compiled through LLVM:** `snouty docs show /docs/reference/sdk/fallback/`.
+- **Languages compiled through LLVM:** `snouty docs show /docs/reference/sdk/fallback/`. Check each binary with the checks under "Instrumentation" in `references/workload/languages/cpp.md`.
 - **Any other:** check the list of supported languages in `snouty docs show /docs/product/writing_tests/instrumentation/coverage_instrumentation/`. If the language isn't there, the component can't be instrumented: tell the user, and instrument the rest.
 
 ## Local coverage

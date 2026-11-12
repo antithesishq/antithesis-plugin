@@ -14,6 +14,8 @@
 
 `snouty docs show /docs/reference/sdk/java/how_to_build_with_sdk/`.
 
+**Check instrumentation:** in each runtime image that runs the code, its jars are under `/opt/antithesis/catalog/`, at most one symlink deep. In a run, `Paths found for Antithesis instrumentation` lists that container and directory with the language Java.
+
 ## Local coverage
 
 Use JaCoCo.

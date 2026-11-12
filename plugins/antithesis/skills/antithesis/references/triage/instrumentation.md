@@ -26,7 +26,7 @@ Each `Software was instrumented` example is one instrumented module that loaded 
 
 **Deduplication caveat:** Antithesis deduplicates these two example lists by debug id. The same binary that starts in many containers appears once. Distinct binaries that share a debug id — for example several Go binaries built from one instrumented module — also collapse into one entry. An expected binary can be absent from the list even when it is instrumented.
 
-Each `Thread pausing was enabled` example is a `"binary (container)"` string. This list is per container, and it is not deduplicated by debug id. A binary in this list is instrumented. A binary absent from this list can still be instrumented.
+Each `Thread pausing was enabled` example is a `"binary (container)"` string. This list is per container, and it is not deduplicated by debug id. A binary in this list is instrumented. A binary absent from this list can still be instrumented, if its process ran too briefly to have delays injected.
 
 For Java, Python and .NET, also check the properties whose names contain `paths found` and `invalid paths`. See `snouty docs show /docs/reference/default_properties/`.
 
@@ -34,8 +34,17 @@ For Java, Python and .NET, also check the properties whose names contain `paths 
 
 The setup normally instruments the SUT binaries, including any client programs that run the system's client library. Whether the workload's own binaries are instrumented depends on its build. A workload built with this skill instruments its driver too, when the driver's language allows. Build the expected list from the source code when you have access to it — the harness and build files show which binaries the setup instruments. Without source access, infer the list from the user's request, the run description, and the containers in the run.
 
+A run confirms an expected component when:
+
+- its module appears in `Software was instrumented`, with `has_catalog` true; or
+- for a binary instrumented at build time (Go, Rust, C, C++), a container that runs it appears in `Thread pausing was enabled`; or
+- for code Antithesis instruments from `/opt/antithesis/catalog/` (Java, .NET), `Paths found for Antithesis instrumentation` lists its container and directory.
+
+Then:
+
 - **Any of these properties fails** — a significant finding: something is probably wrong with the instrumentation setup. Report a setup problem and link the [instrumentation documentation](https://antithesis.com/docs/product/writing_tests/instrumentation/coverage_instrumentation/).
-- **Every expected binary appears in a property** — instrumentation works. Report the modules and their `total_locations`.
-- **Some expected binaries are missing** — do not conclude that they are uninstrumented; deduplication can hide them. Report which binaries the properties confirm, and state that the deduplicated lists cannot confirm the rest.
+- **Every expected component is confirmed** — instrumentation works. Report the modules and their `total_locations`.
+- **A long-running binary instrumented at build time is in neither `Software was instrumented` nor `Thread pausing was enabled`** — it's uninstrumented, even though both properties pass on other modules. Report a setup problem. Deduplication can't explain it, because the thread-pausing list isn't deduplicated. With access to the image, confirm it with the instrumentation check under "Instrumentation" in `references/workload/languages/<language>.md`.
+- **Another expected component is unconfirmed**, such as a short-lived process — report which components the properties confirm, and that the lists can't confirm the rest.
 
 When you cannot build an expected list, report what the properties show and note the deduplication caveat.

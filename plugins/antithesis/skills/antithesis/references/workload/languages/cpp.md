@@ -14,6 +14,8 @@
 
 Follow `snouty docs show /docs/reference/sdk/cpp/instrumentation/`: include `antithesis_instrumentation.h` in exactly one translation unit, such as the file that defines `main`, and build with the page's compile and link flags, using clang. Leave each binary in `/out`, and an unstripped copy in `/symbols` of its runtime image.
 
+**Check instrumentation:** as the page's validation section says, `nm <binary> | grep antithesis_load_libvoidstar` shows a `T` symbol, in the build stage, for each binary the runtime image gets.
+
 ## Local coverage
 
 - Build with clang's `-fprofile-instr-generate -fcoverage-mapping`.

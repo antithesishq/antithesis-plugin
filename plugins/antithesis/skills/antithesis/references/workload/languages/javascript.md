@@ -8,6 +8,8 @@ None released: `snouty docs show /docs/reference/sdk/javascript_sdk/` says to co
 
 Antithesis instruments JavaScript itself: `snouty docs show /docs/reference/sdk/javascript_sdk/`.
 
+**Check instrumentation:** in each runtime image that runs the code, the directory that holds its `node_modules` is under `/opt/antithesis/catalog/`, at most one symlink deep.
+
 ## Local coverage
 
 Use `c8` for Node.

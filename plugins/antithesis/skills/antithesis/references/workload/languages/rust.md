@@ -27,6 +27,8 @@ RUN cargo build --release \
  && cp /out/driver /symbols/
 ```
 
+**Check instrumentation:** as the page's validation section says, in the build stage, for each binary the runtime image gets: `nm <binary> | grep antithesis_load_libvoidstar` shows a `T` symbol, and `readelf -S <binary> | grep sancov` lists the `__sancov_guards` and `__sancov_pcs` sections.
+
 ## Local coverage
 
 - In the build stage, run `rustup component add llvm-tools-preview` and build with the same command and `RUSTFLAGS="-Cinstrument-coverage -Cllvm-args=-runtime-counter-relocation"` set. `RUSTFLAGS` replaces the Antithesis rustflags, and the build target, so the binary's path, stays the same.

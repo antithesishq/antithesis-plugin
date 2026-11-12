@@ -25,6 +25,10 @@ COPY driver/ .
 RUN go build -toolexec=antithesis-go-toolexec -o /out/driver .
 ```
 
+Pass build tags in `GOFLAGS`, such as `GOFLAGS=-tags=enable_antithesis_sdk`, never as `go build -tags`. A project that requires a `-default-no-op` version of the SDK, as nats-server does, needs that tag for its assertions and its coverage. The toolexec builds the SDK's coverage package in a nested `go list` that sees `GOFLAGS` but not the command line, so with `-tags` it silently links a no-op: the catalogs are written and the assertions fire, but nothing reports coverage ([antithesis-sdk-go#46](https://github.com/antithesishq/antithesis-sdk-go/issues/46)).
+
+**Check instrumentation:** in the build stage, `go tool nm /out/<binary> | grep -c 'voidstarHandler).init_coverage'` prints a number above 0 for each binary. A 0 means the binary reports no coverage.
+
 ## Local coverage
 
 - Build with `ANTITHESIS_SKIP_COVERAGE=true go build -toolexec=antithesis-go-toolexec -cover -covermode=atomic -coverpkg=./...`, and set `GOCOVERDIR=/coverage/<service>`. The toolexec still catalogs the assertions, so the local loop lists one that's never reached.
