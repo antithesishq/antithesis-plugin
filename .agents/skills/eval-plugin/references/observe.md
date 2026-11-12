@@ -10,7 +10,7 @@ Read the transcripts, not only the final answers. For each finding, note the tim
 - **snouty:** commands that failed, flags it guessed, errors it misread, and features it didn't know about.
 - **Budget:** the caps it launched with, what it reported spending, and what `snouty runs usage` says it spent.
 - **Claims:** check each claim in the final answer against the runs and the transcript, such as a property it says passed, or a cause it says it confirmed.
-- **Cost hygiene:** did it cancel debug runs and follow-up runs once it had what it needed?
+- **Cost hygiene:** did it cancel debugging sessions and follow-up runs once it had what it needed?
 - **Isolation:** did it cancel other sessions' runs, or change their images or checkouts, and did it say so? Running commands in another session's ready run is fine.
 
 ## Per task

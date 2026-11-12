@@ -253,7 +253,7 @@ def runlog(data: Path) -> dict:
                                 "launched": e.get("timestamp"),
                                 "purpose": next((g for g in desc.groups() if g), "")
                                 if desc
-                                else "debug run"
+                                else "debugging session"
                                 if "snouty debug" in cmd
                                 else "",
                                 "cap": int(cap.group(1)) if cap else 0,
