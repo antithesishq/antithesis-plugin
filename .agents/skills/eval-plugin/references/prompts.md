@@ -10,7 +10,7 @@ For a 300 compute-hour eval of one target on the standard tier:
 | --- | --- | --- |
 | Workload | 80 | Eval 2's workload billed 96 against a 100 budget. |
 | Triage root-cause, each round | 10 | Often uses one short run, or nothing. Eval 2's used 6.1. |
-| Debug | 10 | With one session at a time there's no other ready run to borrow, so expect a debug run of about 4. |
+| Debug | 10 | With one session at a time there's no other ready run to borrow, so the session starts its own debugging run. That bills about 48 compute hours per hour of wall time, so 10 buys about 12 minutes. Eval 3's billed 14.5 for 18 minutes. |
 | Monitor run | 24 | You launch it for the monitor task; plain-language triage uses it too. |
 | Properties | 30 | |
 | Patterns | 125 | The long run alone needs about 100: 2 hours of fuzzing on 48 cores is 96, plus setup. |

@@ -191,13 +191,22 @@ def cmd_result(a) -> None:
 
 RUN_ID = re.compile(r"\b[0-9a-f]{32}-\d+-\d+\b")
 LAUNCH = re.compile(r"\bsnouty\s+(?:launch|debug)\b(?![^\n]*--help)")
+# A launch wrapper script, such as scripts/launch.sh, whose output may be filtered down
+# to the bare run ID.
+WRAPPER = re.compile(r"\blaunch[\w-]*\.sh\b(?!\s*<<)")
+# snouty's own lines for a new run, which also catch launches through a wrapper script,
+# even when the output is cut short with `tail`.
+STARTED = re.compile(
+    r"(?:Test run started: run_id |Wait for the run to finish with:\s+snouty runs wait )([0-9a-f]{32}-\d+-\d+)"
+)
 
 
 def runlog(data: Path) -> dict:
     """Add every run that a session launched to runs/runs.json, from the synced transcripts.
 
-    A launch is a Bash call that runs `snouty launch` or `snouty debug`; its run ID is the
-    one that first appears in the call's output. Existing entries keep any fields you added.
+    A launch is a Bash call that runs `snouty launch` or `snouty debug`, whose run ID is the
+    one that first appears in the call's output, or any call whose output has snouty's
+    "Test run started" line, such as a wrapper script; its cap is then unknown (0). Existing entries keep any fields you added.
     """
     path = data / "runs" / "runs.json"
     log = json.loads(path.read_text()) if path.exists() else {}
@@ -210,11 +219,15 @@ def runlog(data: Path) -> dict:
                 for e in read_jsonl(lines):
                     content = (e.get("message") or {}).get("content")
                     for c in content if isinstance(content, list) else []:
-                        if c.get("type") == "tool_use" and LAUNCH.search(str(c["input"].get("command", ""))):
-                            launches[c["id"]] = c["input"]["command"]
+                        if c.get("type") == "tool_use":
+                            launches[c["id"]] = str(c["input"].get("command", ""))
                         elif c.get("type") == "tool_result" and c.get("tool_use_id") in launches:
                             cmd = launches.pop(c["tool_use_id"])
-                            ids = [i for i in RUN_ID.findall(json.dumps(c.get("content"))) if i not in cmd]
+                            out = json.dumps(c.get("content"))
+                            if LAUNCH.search(cmd) or WRAPPER.search(cmd):
+                                ids = [i for i in RUN_ID.findall(out) if i not in cmd]
+                            else:
+                                ids = STARTED.findall(out.replace("\\n", "\n"))
                             if not ids or ids[0] in log:
                                 continue
                             cap = re.search(r"--max-compute-hours[ =](\d+)", cmd)
@@ -279,8 +292,13 @@ def cmd_watch(a) -> None:
 
 
 def cmd_usage(a) -> None:
-    """Save billed compute hours per run, for runs that ended after --since."""
-    raw = ssh(a.host, f"snouty runs usage --json --after {shlex.quote(a.since)} -n 1000")
+    """Save billed compute hours for the runs in the run log.
+
+    snouty 0.10 dropped -n and takes run IDs instead, which --after can't be combined
+    with, so --since is ignored. A run that hasn't been billed yet is left out.
+    """
+    ids = " ".join(shlex.quote(i) for i in runlog(a.data))
+    raw = ssh(a.host, f"snouty runs usage --json {ids}") if ids else ""
     rows = list(read_jsonl(raw.splitlines()))
     out = a.data / "runs" / "usage.json"
     out.parent.mkdir(parents=True, exist_ok=True)
