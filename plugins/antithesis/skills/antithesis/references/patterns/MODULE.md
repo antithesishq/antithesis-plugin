@@ -16,6 +16,13 @@ Read `references/patterns/log-forwarding.md`.
 - **Use when** an assertion or a rule needs a node's internal state together with other nodes' state or the driver's model. Examples: nodes disagreeing on the term, a follower lagging the leader, at most one leader per term, sending reads to a lagging follower. Also use it when the state lives in code that can't take assertions: a third-party binary, or code you can't change.
 - **Don't use when** one node's own state is enough. Put the assertion in that node's code instead ("Exploration assertions" in `references/properties/assertions.md`). It fires at the moment the state occurs, needs no extra log level, and can't break when the log format changes.
 
+## Retroactive logging
+
+Read `references/patterns/retroactive-logging.md`.
+
+- **Use when** the system's verbose logs, such as trace level, would help debug a failure, but logging them in every run would slow the system or fail the `Logging output was limited` property.
+- **Don't use when** the normal log level is enough, or the system can turn on verbose logging while it runs. Then a command at the moment can turn it on (`references/debug/MODULE.md`).
+
 ## Adopting one
 
 Read the pattern's page. It says what the pattern adds to each workload step: the driver, the harness, the local loop and short runs. Do those as part of the steps in `references/workload/MODULE.md`. In the report, tell the user which patterns you adopted and why.

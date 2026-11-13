@@ -34,6 +34,7 @@ snouty runs exec "$RUN_ID" --container client1 --timeout 5m -1469731053185852001
 - **Without `--container`,** it runs in the guest: the virtual machine in Antithesis's deterministic hypervisor that runs every container or Kubernetes manifest. You can't change its tools, but it has the basics, such as bash and the usual shell commands, `podman` and `kubectl`. Use it for Kubernetes pods, which `--container` doesn't support.
 - If a tool is missing in either place, process the output on your machine.
 - Rewarming a deep moment takes longer: a moment at vtime 10 rewarms faster than one at vtime 100.
+- If the run filtered logs, which `snouty runs show` lists as the `log_filter` attribute, add `--events --include-filtered-logs` to get the dropped lines logged while the command runs.
 - To see how the system reacts to an action, such as killing a container, run `sleep 30` with `--events` from the action's end moment.
 
 ## When you're done
