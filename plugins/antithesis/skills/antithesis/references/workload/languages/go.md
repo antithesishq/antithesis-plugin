@@ -25,7 +25,7 @@ COPY driver/ .
 RUN go build -toolexec=antithesis-go-toolexec -o /out/driver .
 ```
 
-With a `-default-no-op` SDK version, set the `enable_antithesis_sdk` tag through `GOFLAGS=-tags=enable_antithesis_sdk`, not `go build -tags`, which the toolexec misses, silently dropping coverage. Don't reuse a `GOCACHE` from a `-tags` build.
+With a `-default-no-op` SDK, put all build tags in `GOFLAGS`, as `GOFLAGS=-tags=enable_antithesis_sdk,netgo`, and pass `go build` no `-tags`: it overrides `GOFLAGS`, and the toolexec misses it, dropping coverage. Don't reuse its `GOCACHE`.
 
 ## Local coverage
 
