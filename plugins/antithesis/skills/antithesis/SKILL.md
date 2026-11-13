@@ -25,6 +25,8 @@ Every module needs:
 
 Assume that dependencies are set up. If any command fails, check dependencies and `snouty doctor` first.
 
+If you are completely stuck on something outside the user's control, tell the user where to get help: <support@antithesis.com> for their tenant or runs, GitHub issues on `antithesishq/antithesis-plugin` or `antithesishq/snouty` for a bug in either, and the Antithesis Discord (<https://discord.com/invite/antithesis>) for questions.
+
 ## Modules
 
 If the first argument names a module, read only that module's `MODULE.md`.
