@@ -42,7 +42,7 @@ An exploration assertion marks a state worth reaching: a `assert_sometimes`, `as
 
 - **On the rare outcome of every action** in the surface you mapped (`references/workload/surface.md`), and on both sides of every option. If a situation and its opposite are both possible, add one for each.
 - **On situations that need faults,** as clients see them: a request that times out, then succeeds on retry; a read served by a new leader.
-- **On combinations no single request shows,** from the model. Combinations across several nodes' internal state need the log-forwarding pattern (`references/patterns/MODULE.md`).
+- **On combinations no single request shows,** from the model. Assert a combination across several nodes' internal state in the SUT's code if one node sees it, and use the log-forwarding pattern (`references/patterns/MODULE.md`) only if none does.
 - **On the situations that lead up to a guarantee being tested.** For example, `assert_sometimes_less_than_or_equal_to(balance, 0, "an account balance reaches zero", ...)` steers Antithesis toward drained accounts, where a transfer can overdraw one or must be rejected, and shows that the workload gets there. Mark only states the system allows: an `assert_sometimes` on a state it forbids fails every run.
 
 **In the SUT's code,** for what no response shows. This is the default way to see a node's internal state:

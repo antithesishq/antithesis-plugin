@@ -13,8 +13,8 @@ Read `references/patterns/stateful-clients.md`.
 
 Read `references/patterns/log-forwarding.md`.
 
-- **Use when** an assertion or a rule needs a node's internal state together with other nodes' state or the driver's model. Examples: nodes disagreeing on the term, a follower lagging the leader, at most one leader per term, sending reads to a lagging follower. Also use it when the state lives in code that can't take assertions: a third-party binary, or code you can't change.
-- **Don't use when** one node's own state is enough. Put the assertion in that node's code instead ("Exploration assertions" in `references/properties/assertions.md`). It fires at the moment the state occurs, needs no extra log level, and can't break when the log format changes.
+- **Use when** a check needs the internal state of several nodes at once, or a node's state together with the driver's model, and no one node can see it. Examples: at most one leader per term, nodes applying only values the workload wrote. Also use it when a driver rule must pick its target by node state, such as sending reads to a lagging follower, or when the state lives in code that can't take assertions: a third-party binary, or code you can't change.
+- **Don't use when** a SUT-side assertion would do: one node's own state is enough, or one node learns the rest from the messages it handles. A follower that gets a heartbeat with a higher term sees the term disagreement, and a leader tracking each follower's match index sees how far each lags. Put the assertion in that node's code instead ("Exploration assertions" in `references/properties/assertions.md`). It fires at the moment the state occurs, needs no extra log level, and can't break when the log format changes.
 
 ## Adopting one
 

@@ -2,7 +2,7 @@
 
 A system's logs show what each node believes: who is leader, which term it's in, how far it has applied. With this pattern, a forwarder in each system container sends the lines that state this to the driver. A background thread there parses them into each node's state, where assertions can combine several nodes' state with the driver's model, and rules can read it to pick their targets.
 
-Assertions that need only one node's state belong in that node's code, not here, if you can change that code ("Exploration assertions" in `references/properties/assertions.md`).
+Assertions that one node can check, from its own state or the messages it handles, belong in that node's code, not here, if you can change that code ("Exploration assertions" in `references/properties/assertions.md`).
 
 ## 1. Find the log lines
 
