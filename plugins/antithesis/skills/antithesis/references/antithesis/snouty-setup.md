@@ -26,3 +26,7 @@ Configure the tenant, registry and credentials with `snouty login`; it is intera
 ## Verify snouty
 
 Run `snouty doctor`.
+
+## Without a tenant
+
+If `snouty doctor` reports no tenant or credentials, ask the user to configure snouty, or to confirm they have no tenant yet. Without one, keep working: only `snouty launch`, `snouty runs` and `snouty debug` need a tenant. `snouty validate`, `snouty docs` and the local Docker Compose loop work without one, so you can still build a workload up to its local loop and import properties. Skip every step that launches, triages or debugs a run, and tell the user which you skipped, and that they need a tenant for them: <https://antithesis.com/company/contact/>.

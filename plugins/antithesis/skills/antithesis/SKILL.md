@@ -19,7 +19,7 @@ Plugin version: `0.1.0`
 
 Every module needs:
 
-- **snouty 0.10.0 or later**, installed and configured for the Antithesis tenant. If it's missing or not configured, follow `references/antithesis/snouty-setup.md`. If it's older, run `snouty update`, or reinstall it if it wasn't installed with the installer script
+- **snouty 0.10.0 or later**, installed and configured for the Antithesis tenant. If it's missing or not configured, follow `references/antithesis/snouty-setup.md`. If it's older, run `snouty update`, or reinstall it if it wasn't installed with the installer script. Much of the work needs no tenant: see "Without a tenant" in `references/antithesis/snouty-setup.md`
 - **Docker or Podman, with Docker Compose**
 - **jq**
 
