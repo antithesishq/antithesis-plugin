@@ -16,6 +16,7 @@ MANIFESTS = [
     CANONICAL,
     PLUGIN / ".claude-plugin" / "plugin.json",
     PLUGIN / ".devin-plugin" / "plugin.json",
+    PLUGIN / ".cursor-plugin" / "plugin.json",
 ]
 # SKILL.md states the version too, for agents that can't see the manifests, such as
 # the launch module, which records it on every run.
