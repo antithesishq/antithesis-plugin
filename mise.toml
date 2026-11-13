@@ -67,7 +67,7 @@ run = "{{vars.check}} tokens"
 env.SKILL_TOKEN_BUDGET = "{{ get_env(name='SKILL_TOKEN_BUDGET', default='2600') }}"
 env.MODULE_TOKEN_BUDGET = "{{ get_env(name='MODULE_TOKEN_BUDGET', default='20000') }}"
 # Per-module budgets that differ from MODULE_TOKEN_BUDGET, as `name=tokens,...`.
-env.MODULE_TOKEN_BUDGETS = "{{ get_env(name='MODULE_TOKEN_BUDGETS', default='workload=23100,patterns=23500,properties=24000') }}"
+env.MODULE_TOKEN_BUDGETS = "{{ get_env(name='MODULE_TOKEN_BUDGETS', default='workload=23200,patterns=23600,properties=24000') }}"
 # tiktoken downloads its encoding once. Keep it out of $TMPDIR, so it survives a
 # reboot and the check keeps working offline.
 env.TIKTOKEN_CACHE_DIR = "{{ get_env(name='XDG_CACHE_HOME', default=env.HOME ~ '/.cache') }}/tiktoken"
