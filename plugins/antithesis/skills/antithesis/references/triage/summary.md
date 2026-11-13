@@ -1,6 +1,6 @@
 # Summarize a finished run
 
-1. Triage each failing property in its own subagent, following "Investigate a failing property" in `references/triage/MODULE.md`.
+1. Triage each failing property in its own subagent, following "Investigate a failing property" in `references/triage/MODULE.md`. The run has ended, so tell each subagent to run commands in another run, as `references/debug/MODULE.md` describes.
 2. Check which failures are already known, with the search in "Duplicates" in `references/triage/issues.md`. If you don't know where issues are reported, say that this wasn't checked.
 3. Summarize the run for the user:
    - each failing property, its likely cause, and whether it's new or already known
