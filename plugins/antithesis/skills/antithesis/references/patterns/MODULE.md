@@ -20,7 +20,7 @@ Read `references/patterns/log-forwarding.md`.
 
 Read `references/patterns/retroactive-logging.md`.
 
-- **Use when** the system's verbose logs, such as trace level, would help debug a failure, but logging them in every run would slow the system or fail the `Logging output was limited` property. It suits races that stop happening when verbose logging is turned on while the system runs: recovering filtered lines doesn't change how the system runs.
+- **Use when** the system's verbose logs, such as trace level, would help debug a failure, but logging them in every run would slow the system or fail the `Logging output was limited` property. It suits races that stop happening when verbose logging is turned on while the system runs: recovering filtered lines doesn't change how the system runs. Also use it to root-cause a hard failure with temporary prints, even in hot loops.
 - **Don't use when** the normal log level is enough.
 
 ## Adopting one
