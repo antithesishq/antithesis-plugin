@@ -42,13 +42,13 @@ An exploration assertion marks a state worth reaching: a `assert_sometimes`, `as
 
 - **On the rare outcome of every action** in the surface you mapped (`references/workload/surface.md`), and on both sides of every option. If a situation and its opposite are both possible, add one for each.
 - **On situations that need faults,** as clients see them: a request that times out, then succeeds on retry; a read served by a new leader.
-- **On combinations no single request shows,** from the model. Combinations across several nodes' internal state need the log-forwarding pattern (`references/patterns/MODULE.md`).
+- **On combinations no single request shows,** from the model. Combinations across nodes that no one node sees need the log-forwarding pattern (`references/patterns/MODULE.md`).
 - **On the situations that lead up to a guarantee being tested.** For example, `assert_sometimes_less_than_or_equal_to(balance, 0, "an account balance reaches zero", ...)` steers Antithesis toward drained accounts, where a transfer can overdraw one or must be rejected, and shows that the workload gets there. Mark only states the system allows: an `assert_sometimes` on a state it forbids fails every run.
 
 **In the SUT's code,** for what no response shows. This is the default way to see a node's internal state:
 
 - **`assert_reachable` on each branch that matters and that only faults or rare timing reach:** error handling, retries, timeouts, recovery, rollback, a snapshot install, a node rejoining with a stale term.
-- **`assert_sometimes` on internal states,** such as a queue filling up, a lease expiring while held, or a write racing a compaction.
+- **`assert_sometimes` on internal states that only faults or rare timing reach,** such as a queue filling up, a lease expiring while held, or a write racing a compaction. Not on one every startup reaches, such as a node adopting a higher term in the first election: it passes every run and steers nothing.
 - **Not on every line.** One per branch that matters is enough.
 
 ## Assertions in the SUT's code

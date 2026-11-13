@@ -54,6 +54,13 @@ The skill is designed to be composable, so feel free to ask your agent to chain 
 
 Antithesis bills by compute hours, so consider giving your agent a compute hour budget to spend, per run or overall. Keep your system's setup fast too: every run spends that time before fuzzing starts, so a faster setup makes every Antithesis run shorter. See [the Antithesis docs on usage](https://antithesis.com/docs/configuration/usage/) for details.
 
+## Getting help
+
+- Questions, discussion and feedback: the [Antithesis Discord](https://discord.com/invite/antithesis).
+- A bug or request for this plugin: [file an issue here](https://github.com/antithesishq/antithesis-plugin/issues).
+- A bug or request for Snouty: [file an issue on Snouty](https://github.com/antithesishq/snouty/issues).
+- Anything about your Antithesis account, tenant or runs: email [support@antithesis.com](mailto:support@antithesis.com).
+
 ---
 
 [Privacy policy](https://antithesis.com/legal/privacy_policy/) • [Support email](mailto:support@antithesis.com)
