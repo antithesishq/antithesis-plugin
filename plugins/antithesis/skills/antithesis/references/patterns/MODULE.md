@@ -20,8 +20,8 @@ Read `references/patterns/log-forwarding.md`.
 
 Read `references/patterns/retroactive-logging.md`.
 
-- **Use when** the system's verbose logs, such as trace level, would help debug a failure, but logging them in every run would slow the system or fail the `Logging output was limited` property.
-- **Don't use when** the normal log level is enough, or the system can turn on verbose logging while it runs. Then a command at the moment can turn it on (`references/debug/MODULE.md`).
+- **Use when** the system's verbose logs, such as trace level, would help debug a failure, but logging them in every run would slow the system or fail the `Logging output was limited` property. It suits races that stop happening when verbose logging is turned on while the system runs: recovering filtered lines doesn't change how the system runs.
+- **Don't use when** the normal log level is enough.
 
 ## Adopting one
 
