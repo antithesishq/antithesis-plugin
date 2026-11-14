@@ -2,6 +2,8 @@
 
 Input: a candidate SUT bug, as a failing property or anomaly in a run, from the triage or workload module or the user. Output: a confirmed report, or the evidence that the candidate isn't a SUT bug, and how to keep the bug from hiding others.
 
+To show that a fix resolves a bug instead, follow `references/bug-report/verify-fix.md`.
+
 ## Characterize the failure
 
 1. Find every failing example of the property across timelines with `snouty runs search`, and the passing ones near them. Note what the failing ones share and the passing ones lack: an operation, an active fault, a configuration, a vtime.
@@ -34,4 +36,4 @@ Fix or relabel each claim it lists. If a fix changes the conclusion, review agai
 
 Check for an existing report first, as "Duplicates" in `references/bug-report/template.md` says. Then file or print the report.
 
-Tell the caller how to keep this bug from hiding others in later runs, such as a workload change that avoids its trigger. Keep the failing assertion, and mark the change with a link to the report so it can be removed once the bug is fixed.
+Tell the caller how to keep this bug from hiding others in later runs, such as a workload change that avoids its trigger. Keep the failing assertion, and mark the change with a link to the report so it can be removed once the bug is fixed, as `references/bug-report/verify-fix.md` does.
