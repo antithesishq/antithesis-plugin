@@ -1,7 +1,7 @@
 {
   "name": "antithesis",
   "displayName": "Antithesis",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Autonomous testing with Antithesis: Write tests, triage runs, and debug failures",
   "author": { "name": "Antithesis" },
   "homepage": "https://antithesis.com",

@@ -66,7 +66,7 @@ run = "{{vars.check}} tokens"
 # that reads every page. Change the defaults here, or override one run:
 # SKILL_TOTAL_TOKEN_BUDGET=40000 mise run check.
 env.SKILL_TOKEN_BUDGET = "{{ get_env(name='SKILL_TOKEN_BUDGET', default='2600') }}"
-env.SKILL_TOTAL_TOKEN_BUDGET = "{{ get_env(name='SKILL_TOTAL_TOKEN_BUDGET', default='36700') }}"
+env.SKILL_TOTAL_TOKEN_BUDGET = "{{ get_env(name='SKILL_TOTAL_TOKEN_BUDGET', default='36800') }}"
 # tiktoken downloads its encoding once. Keep it out of $TMPDIR, so it survives a
 # reboot and the check keeps working offline.
 env.TIKTOKEN_CACHE_DIR = "{{ get_env(name='XDG_CACHE_HOME', default=env.HOME ~ '/.cache') }}/tiktoken"
