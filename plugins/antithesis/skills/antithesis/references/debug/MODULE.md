@@ -37,6 +37,28 @@ snouty runs exec "$RUN_ID" --container client1 --timeout 5m -1469731053185852001
 - If the moment comes from a run that filtered logs, which shows in that run's `parameters` in `snouty runs show --json`, add `--events --include-filtered-logs` to get the dropped lines logged while the command runs, the command's own included. The filter goes with the moment, not with the run that executes the command, so check the run each moment comes from.
 - To see how the system reacts to an action, such as killing a container, run `sleep 30` with `--events` from the action's end moment.
 
+## Extracting files
+
+To copy out a file, such as a database, compress and split it in one exec, then download the parts in parallel from its end moment:
+
+```bash
+snouty runs exec "$RUN_ID" --container db1 --json -1469731053185852001 38.52 \
+  'mkdir -p /tmp/x && cd /tmp/x && gzip -c /var/lib/db/data.db | split -b 10000000 -a 3 - part. && sha256sum part.*' \
+  > prep.json
+jq -r 'select(.source.stream == "info") | .output_text' prep.json > parts.sha256
+export RUN_ID; read -r HASH VTIME < <(jq -r '.end_moment // empty | "\(.input_hash) \(.vtime)"' prep.json); export HASH VTIME
+get() { xargs -P 20 -I{} sh -c 'snouty runs exec "$RUN_ID" --container db1 "$HASH" "$VTIME" "base64 -w 1000000 /tmp/x/{}" | base64 -d > {}'; }
+awk '{print $2}' parts.sha256 | get
+sha256sum -c --quiet parts.sha256 | cut -d: -f1 | get   # downloads any damaged part again
+sha256sum -c --quiet parts.sha256 && cat part.* | gunzip > data.db
+```
+
+- **Encode with base64 in 1 MB lines.** Raw binary arrives corrupted, a line over about 9 MB is dropped, and short lines are slow.
+- **Check every part.** An exec can drop output lines and still exit 0.
+- **Download parts of about 10 MB, 20 at a time.** That was fastest: 200 MB in under a minute, where one exec streams only a few hundred KB/s. The parts exist only on the first exec's branch.
+- **Freeze writers first,** so the file doesn't change under you: `kill -STOP <pid>` in the first exec, or run it in the guest, without `--container`, starting with `podman pause db1 && podman cp db1:/var/lib/db/data.db /tmp/f`. The guest has `gzip` and `split` even when the image lacks them. Execs run on throwaway branches, so this changes nothing else.
+- The file must exist at the moment you run at. Run any command that writes it in the first exec.
+
 ## When you're done
 
 A debugging session started with `snouty debug` bills compute for as long as it stays available, up to its `--duration`. As soon as you have what you need, cancel each debugging session you started with `snouty runs cancel <run_id>`. A subagent reports the debugging sessions it started and leaves them running, because another subagent may be using them. The agent that launched the subagents cancels those sessions once they have all finished. Never cancel a run that you or your subagents didn't start.
