@@ -1,10 +1,11 @@
 #!/usr/bin/env -S uv run --quiet --locked
 """Drive agent sessions in the eval sandbox, and bring their data back.
 
-Run `evalctl.py --host HOST --data DIR --help` for the commands. `start` records each
+Run `evalctl.py --host HOST --data DIR --help` for the commands. `--host local` drives
+sessions on this machine, without ssh, for a sandbox that is the machine you run on. `start` records each
 session in DIR/notes/sessions.json, and `start` and `resume` keep each prompt they send
 in DIR/notes/prompt-NAME.N.txt. `sync` copies the session logs to DIR/logs/ and the raw
-Claude transcripts to DIR/transcripts/. `runlog` finds every run the sessions launched in
+Claude transcripts to DIR/transcripts/, and the Codex rollouts to DIR/transcripts/codex/. `runlog` finds every run the sessions launched in
 their transcripts, and records it in DIR/runs/runs.json, so runs that others launch on a
 shared tenant never count. `watch` keeps the run log current and prints a line for each
 new or changed run in it, and for each session that finishes, so it can feed a Monitor.
@@ -12,6 +13,7 @@ new or changed run in it, and for each session that finishes, so it can feed a M
 
 import argparse
 import json
+import os
 import re
 import shlex
 import subprocess
@@ -30,15 +32,20 @@ CREDENTIALS = "[ -f ~/.localrc ] && . ~/.localrc"
 
 def ssh(host: str, cmd: str, check: bool = True) -> str:
     """Run cmd on the sandbox, with the snouty credentials loaded."""
-    r = subprocess.run(
-        ["ssh", "-o", "ConnectTimeout=15", host, f"{CREDENTIALS}; {cmd}"],
-        check=False,
-        capture_output=True,
-        text=True,
+    argv = (
+        ["bash", "-c", f"{CREDENTIALS}; {cmd}"]
+        if host == "local"
+        else ["ssh", "-o", "ConnectTimeout=15", host, f"{CREDENTIALS}; {cmd}"]
     )
+    r = subprocess.run(argv, check=False, capture_output=True, text=True)
     if check and r.returncode != 0:
         sys.exit(f"ssh {host}: {cmd!r} failed ({r.returncode}):\n{r.stderr.strip()}")
     return r.stdout
+
+
+def remote(host: str, path: str) -> str:
+    """An rsync or scp operand for path on the sandbox."""
+    return os.path.expanduser(path) if host == "local" else f"{host}:{path}"
 
 
 def read_jsonl(lines) -> Iterator[dict]:
@@ -71,18 +78,30 @@ def log_files(data: Path, name: str) -> list[Path]:
 
 def cmd_preflight(a) -> None:
     """Check, without changing anything, that the sandbox is ready for an eval."""
+    harness = {
+        "claude": {
+            # First, because the harness auth check below writes a session of its own.
+            "prior agent memory": "ls ~/.claude/projects 2>/dev/null | head",
+            "harness": "claude --version",
+            "harness auth": "claude -p 'Reply with the single word ok.' --output-format json | jq -r .result",
+            "skill installed": "ls -la ~/.claude/skills/ 2>/dev/null; claude plugin list 2>/dev/null | grep -i antithesis",
+        },
+        "codex": {
+            "prior agent memory": "ls -R ~/.codex/sessions 2>/dev/null | tail -5; ls ~/.codex/memories 2>/dev/null",
+            "harness": "codex --version",
+            "harness auth": "cd /tmp && codex exec --json --skip-git-repo-check 'Reply with the single word ok.' "
+            "</dev/null | jq -r 'select(.item.type? == \"agent_message\") | .item.text'",
+            "skill installed": "ls -la ~/.codex/skills/ ~/.agents/skills/ 2>/dev/null",
+        },
+    }[a.harness]
     checks = {
-        # First, because the harness auth check below writes a session of its own.
-        "prior agent memory": "ls ~/.claude/projects 2>/dev/null | head",
-        "harness": "claude --version",
-        "harness auth": "claude -p 'Reply with the single word ok.' --output-format json | jq -r .result",
+        **harness,
         "snouty": "snouty --version",
         "snouty auth + tenant": "snouty doctor 2>&1 | tail -3",
         "docker": "docker info --format '{{.ServerVersion}}'",
         "jq": "jq --version",
         "plugin version": f"grep -m1 'Plugin version' {a.plugin_dir}/plugins/antithesis/skills/antithesis/SKILL.md",
         "plugin checkout": f"git -C {a.plugin_dir} log --oneline -1 && git -C {a.plugin_dir} status --short | head",
-        "skill installed": "ls -la ~/.claude/skills/ 2>/dev/null; claude plugin list 2>/dev/null | grep -i antithesis",
         "hostname": "hostname",
     }
     # One connection for every check.
@@ -97,7 +116,7 @@ def cmd_push(a) -> None:
         f"sudo mkdir -p {REMOTE} && sudo chown -R $(id -un) {REMOTE} && "
         f'{{ [ -z "$(ls -A {REMOTE}/logs 2>/dev/null)" ] || mv {REMOTE}/logs {old}; }} && mkdir -p {REMOTE}/logs',
     )
-    subprocess.run(["scp", "-q", str(HERE / "sandbox_session.py"), f"{a.host}:{REMOTE}/"], check=True)
+    subprocess.run(["scp", "-q", str(HERE / "sandbox_session.py"), remote(a.host, f"{REMOTE}/")], check=True)
     print(f"pushed sandbox_session.py to {a.host}:{REMOTE}/")
 
 
@@ -107,10 +126,11 @@ def invoke(a, mode: str, entry: dict) -> None:
     keep = a.data / "notes" / f"prompt-{a.name}.{n}.txt"
     keep.parent.mkdir(parents=True, exist_ok=True)
     keep.write_text(Path(a.prompt_file).read_text())
-    remote = f"{REMOTE}/prompt-{a.name}.{n}.txt"
-    subprocess.run(["scp", "-q", str(keep), f"{a.host}:{remote}"], check=True)
+    prompt = f"{REMOTE}/prompt-{a.name}.{n}.txt"
+    subprocess.run(["scp", "-q", str(keep), remote(a.host, prompt)], check=True)
     env = " ".join(f"--env {shlex.quote(kv)}" for kv in entry["env"])
-    args = f"{mode} {a.name} {n} {shlex.quote(entry['cwd'])} {remote} {entry['id']} {env}"
+    harness = entry.get("harness", "claude")
+    args = f"{mode} {a.name} {n} {shlex.quote(entry['cwd'])} {prompt} {entry['id']} --harness {harness} {env}"
     print(ssh(a.host, f"python3 {REMOTE}/sandbox_session.py {args}"))
 
 
@@ -118,7 +138,14 @@ def cmd_start(a) -> None:
     s = load_sessions(a.data)
     if a.name in s:
         sys.exit(f"session {a.name} already exists ({s[a.name]['id']}); use resume, or pick a new name")
-    s[a.name] = {"id": str(uuid.uuid4()), "cwd": a.cwd, "env": a.env, "target": a.target}
+    # For codex, id is only a placeholder: the session's thread ID lands in logs/NAME.thread.
+    s[a.name] = {
+        "id": str(uuid.uuid4()),
+        "cwd": a.cwd,
+        "env": a.env,
+        "target": a.target,
+        "harness": a.harness,
+    }
     invoke(a, "start", s[a.name])
     save_sessions(a.data, s)
 
@@ -135,9 +162,24 @@ def sync(a) -> bool:
     for sub in ("logs", "transcripts"):
         (a.data / sub).mkdir(parents=True, exist_ok=True)
     jobs = [
-        subprocess.Popen(["rsync", "-az", f"{a.host}:{REMOTE}/logs/", f"{a.data}/logs/"]),
-        subprocess.Popen(["rsync", "-az", f"{a.host}:.claude/projects/", f"{a.data}/transcripts/"]),
+        subprocess.Popen(["rsync", "-az", remote(a.host, f"{REMOTE}/logs/"), f"{a.data}/logs/"]),
+        subprocess.Popen(
+            [
+                "rsync",
+                "-az",
+                "--exclude",
+                "codex/",
+                remote(a.host, "~/.claude/projects/"),
+                f"{a.data}/transcripts/",
+            ]
+        ),
     ]
+    if any(s.get("harness") == "codex" for s in load_sessions(a.data).values()):
+        jobs.append(
+            subprocess.Popen(
+                ["rsync", "-az", remote(a.host, "~/.codex/sessions/"), f"{a.data}/transcripts/codex/"]
+            )
+        )
     # Wait for both, even when the first fails.
     codes = [j.wait() for j in jobs]
     return not any(codes)
@@ -167,6 +209,20 @@ def cmd_tail(a) -> None:
                                 or json.dumps(i)
                             )
                             out.append(f"{c['name']}: {str(s)[:300]}".replace("\n", " \\ "))
+                elif e.get("type") == "item.completed":
+                    i = e["item"]
+                    if i.get("type") == "agent_message":
+                        out.append("TXT " + i["text"][:400].replace("\n", " | "))
+                    elif i.get("type") == "command_execution":
+                        out.append(f"exec[{i.get('exit_code')}]: {i['command'][:300]}".replace("\n", " \\ "))
+                    elif i.get("type") not in ("reasoning",):
+                        out.append(f"{i.get('type')}: {json.dumps(i)[:300]}")
+                elif e.get("type") in ("turn.completed", "turn.failed"):
+                    u = e.get("usage") or {}
+                    out.append(
+                        f"TURN {e['type'].split('.')[1]} {e.get('_ts', '')} in={u.get('input_tokens')} "
+                        f"cached={u.get('cached_input_tokens')} out={u.get('output_tokens')} {e.get('error') or ''}"
+                    )
                 elif e.get("type") == "result":
                     out.append(
                         f"RESULT {e.get('subtype')} turns={e.get('num_turns')} "
@@ -179,7 +235,17 @@ def cmd_result(a) -> None:
     """Print the final result text of the session's last invocation."""
     for f in reversed(log_files(a.data, a.name)):
         with open(f) as lines:
-            results = [e for e in read_jsonl(lines) if e.get("type") == "result"]
+            events = list(read_jsonl(lines))
+        # codex: the last agent message of the invocation is its answer.
+        messages = [
+            e["item"]["text"]
+            for e in events
+            if e.get("type") == "item.completed" and e["item"].get("type") == "agent_message"
+        ]
+        if messages:
+            print(messages[-1])
+            return
+        results = [e for e in events if e.get("type") == "result"]
         if results:
             last = results[-1]
             print(
@@ -191,13 +257,14 @@ def cmd_result(a) -> None:
 
 RUN_ID = re.compile(r"\b[0-9a-f]{32}-\d+-\d+\b")
 LAUNCH = re.compile(r"\bsnouty\s+(?:launch|debug)\b(?![^\n]*--help)")
-# A launch wrapper script, such as scripts/launch.sh, whose output may be filtered down
+# A launch wrapper script, such as scripts/launch.sh or launch.py, whose output may be filtered down
 # to the bare run ID.
-WRAPPER = re.compile(r"\blaunch[\w-]*\.sh\b(?!\s*<<)")
-# snouty's own lines for a new run, which also catch launches through a wrapper script,
+WRAPPER = re.compile(r"\blaunch[\w-]*\.(?:sh|py)\b(?!\s*<<)")
+# snouty's own lines for a new run, or `launch --json`'s runId, which also catch launches through a wrapper script,
 # even when the output is cut short with `tail`.
 STARTED = re.compile(
-    r"(?:Test run started: run_id |Wait for the run to finish with:\s+snouty runs wait )([0-9a-f]{32}-\d+-\d+)"
+    r"(?:Test run started: run_id |Wait for the run to finish with:\s+snouty runs wait |\"runId\":\s*\")"
+    r"([0-9a-f]{32}-\d+-\d+)"
 )
 
 
@@ -208,6 +275,33 @@ def text_of(content) -> str:
     if isinstance(content, list):
         return "\n".join(b.get("text", "") for b in content if isinstance(b, dict))
     return ""
+
+
+def record(log: dict, name: str, cmd: str, out: str, when: str | None) -> None:
+    """Add the run that one shell call of session name launched, if any, to the run log."""
+    launch = bool(LAUNCH.search(cmd) or WRAPPER.search(cmd))
+    ids = [i for i in RUN_ID.findall(out) if i not in cmd] if launch else STARTED.findall(out)
+    if not ids:
+        return
+    old = log.get(ids[0])
+    if old and not (launch and old.get("source") == "output"):
+        return
+    cap = re.search(r"--max-compute-hours[ =](\d+)", cmd)
+    desc = re.search(r"--description[ =](?:\"([^\"]*)\"|'([^']*)')", cmd)
+    log[ids[0]] = (old or {}) | {
+        "session": name,
+        "launched": when,
+        "purpose": next((g for g in desc.groups() if g), "")
+        if desc
+        else "debugging session"
+        if "snouty debug" in cmd
+        else "",
+        "cap": int(cap.group(1)) if cap else 0,
+    }
+    if not launch:
+        log[ids[0]]["source"] = "output"
+    else:
+        log[ids[0]].pop("source", None)
 
 
 def runlog(data: Path) -> dict:
@@ -223,6 +317,14 @@ def runlog(data: Path) -> dict:
     path = data / "runs" / "runs.json"
     log = json.loads(path.read_text()) if path.exists() else {}
     for name, s in load_sessions(data).items():
+        if s.get("harness") == "codex":
+            for f in log_files(data, name):
+                with open(f) as lines:
+                    for e in read_jsonl(lines):
+                        i = e.get("item") or {}
+                        if e.get("type") == "item.completed" and i.get("type") == "command_execution":
+                            record(log, name, i["command"], i.get("aggregated_output") or "", e.get("_ts"))
+            continue
         files = list((data / "transcripts").glob(f"*/{s['id']}.jsonl"))
         files += list((data / "transcripts").glob(f"*/{s['id']}/subagents/*.jsonl"))
         for f in files:
@@ -235,33 +337,7 @@ def runlog(data: Path) -> dict:
                             launches[c["id"]] = str(c["input"].get("command", ""))
                         elif c.get("type") == "tool_result" and c.get("tool_use_id") in launches:
                             cmd = launches.pop(c["tool_use_id"])
-                            out = text_of(c.get("content"))
-                            launch = bool(LAUNCH.search(cmd) or WRAPPER.search(cmd))
-                            if launch:
-                                ids = [i for i in RUN_ID.findall(out) if i not in cmd]
-                            else:
-                                ids = STARTED.findall(out)
-                            if not ids:
-                                continue
-                            old = log.get(ids[0])
-                            if old and not (launch and old.get("source") == "output"):
-                                continue
-                            cap = re.search(r"--max-compute-hours[ =](\d+)", cmd)
-                            desc = re.search(r"--description[ =](?:\"([^\"]*)\"|'([^']*)')", cmd)
-                            log[ids[0]] = (old or {}) | {
-                                "session": name,
-                                "launched": e.get("timestamp"),
-                                "purpose": next((g for g in desc.groups() if g), "")
-                                if desc
-                                else "debugging session"
-                                if "snouty debug" in cmd
-                                else "",
-                                "cap": int(cap.group(1)) if cap else 0,
-                            }
-                            if not launch:
-                                log[ids[0]]["source"] = "output"
-                            else:
-                                log[ids[0]].pop("source", None)
+                            record(log, name, cmd, text_of(c.get("content")), e.get("timestamp"))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(log, indent=2) + "\n")
     return log
@@ -361,6 +437,7 @@ def main() -> None:
     sub = p.add_subparsers(required=True)
     pf = sub.add_parser("preflight", help="check the sandbox, changing nothing")
     pf.add_argument("--plugin-dir", default="~/antithesis-plugin")
+    pf.add_argument("--harness", default="claude", choices=["claude", "codex"])
     pf.set_defaults(func=cmd_preflight)
     sub.add_parser("push", help="copy sandbox_session.py to the sandbox").set_defaults(func=cmd_push)
     st = sub.add_parser("start", help="start a session")
@@ -369,6 +446,7 @@ def main() -> None:
     st.add_argument("prompt_file")
     st.add_argument("--env", action="append", default=[], help="K=V to export for the session")
     st.add_argument("--target", default="", help="the target profile the session tests")
+    st.add_argument("--harness", default="claude", choices=["claude", "codex"], help="the harness under test")
     st.set_defaults(func=cmd_start)
     rs = sub.add_parser("resume", help="send a session its next prompt")
     rs.add_argument("name")

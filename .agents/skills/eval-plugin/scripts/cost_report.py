@@ -5,7 +5,8 @@
 
 Reads, under DATA_DIR:
     notes/sessions.json   NAME -> {"id": session id, "target": profile, ...}, from `evalctl.py start`
-    transcripts/          raw Claude transcripts (`evalctl.py sync`), subagents included
+    transcripts/          raw Claude transcripts (`evalctl.py sync`), subagents included, and
+                          Codex rollouts in transcripts/codex/, found by logs/NAME.thread
     runs/usage.json       billed compute hours per run (`evalctl.py usage`)
     runs/runs.json        the run log (`evalctl.py runlog`): {run_id: {"session", "purpose", "cap", "task"}}
     notes/tasks.json      optional: [{"id", "session", "label", "start", "end"}], RFC 3339 times.
@@ -35,6 +36,9 @@ PRICES = {
     "claude-opus-5-5": {"input": 4.00, "output": 20.00, "cw5m": 5.00, "cw1h": 8.00, "cr": 0.20},
 }
 DEFAULT_MODEL = "claude-opus-5-5"
+# Models whose price we don't know, such as Codex models behind a proxy: their tokens
+# are counted and their token cost is left at 0.
+UNPRICED = ("gpt-",)
 
 
 def calls_in(path: Path) -> list[dict]:
@@ -49,12 +53,58 @@ def calls_in(path: Path) -> list[dict]:
     return list(seen.values())
 
 
+def codex_calls_in(path: Path) -> list[dict]:
+    """The API calls in one Codex rollout, with Claude-shaped usage, and the model of their turn."""
+    calls, model = [], None
+    with open(path) as f:
+        for e in read_jsonl(f):
+            p = e.get("payload") or {}
+            if e.get("type") == "turn_context":
+                model = p.get("model") or model
+            elif e.get("type") == "token_usage_record" and p.get("usage"):
+                u = p["usage"]
+                cached = u.get("cached_input_tokens") or 0
+                usage = {
+                    # OpenAI counts cached tokens inside input_tokens.
+                    "input_tokens": (u.get("input_tokens") or 0) - cached,
+                    "output_tokens": u.get("output_tokens") or 0,
+                    "cache_creation_input_tokens": u.get("cache_write_input_tokens") or 0,
+                    "cache_read_input_tokens": cached,
+                }
+                calls.append({"ts": e["timestamp"].replace("Z", "+00:00"), "model": model, "usage": usage})
+    return calls
+
+
+def codex_subagents(root: Path, tid: str) -> list[Path]:
+    """The rollouts of every subagent that thread tid spawned, at any depth."""
+    children: dict[str, list[Path]] = defaultdict(list)
+    for f in root.glob("**/rollout-*.jsonl"):
+        with open(f) as lines:
+            meta = next(read_jsonl(lines), {})
+        source = (meta.get("payload") or {}).get("source")
+        spawn = (source.get("subagent") or {}).get("thread_spawn") if isinstance(source, dict) else None
+        if spawn:
+            children[spawn["parent_thread_id"]].append(f)
+    found, todo = [], [tid]
+    while todo:
+        for f in children.pop(todo.pop(), []):
+            found.append(f)
+            todo.append(f.stem[-36:])
+    return found
+
+
 def cost(call: dict, warned: set) -> Counter:
     u, model = call["usage"], call["model"] or "?"
-    if model not in PRICES and model not in warned:
+    if model.startswith(UNPRICED):
+        if model not in warned:
+            warned.add(model)
+            print(f"warning: no price for {model}; counting its tokens at $0", file=sys.stderr)
+        p = dict.fromkeys(("input", "output", "cw5m", "cw1h", "cr"), 0.0)
+    elif model not in PRICES and model not in warned:
         warned.add(model)
         print(f"warning: no price for {model}; using {DEFAULT_MODEL}'s", file=sys.stderr)
-    p = PRICES.get(model, PRICES[DEFAULT_MODEL])
+    else:
+        p = PRICES.get(model, PRICES[DEFAULT_MODEL])
     cw1h = (u.get("cache_creation") or {}).get("ephemeral_1h_input_tokens") or 0
     row = Counter(
         calls=1,
@@ -118,6 +168,21 @@ def main() -> None:
     per_session: dict = defaultdict(Counter)
     per_task: dict = defaultdict(Counter)
     for name, s in sessions.items():
+        thread = d / "logs" / f"{name}.thread"
+        if s.get("harness") == "codex" and thread.exists():
+            tid = thread.read_text().strip()
+            rollouts = list((d / "transcripts" / "codex").glob(f"**/rollout-*-{tid}.jsonl"))
+            if not rollouts:
+                print(f"warning: no rollout for session {name} ({tid})", file=sys.stderr)
+            subagents = codex_subagents(d / "transcripts" / "codex", tid)
+            per_session[name]["subagents"] = len(subagents)
+            rollouts += subagents
+            for f in rollouts:
+                for c in codex_calls_in(f):
+                    row = cost(c, warned)
+                    per_session[name] += row
+                    per_task[task_of(name, datetime.fromisoformat(c["ts"]))] += row
+            continue
         files = list((d / "transcripts").glob(f"*/{s['id']}.jsonl"))
         if not files:
             print(f"warning: no transcript for session {name} ({s['id']})", file=sys.stderr)
