@@ -26,3 +26,7 @@ Configure the tenant, registry and credentials with `snouty login`; it is intera
 ## Verify snouty
 
 Run `snouty doctor`.
+
+## Without a tenant or credentials
+
+If `snouty doctor` reports no tenant or credentials, ask the user to configure snouty, or to confirm that you go on without a tenant. Ask before you start, with the up-front questions in `SKILL.md`: otherwise an unattended task can end with no Antithesis runs. Only `snouty launch`, `snouty runs` and `snouty debug` need a tenant, so without one you can still build and validate a workload through its local loop and import properties. Skip the steps that launch, triage or debug runs, and report them as needing a tenant.
