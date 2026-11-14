@@ -29,7 +29,7 @@ If you are completely stuck on something outside the user's control, tell the us
 
 ### When snouty fails
 
-If a snouty command fails, run `snouty doctor` and diagnose it with `references/antithesis/snouty-setup.md`. Most of the work needs no tenant or credentials.
+If a snouty command fails, run `snouty doctor` and follow `references/antithesis/snouty-setup.md`. Most work needs no tenant or credentials.
 
 ## Modules
 
