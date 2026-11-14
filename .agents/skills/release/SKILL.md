@@ -66,7 +66,7 @@ Run `scripts/set-version.py X.Y.Z`, then `scripts/set-version.py --check`. This 
 
 ```bash
 git switch -c release/vX.Y.Z
-git add CHANGELOG.md plugins/antithesis/plugin.json plugins/antithesis/.claude-plugin/plugin.json plugins/antithesis/.devin-plugin/plugin.json plugins/antithesis/skills/antithesis/SKILL.md
+git add CHANGELOG.md plugins/antithesis/plugin.json plugins/antithesis/.claude-plugin/plugin.json plugins/antithesis/.devin-plugin/plugin.json plugins/antithesis/.cursor-plugin/plugin.json plugins/antithesis/skills/antithesis/SKILL.md
 git commit -m "Release antithesis plugin X.Y.Z"
 git push -u origin release/vX.Y.Z
 gh pr create --title "Release antithesis plugin X.Y.Z" --body "<body>"
