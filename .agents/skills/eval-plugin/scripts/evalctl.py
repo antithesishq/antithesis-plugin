@@ -161,20 +161,23 @@ def sync(a) -> bool:
     """Copy the session logs and transcripts to DATA; whether both copies succeeded."""
     for sub in ("logs", "transcripts"):
         (a.data / sub).mkdir(parents=True, exist_ok=True)
-    jobs = [
-        subprocess.Popen(["rsync", "-az", remote(a.host, f"{REMOTE}/logs/"), f"{a.data}/logs/"]),
-        subprocess.Popen(
-            [
-                "rsync",
-                "-az",
-                "--exclude",
-                "codex/",
-                remote(a.host, "~/.claude/projects/"),
-                f"{a.data}/transcripts/",
-            ]
-        ),
-    ]
-    if any(s.get("harness") == "codex" for s in load_sessions(a.data).values()):
+    jobs = [subprocess.Popen(["rsync", "-az", remote(a.host, f"{REMOTE}/logs/"), f"{a.data}/logs/"])]
+    harnesses = {s.get("harness", "claude") for s in load_sessions(a.data).values()}
+    # Copy only the transcripts of harnesses in use: a missing directory fails rsync.
+    if "claude" in harnesses:
+        jobs.append(
+            subprocess.Popen(
+                [
+                    "rsync",
+                    "-az",
+                    "--exclude",
+                    "codex/",
+                    remote(a.host, "~/.claude/projects/"),
+                    f"{a.data}/transcripts/",
+                ]
+            )
+        )
+    if "codex" in harnesses:
         jobs.append(
             subprocess.Popen(
                 ["rsync", "-az", remote(a.host, "~/.codex/sessions/"), f"{a.data}/transcripts/codex/"]
@@ -236,13 +239,17 @@ def cmd_result(a) -> None:
     for f in reversed(log_files(a.data, a.name)):
         with open(f) as lines:
             events = list(read_jsonl(lines))
-        # codex: the last agent message of the invocation is its answer.
+        # codex: the invocation's last agent message is its answer, unless its turn failed.
+        turns = [e for e in events if e.get("type") in ("turn.completed", "turn.failed")]
+        if turns and turns[-1]["type"] == "turn.failed":
+            print(f"(the last turn failed: {(turns[-1].get('error') or {}).get('message', '')})")
+            return
         messages = [
             e["item"]["text"]
             for e in events
             if e.get("type") == "item.completed" and e["item"].get("type") == "agent_message"
         ]
-        if messages:
+        if turns and messages:
             print(messages[-1])
             return
         results = [e for e in events if e.get("type") == "result"]

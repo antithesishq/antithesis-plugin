@@ -100,10 +100,10 @@ def cost(call: dict, warned: set) -> Counter:
             warned.add(model)
             print(f"warning: no price for {model}; counting its tokens at $0", file=sys.stderr)
         p = dict.fromkeys(("input", "output", "cw5m", "cw1h", "cr"), 0.0)
-    elif model not in PRICES and model not in warned:
-        warned.add(model)
-        print(f"warning: no price for {model}; using {DEFAULT_MODEL}'s", file=sys.stderr)
     else:
+        if model not in PRICES and model not in warned:
+            warned.add(model)
+            print(f"warning: no price for {model}; using {DEFAULT_MODEL}'s", file=sys.stderr)
         p = PRICES.get(model, PRICES[DEFAULT_MODEL])
     cw1h = (u.get("cache_creation") or {}).get("ephemeral_1h_input_tokens") or 0
     row = Counter(
