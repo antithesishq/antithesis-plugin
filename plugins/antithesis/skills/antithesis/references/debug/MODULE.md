@@ -42,21 +42,20 @@ To copy a file out, such as a database or a core dump, compress it and split it 
 
 ```bash
 snouty runs exec "$RUN_ID" --container db1 -1469731053185852001 38.52 \
-  'f=/var/lib/db/data.db; sha256sum "$f"; mkdir -p /tmp/x; gzip -c "$f" | split -b 10000000 -d -a 3 - /tmp/x/part.; ls /tmp/x' \
-  > prep.out 2> prep.err
+  'mkdir -p /tmp/x && cd /tmp/x && gzip -c /var/lib/db/data.db | split -b 10000000 -d -a 3 - part. && sha256sum part.*' \
+  > parts.sha256 2> prep.err
 read -r HASH VTIME < <(sed -n 's/^end moment: //p' prep.err)
-for p in $(tail -n +2 prep.out); do
-  snouty runs exec "$RUN_ID" --container db1 "$HASH" "$VTIME" "base64 -w 1000000 /tmp/x/$p" > "$p.b64" &
-done; wait
-for f in part.*.b64; do base64 -d < "$f"; done | gunzip > data.db
-sha256sum data.db; head -n 1 prep.out
+get() { snouty runs exec "$RUN_ID" --container db1 "$HASH" "$VTIME" "base64 -w 1000000 /tmp/x/$1" | base64 -d > "$1"; }
+for p in $(awk '{print $2}' parts.sha256); do get "$p" & done; wait
+sha256sum -c --quiet parts.sha256   # names any part to download again with get
+cat part.* | gunzip > data.db
 ```
 
 - **Encode with base64.** The output is carried as text, so raw binary bytes arrive corrupted.
-- **Wrap at 1 MB with `base64 -w 1000000`.** An output line over about 9 MB is dropped without an error, and the command still exits 0. Each line is a separate event, so the default 76-column wrapping is many times slower.
+- **Wrap at 1 MB with `base64 -w 1000000`.** An output line over about 9 MB is dropped. Each line is a separate event, so the default 76-column wrapping is many times slower.
+- **Check every part.** An exec can drop output lines and still exit 0, so only the checksums show a damaged part.
 - **Compress** if the image has `gzip` or `zstd`. Source and logs shrink 3x or more.
-- **Download parts of about 10 MB in parallel.** One exec streams at about 300 KB/s, and a proxy can cut a request after 10 minutes, but parallel execs add up: 200 MB as 20 parts took about 75 seconds. The parts exist only on the first exec's branch, so download them from its end moment.
-- **Compare checksums.** A dropped line or a failed part leaves a shorter file, so check the local `sha256sum` against the first line of `prep.out`.
+- **Download parts of about 10 MB in parallel.** One exec streams at a few hundred KB/s, and a proxy can cut a request after 10 minutes. 200 MB in 10 MB parts downloaded in 30 to 60 seconds. Smaller parts were slower, from the overhead of more execs, and larger parts were slower, as each exec streams more. The parts exist only on the first exec's branch, so download them from its end moment.
 - The file must exist at the moment you run at. To extract what a command writes, run the command in the first exec.
 
 ## When you're done
