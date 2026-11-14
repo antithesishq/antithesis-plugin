@@ -24,13 +24,13 @@ Launch only if the total stays within the budget. Otherwise, stop and tell the u
 
 ## Finding your runs
 
-Keep a list of the run IDs you launch; the compute budget counts from it. `snouty launch` also records the agent session that ran it as run attrs, when it can detect one: after your first launch, read `attrs.agent_session_id` from the run's `parameters` in `snouty runs show <run_id> --json`. To recover your session's runs, such as after your context is compacted, grep the recent runs for it:
+Keep a list of the run IDs you launch; the compute budget counts from it. `snouty launch` also records the agent session that ran it as run attrs, when it can detect one: after your first launch, read `attrs.agent_session_id` from the run's `parameters` in `snouty runs show <run_id> --json`. To recover your session's runs, such as after compaction:
 
 ```sh
 snouty runs list --json -n 200 | grep '"attrs.agent_session_id":"<session_id>"'
 ```
 
-This searches only the last 200 runs on the tenant, and runs from another session carry another ID.
+It searches only the tenant's last 200 runs, and misses other sessions' runs.
 
 ## Setup timeout
 
