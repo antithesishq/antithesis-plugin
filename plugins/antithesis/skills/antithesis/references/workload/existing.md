@@ -8,7 +8,7 @@ Read the workload's `docker-compose.yaml` and the images it builds, and classify
 - **Test composer:** test templates, `/opt/antithesis/test/v1/<test>/`, hold commands such as `parallel_driver_` and `eventually_`, and Antithesis picks which runs when.
 - **Unknown:** anything else.
 
-Tell the user the class and the evidence. Never convert a workload to another class unless the user asks. To convert one, build a hegel driver workload with "Steps" in `references/workload/MODULE.md`, port the old workload's actions and assertions into it, and keep the old one until the new one reaches everything it did.
+Tell the user the class and the evidence. Never convert a workload to another class unless the user asks. To convert one, follow "Convert a test composer workload".
 
 ## Find what to improve
 
@@ -33,3 +33,23 @@ Run commands locally as `/docs/product/writing_tests/test_templates/testing_loca
 ## Unknown
 
 Describe the workload to the user, and ask whether to improve it as it is or build a hegel driver workload beside it. To improve it, follow "Find what to improve", then `references/workload/local-loop.md` and `references/workload/run-loop.md`, using only the checks that fit it.
+
+## Convert a test composer workload
+
+Build a hegel driver workload with "Steps" in `references/workload/MODULE.md`, beside the old one, and port what each test command does:
+
+| Test command              | In the driver                                                                                       |
+| ------------------------- | --------------------------------------------------------------------------------------------------- |
+| `first_`                  | Admin setup, in "Starting up" in `references/workload/driver.md`, before setup complete.            |
+| `parallel_driver_`        | One rule per action, in the main group.                                                             |
+| `serial_driver_`          | Rules in a group of their own, so nothing overlaps them.                                            |
+| `singleton_driver_`       | Its steps as rules, in a group of their own if they need the system to themselves.                  |
+| `anytime_`                | A check without requests becomes an always-run invariant; one with requests, a rule in every group. |
+| `eventually_`, `finally_` | Assertions in the driver's eventually ("Eventually" in `references/workload/driver.md`).            |
+
+- **Random choices** a command makes, such as `$RANDOM` or a language's `random`, become hegel draws.
+- **State** commands share through files, databases or environment variables becomes the driver's model.
+- **Assertions** move into the driver unchanged, with the same messages, so their properties keep their history. Leave assertions in the SUT's code where they are.
+- **Setup complete** comes only from the driver: remove every other reporter.
+
+The conversion is done when a run of the new workload reaches every property that the old workload's recent runs reached, as the triage module reports them. Then ask the user before you delete the old workload's test templates.
