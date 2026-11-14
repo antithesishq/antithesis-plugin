@@ -38,32 +38,26 @@ snouty runs exec "$RUN_ID" --container client1 --timeout 5m -1469731053185852001
 
 ## Extracting files
 
-To copy a file out, such as a database or a core dump, print it from `snouty runs exec` and decode it on your machine:
+To copy a file out, such as a database or a core dump, compress it and split it into parts in one exec, then download the parts in parallel from that exec's end moment:
 
 ```bash
-snouty runs exec "$RUN_ID" --container db1 --timeout 10m -1469731053185852001 38.52 \
-  'f=/var/lib/db/data.db; sha256sum "$f" >&2; gzip -c "$f" | base64 -w 1000000' \
-  2>extract.err | base64 -d | gunzip > data.db
-sha256sum data.db; cat extract.err
+snouty runs exec "$RUN_ID" --container db1 -1469731053185852001 38.52 \
+  'f=/var/lib/db/data.db; sha256sum "$f"; mkdir -p /tmp/x; gzip -c "$f" | split -b 10000000 -d -a 3 - /tmp/x/part.; ls /tmp/x' \
+  > prep.out 2> prep.err
+read -r HASH VTIME < <(sed -n 's/^end moment: //p' prep.err)
+for p in $(tail -n +2 prep.out); do
+  snouty runs exec "$RUN_ID" --container db1 "$HASH" "$VTIME" "base64 -w 1000000 /tmp/x/$p" > "$p.b64" &
+done; wait
+for f in part.*.b64; do base64 -d < "$f"; done | gunzip > data.db
+sha256sum data.db; head -n 1 prep.out
 ```
 
 - **Encode with base64.** The output is carried as text, so raw binary bytes arrive corrupted.
 - **Wrap at 1 MB with `base64 -w 1000000`.** An output line over about 9 MB is dropped without an error, and the command still exits 0. Each line is a separate event, so the default 76-column wrapping is many times slower.
-- **Compress first** if the image has `gzip` or `zstd`. Source and logs shrink 3x or more, and the transfer time shrinks with them.
-- **Compare checksums.** A dropped line or a timeout leaves a shorter file, so check the `sha256sum` from `extract.err` against the local one.
-- **Split a large file into parts.** The transfer runs at roughly 150 to 300 KB/s, and a proxy can cut a request after 10 minutes, so keep each exec under about 30 MB of output. Print each part from its own exec at the same moment, in parallel, since each exec runs on its own branch. Use double quotes, so your shell fills in each part's offset (here a 100 MB file in 4 parts):
-
-  ```bash
-  for i in 0 1 2 3; do
-    snouty runs exec "$RUN_ID" --container db1 --timeout 10m -1469731053185852001 38.52 \
-      "tail -c +$((i * 25000000 + 1)) /var/lib/db/data.db | head -c 25000000 | gzip -c | base64 -w 1000000" \
-      > "part$i.b64" &
-  done; wait
-  for i in 0 1 2 3; do base64 -d < "part$i.b64" | gunzip; done > data.db
-  ```
-
-  Compare the result with `sha256sum` run in one more exec.
-- The file must exist at the moment you run at. To extract what a command writes, run the command in the same script, or extract from its end moment.
+- **Compress** if the image has `gzip` or `zstd`. Source and logs shrink 3x or more.
+- **Download parts of about 10 MB in parallel.** One exec streams at about 300 KB/s, and a proxy can cut a request after 10 minutes, but parallel execs add up: 200 MB as 20 parts took about 75 seconds. The parts exist only on the first exec's branch, so download them from its end moment.
+- **Compare checksums.** A dropped line or a failed part leaves a shorter file, so check the local `sha256sum` against the first line of `prep.out`.
+- The file must exist at the moment you run at. To extract what a command writes, run the command in the first exec.
 
 ## When you're done
 
