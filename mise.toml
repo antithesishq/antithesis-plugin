@@ -58,19 +58,22 @@ description = "Every referenced skill file and section exists, no step is referr
 run = "{{vars.check}} references"
 
 [tasks."check:tokens"]
-description = "Report skill token counts, and enforce the top-level and per-module budgets"
+description = "Report skill token counts, and enforce the top-level and whole-skill budgets"
 run = "{{vars.check}} tokens"
 # Token budgets, estimated with tiktoken. The top level (SKILL.md and the files it
 # names outside any module) loads in every context that uses the skill, so keep it
-# small. A module is what its MODULE.md adds on demand, up to another module.
-# Change the defaults here, or override one run: MODULE_TOKEN_BUDGET=20000 mise run check.
+# small. The whole skill is every file reachable from SKILL.md: the worst case, an agent
+# that reads every page. Change the defaults here, or override one run:
+# SKILL_TOTAL_TOKEN_BUDGET=40000 mise run check.
 env.SKILL_TOKEN_BUDGET = "{{ get_env(name='SKILL_TOKEN_BUDGET', default='2600') }}"
-env.MODULE_TOKEN_BUDGET = "{{ get_env(name='MODULE_TOKEN_BUDGET', default='20000') }}"
-# Per-module budgets that differ from MODULE_TOKEN_BUDGET, as `name=tokens,...`.
-env.MODULE_TOKEN_BUDGETS = "{{ get_env(name='MODULE_TOKEN_BUDGETS', default='workload=23200,patterns=24100,properties=24000') }}"
+env.SKILL_TOTAL_TOKEN_BUDGET = "{{ get_env(name='SKILL_TOTAL_TOKEN_BUDGET', default='36000') }}"
 # tiktoken downloads its encoding once. Keep it out of $TMPDIR, so it survives a
 # reboot and the check keeps working offline.
 env.TIKTOKEN_CACHE_DIR = "{{ get_env(name='XDG_CACHE_HOME', default=env.HOME ~ '/.cache') }}/tiktoken"
+
+[tasks."check:prose"]
+description = "No filler phrases in skill pages"
+run = "{{vars.check}} prose"
 
 [tasks."check:lychee"]
 description = "Check links (only local ones when CHECK_OFFLINE is set)"
