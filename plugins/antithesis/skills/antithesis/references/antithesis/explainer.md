@@ -35,9 +35,11 @@ Every tenant has two default launchers: `basic_test` and `basic_k8s_test`. Tenan
 
 A debugging session is a run that takes a source run and moment as input and rewarms it into a deterministic virtual machine. Like any run, it can rewarm more moments from one or more source runs.
 
-## Run readiness
+## What each run state supports
 
-snouty's run commands work on any ready run: status `in_progress:ready` in `snouty runs show`, or wait with `snouty runs wait --until ready`. All except `snouty runs exec` also work on completed runs. A run's moments stay debuggable after it ends: exec at them in another ready run with `--source-run-id`, or start a debugging session with `snouty debug` (`references/debug/MODULE.md`). Never fall back to logs alone because a run has ended.
+snouty's run commands work on any ready run: status `in_progress:ready` in `snouty runs show`, or wait with `snouty runs wait --until ready`.
+
+All except `snouty runs exec` also work on completed runs. Their moments stay debuggable: exec at them in another ready run with `--source-run-id`, or start a debugging session with `snouty debug` (`references/debug/MODULE.md`). Never fall back to logs alone because a run has ended.
 
 ## snouty
 
