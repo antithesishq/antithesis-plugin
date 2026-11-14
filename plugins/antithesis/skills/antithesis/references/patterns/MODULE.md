@@ -16,6 +16,13 @@ Read `references/patterns/log-forwarding.md`.
 - **Use when** a check needs the internal state of several nodes at once, or a node's state together with the driver's model, and no one node can see it. Examples: at most one leader per term, nodes applying only values the workload wrote. Also use it when a driver rule must pick its target by node state, such as sending reads to a lagging follower, or when the state lives in code that can't take assertions: a third-party binary, or code you can't change.
 - **Don't use when** a SUT-side assertion would do, whether it checks a guarantee or marks a state to explore: one node's own state is enough, or one node learns the rest from the messages it handles. A follower that gets entries conflicting with its own log sees the divergence, and can assert it never truncates a committed entry. A leader that steps down on seeing a higher term knows it was deposed. Put the assertion in that node's code instead ("Assertions in the SUT's code" in `references/properties/assertions.md`). It fires at the moment the state occurs, needs no extra log level, and can't break when the log format changes.
 
+## Retroactive logging
+
+Read `references/patterns/retroactive-logging.md`.
+
+- **Use when** the system's verbose logs, such as trace level, would help debug a failure, but logging them in every run would slow the system or fail the `Logging output was limited` property. It suits races that stop happening when verbose logging is turned on while the system runs: recovering filtered lines doesn't change how the system runs. Also use it to root-cause a hard failure with temporary prints, even in hot loops.
+- **Don't use when** the normal log level is enough.
+
 ## Adopting one
 
 Read the pattern's page. It says what the pattern adds to each workload step: the driver, the harness, the local loop and short runs. Do those as part of the steps in `references/workload/MODULE.md`. In the report, tell the user which patterns you adopted and why.
