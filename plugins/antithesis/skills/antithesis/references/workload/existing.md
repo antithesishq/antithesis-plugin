@@ -42,14 +42,14 @@ Build a hegel driver workload with "Steps" in `references/workload/MODULE.md`, b
 | ------------------------- | --------------------------------------------------------------------------------------------------- |
 | `first_`                  | Admin setup, in "Starting up" in `references/workload/driver.md`, before setup complete.            |
 | `parallel_driver_`        | One rule per action, in the main group.                                                             |
-| `serial_driver_`          | Rules in a group of their own, so nothing overlaps them.                                            |
-| `singleton_driver_`       | Its steps as rules, in a group of their own if they need the system to themselves.                  |
+| `serial_driver_`          | Rules in a group of their own, each holding one lock for the whole rule, so they run one at a time. |
+| `singleton_driver_`       | Its steps as rules, grouped and locked as for `serial_driver_` if they need the system alone.       |
 | `anytime_`                | A check without requests becomes an always-run invariant; one with requests, a rule in every group. |
 | `eventually_`, `finally_` | Assertions in the driver's eventually ("Eventually" in `references/workload/driver.md`).            |
 
-- **Random choices** a command makes, such as `$RANDOM` or a language's `random`, become hegel draws.
+- **Random choices** a command makes, such as `$RANDOM` or a language's `random`, become hegel draws in rules. Make a `first_` command's choices fixed in setup, or move them into a rule: nothing before the state machine draws from hegel.
 - **State** commands share through files, databases or environment variables becomes the driver's model.
 - **Assertions** move into the driver unchanged, with the same messages, so their properties keep their history. Leave assertions in the SUT's code where they are.
-- **Setup complete** comes only from the driver: remove every other reporter.
+- **Setup complete** comes only from the driver. Turn off every other reporter in the new workload only, such as with an environment variable its compose file sets, so the old workload still starts.
 
-The conversion is done when a run of the new workload reaches every property that the old workload's recent runs reached, as the triage module reports them. Then ask the user before you delete the old workload's test templates.
+The conversion is done when a run of the new workload reaches every property that the old workload's recent runs reached, as the triage module reports them, and fails none they passed unless the failure is a SUT bug. Then ask the user before you delete the old workload's test templates.

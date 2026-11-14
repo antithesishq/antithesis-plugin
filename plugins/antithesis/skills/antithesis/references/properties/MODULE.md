@@ -2,7 +2,7 @@
 
 This module imports or defines the SUT's guarantees, such as "acknowledged writes are never lost", and checks each with one or more Antithesis SDK assertions, in the driver or the system's own code. Assertions are the only way to define properties: each assertion becomes a property in the run, and the guarantee holds when its properties pass.
 
-Add them to a workload built with `references/workload/MODULE.md`. If there is none, build it first.
+Add them to the system's workload, or build one first with `references/workload/MODULE.md`. In a test composer workload (`references/workload/existing.md`), put a driver's check in a test command instead, and check locally and in runs as "Test composer" in `references/workload/existing.md` says.
 
 - `define`: add one guarantee the user describes. Follow "Define a guarantee".
 - `import`: add guarantees from a source the user points to. Follow "Import guarantees".
