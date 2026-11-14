@@ -4,7 +4,7 @@ Antithesis can run scripts at any Moment in the Multiverse. Start by choosing th
 
 Running commands shows the system's real state, so always do it when investigating any kind of failure. Use an existing ready run if one exists, even from an unrelated source. Otherwise, start a debugging session.
 
-If the run you are using to run commands finishes, you can continue debugging by pulling the moments you need into another run.
+A run that has ended can't execute commands, but its moments can: pull them into another ready run with `--source-run-id`, or start a debugging session on them. If `snouty runs exec` fails because the run has ended, pick another run with the policy below, and keep running commands.
 
 ## Finding moments
 
