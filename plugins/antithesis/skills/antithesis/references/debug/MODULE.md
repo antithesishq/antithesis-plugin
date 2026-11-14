@@ -43,7 +43,7 @@ To copy a file out, such as a database or a core dump, compress it and split it 
 
 ```bash
 snouty runs exec "$RUN_ID" --container db1 -1469731053185852001 38.52 \
-  'mkdir -p /tmp/x && cd /tmp/x && gzip -c /var/lib/db/data.db | split -b 10000000 -d -a 3 - part. && sha256sum part.*' \
+  'mkdir -p /tmp/x && cd /tmp/x && gzip -c /var/lib/db/data.db | split -b 10000000 -a 3 - part. && sha256sum part.*' \
   > parts.sha256 2> prep.err
 read -r HASH VTIME < <(sed -n 's/^end moment: //p' prep.err)
 get() { snouty runs exec "$RUN_ID" --container db1 "$HASH" "$VTIME" "base64 -w 1000000 /tmp/x/$1" | base64 -d > "$1"; }
