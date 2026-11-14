@@ -14,6 +14,8 @@
 
 `snouty docs show /docs/reference/sdk/dotnet/instrumentation/`.
 
+**Check instrumentation:** in each runtime image that runs the code, its assemblies are under `/opt/antithesis/catalog/`, at most one symlink deep. In a run, each assembly registers a module named after it.
+
 ## Local coverage
 
 Use the standard coverage tool for .NET.

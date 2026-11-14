@@ -32,7 +32,7 @@ If the user asks for a language hegel can't write the driver in, tell them why, 
 
 Build every binary in the workload with Antithesis coverage instrumentation, the driver's as well as the SUT's, wherever its language allows. It's required: without it, Antithesis can't guide exploration by coverage or pause threads. An uninstrumented component is a black box: Antithesis can't see its branch points, so it can't include them in its search.
 
-- Follow "Instrumentation" in `references/workload/languages/<language>.md`, for the code's language, including the docs page's validation step. If the project builds with link-time optimization, use the docs page's link-time instructions. Compile-time instrumentation doesn't survive LTO.
+- Follow "Instrumentation" in `references/workload/languages/<language>.md`, for the code's language, including its instrumentation check. If the project builds with link-time optimization, use the docs page's link-time instructions. Compile-time instrumentation doesn't survive LTO.
 - Instrument the binaries that run in the SUT's containers, and make sure the runtime image runs the instrumented build.
 - The client library is code under test too. If the workload runs it in client containers (the stateful-clients pattern, `references/patterns/stateful-clients.md`), instrument the client program with it.
 - Put symbol files in `/symbols` of the runtime image where the language needs them, or code in `/opt/antithesis/catalog/` for languages Antithesis catalogs or instruments itself.
@@ -40,7 +40,7 @@ Build every binary in the workload with Antithesis coverage instrumentation, the
 - If a component can't be instrumented, instrument the rest.
 - Instrument the driver too, the same way as any other code in its language. Its branches are where the workload decides what to do next, so they're part of the state space Antithesis searches.
 
-Check it:
+Check it, for every component you instrumented, the SUT's first. A build can write symbol files and run assertions, and still report no coverage:
 
-- **Locally:** the language's check passes, and the runtime image has the expected `/symbols` or catalog contents.
-- **In a run:** the properties `Software was instrumented` and `Every instrumented module has symbols` pass. If not, fix the build before reading other results. To read these properties in detail, follow `references/triage/instrumentation.md`.
+- **Locally:** the instrumentation check under "Instrumentation" in `references/workload/languages/<language>.md` passes for each binary or code directory that a runtime image gets. The runtime image also has the expected `/symbols` or catalog contents.
+- **In the first run:** list the components you instrumented and the module each one registers, which "Instrumentation" in `references/workload/languages/<language>.md` names. Follow `references/triage/instrumentation.md` with that list, and confirm every one before a longer run. Passing properties aren't enough: `Software was instrumented` passes when any one module registers, such as the driver's. Fix the build of any component it reports as uninstrumented, and check it locally again.

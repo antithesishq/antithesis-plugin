@@ -11,7 +11,7 @@
 
 ## Instrumentation
 
-Follow `snouty docs show /docs/reference/sdk/rust/instrumentation/`: add the latest `antithesis-instrumentation` crate, reference it once with `use antithesis_instrumentation as _;`, and pass the page's build flags as `--config` options of `cargo build` in the Antithesis Dockerfile, as the page's command-line option shows. Copy the flags from the page, not from memory. They set the build target, so the binary lands under `target/<target>/release/`. Keep an unstripped copy of each binary in `/symbols` of its runtime image.
+Follow `snouty docs show /docs/reference/sdk/rust/instrumentation/`: add the latest `antithesis-instrumentation` crate, reference it once with `use antithesis_instrumentation as _;`, and pass the page's build flags as `--config` options of `cargo build` in the Antithesis Dockerfile, as the page's command-line option shows, with release debug info on. Copy the flags from the page, not from memory. They set the build target, so the binary lands under `target/<target>/release/`. Keep an unstripped copy of each binary in `/symbols` of its runtime image.
 
 A build stage, on the "Rust build image" row in `references/workload/images.md`, that leaves the binary in `/out` and its symbols in `/symbols`:
 
@@ -21,11 +21,14 @@ WORKDIR /src
 COPY driver/ .
 RUN cargo build --release \
       --config 'build.target = "x86_64-unknown-linux-gnu"' \
+      --config 'profile.release.debug = true' \
       --config '<the page's target.x86_64-unknown-linux-gnu.rustflags>' \
  && mkdir -p /out /symbols \
  && cp target/x86_64-unknown-linux-gnu/release/driver /out/ \
  && cp /out/driver /symbols/
 ```
+
+**Check instrumentation:** as the page's validation section says, in the build stage, for the unstripped copy in `/symbols` of each binary the runtime image gets: `nm <binary> | grep antithesis_load_libvoidstar` shows a `T` symbol, and `readelf -S <binary> | grep sancov` lists the `__sancov_guards` and `__sancov_pcs` sections. Both are needed: without the rustflags, `nm` still finds the symbol. `readelf -S <binary> | grep -c debug_info` is also above 0: a release build has no debug info unless `profile.release.debug` is on, and without it the symbol catalog has no source locations. In a run, each binary registers one module named after its executable.
 
 ## Local coverage
 

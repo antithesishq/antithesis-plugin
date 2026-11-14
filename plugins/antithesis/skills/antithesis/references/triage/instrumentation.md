@@ -7,35 +7,34 @@ Use this guide to verify that the system under test (SUT) and its client program
 ```bash
 snouty runs properties "${RUN_ID}" --detail --name "software was instrumented"
 snouty runs properties "${RUN_ID}" --detail --name "every instrumented module has symbols"
-snouty runs properties "${RUN_ID}" --detail --name "thread pausing was enabled"
 ```
 
-All three are default properties: their examples carry values, not moments.
+Both are default properties: their examples carry values, not moments.
 
-Each `Software was instrumented` example is one instrumented module that loaded during the run:
+Each `Software was instrumented` example is one instrumented module that registered during the run:
 
 ```json
-{"module": "/usr/local/bin/geo", "language": "Go", "instrumentor": "/go/bin/antithesis-go-toolexec", "total_locations": 17, "has_catalog": true}
+{"module": "inventory-server", "language": "native", "instrumentor": "llvm-sancov", "total_locations": 18342, "has_catalog": true}
 ```
 
-- `module` — identifies the module, usually as an executable path. One binary can appear in several examples, one per instrumented module in it.
+- `module` — the module's name: an executable, jar, assembly or package, depending on the language ("Instrumentation" in `references/workload/languages/<language>.md`). A module registers when its code loads, so it appears even if its process is short-lived. A module loaded in several containers appears once.
 - `total_locations` — the number of instrumentation points (basic blocks or control flow graph edges) in the module.
 - `has_catalog` — whether the module has a symbol catalog.
 
-`Every instrumented module has symbols` fails when a module loaded without a symbol catalog, or a binary provided for symbols wasn't cataloged in full, for example after link-time optimization. Failing examples name the module or binary.
+`Every instrumented module has symbols` fails when a module registered without a symbol catalog, or a file in a `/symbols` directory has nothing to symbolize. Its counterexamples name the file and the reason, such as `not coverage-instrumented`, which means a binary built without coverage, or `symbol catalog has no source locations`, which means a binary built without debug info.
 
-**Deduplication caveat:** Antithesis deduplicates these two example lists by debug id. The same binary that starts in many containers appears once. Distinct binaries that share a debug id — for example several Go binaries built from one instrumented module — also collapse into one entry. An expected binary can be absent from the list even when it is instrumented.
+Neither property shows that a particular component is instrumented: `Software was instrumented` passes when any one module registers, such as the driver's.
 
-Each `Thread pausing was enabled` example is a `"binary (container)"` string. This list is per container, and it is not deduplicated by debug id. A binary in this list is instrumented. A binary absent from this list can still be instrumented.
+For code in `/opt/antithesis/catalog/` (Java, .NET, JavaScript and Python), also check the properties whose names contain `paths found` and `invalid paths`. `Paths found for Antithesis instrumentation` lists each image's catalog directories by language, and `No invalid paths found during Antithesis instrumentation` fails on a symlink to a symlink there. Python has no module, so its directory in `paths found` is the only sign its assertions are cataloged. See `snouty docs show /docs/reference/default_properties/`.
 
-For Java, Python and .NET, also check the properties whose names contain `paths found` and `invalid paths`. See `snouty docs show /docs/reference/default_properties/`.
+## Step 2: compare against the expected components
 
-## Step 2: compare against the expected binaries
+The setup normally instruments the SUT binaries, including any client programs that run the system's client library. Whether the workload's own binaries are instrumented depends on its build. A workload built with this skill instruments its driver too, when the driver's language allows. Build the expected list from the source code when you have access to it — the harness and build files show which components the setup instruments, and the language pages say what each module is called. Without source access, infer the list from the user's request, the run description, and the containers in the run.
 
-The setup normally instruments the SUT binaries, including any client programs that run the system's client library. Whether the workload's own binaries are instrumented depends on its build. A workload built with this skill instruments its driver too, when the driver's language allows. Build the expected list from the source code when you have access to it — the harness and build files show which binaries the setup instruments. Without source access, infer the list from the user's request, the run description, and the containers in the run.
+- **Any expected component has no module in `Software was instrumented`** — it's uninstrumented, even though the property passes. Report a setup problem. With access to the image, confirm it with the instrumentation check under "Instrumentation" in `references/workload/languages/<language>.md`.
+- **`Every instrumented module has symbols` or `No invalid paths found during Antithesis instrumentation` fails, or an expected catalog directory is missing from `paths found`** — report a setup problem with each counterexample's file and reason.
+- **Every expected component has a module with a catalog** — instrumentation works. Report the modules and their `total_locations`.
 
-- **Any of these properties fails** — a significant finding: something is probably wrong with the instrumentation setup. Report a setup problem and link the [instrumentation documentation](https://antithesis.com/docs/product/writing_tests/instrumentation/coverage_instrumentation/).
-- **Every expected binary appears in a property** — instrumentation works. Report the modules and their `total_locations`.
-- **Some expected binaries are missing** — do not conclude that they are uninstrumented; deduplication can hide them. Report which binaries the properties confirm, and state that the deduplicated lists cannot confirm the rest.
+Either way, link the [instrumentation documentation](https://antithesis.com/docs/product/writing_tests/instrumentation/coverage_instrumentation/) in a report of a setup problem.
 
-When you cannot build an expected list, report what the properties show and note the deduplication caveat.
+When you cannot build an expected list, report what the properties show.

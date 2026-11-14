@@ -65,4 +65,4 @@ Check each report against these:
 - Every property status you report came from the properties data or the stream, not inference.
 - Conclusions about failures with moments rest on evidence from the run, with specific log lines, command output, timestamps and property names.
 - The report separates what the run shows from what you interpret.
-- A claim that a binary isn't instrumented follows `references/triage/instrumentation.md` and doesn't rest only on the deduplicated examples of `Software was instrumented`.
+- A claim that a component is or isn't instrumented follows `references/triage/instrumentation.md`, checking that component's own module, not only that `Software was instrumented` passes.

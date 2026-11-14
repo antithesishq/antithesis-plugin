@@ -27,6 +27,8 @@ RUN go build -toolexec=antithesis-go-toolexec -o /out/driver .
 
 With a `-default-no-op` SDK, put all build tags in `GOFLAGS`, as `GOFLAGS=-tags=enable_antithesis_sdk,netgo`, and pass `go build` no `-tags`: it overrides `GOFLAGS`, and the toolexec misses it, dropping coverage. Don't reuse its `GOCACHE`.
 
+**Check instrumentation:** in the build stage, `go tool nm /out/<binary> | grep -c 'voidstarHandler).init_coverage'` prints a number above 0 for each binary. A 0 means the binary reports no coverage, as it does when built without the toolexec, with `CGO_ENABLED=0`, or with a no-op SDK. The symbol tables in `/symbols` prove nothing: the toolexec writes them in all of those cases. The check needs the binary's symbol table, so don't strip the Antithesis build, with `-ldflags=-s` or `strip`. In a run, each instrumented package registers its own module, named by its import path, the `# name` line of its table in `/symbols`. Expect a binary's own main package among them, not only packages it shares with other binaries.
+
 ## Local coverage
 
 - Build with `ANTITHESIS_SKIP_COVERAGE=true go build -toolexec=antithesis-go-toolexec -cover -covermode=atomic -coverpkg=./...`, and set `GOCOVERDIR=/coverage/<service>`. The toolexec still catalogs the assertions, so the local loop lists one that's never reached.
