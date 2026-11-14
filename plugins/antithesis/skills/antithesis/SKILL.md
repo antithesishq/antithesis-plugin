@@ -14,6 +14,7 @@ Plugin version: `0.1.1`
    - Devin: `references/platforms/devin.md`
    - Replit: `references/platforms/replit.md`
 2. Read `references/antithesis/explainer.md`.
+3. Run `snouty doctor`. If it reports a problem, follow `references/antithesis/snouty-setup.md`.
 
 ### Dependencies
 
@@ -23,13 +24,9 @@ Every module needs:
 - **Docker or Podman, with Docker Compose**
 - **jq**
 
-Assume that dependencies are set up. If any command fails, check dependencies first.
+Assume that dependencies are set up. If any command fails, check dependencies and `snouty doctor` first.
 
 If you are completely stuck on something outside the user's control, tell the user where to get help: <support@antithesis.com> for their tenant or runs, GitHub issues on `antithesishq/antithesis-plugin` or `antithesishq/snouty` for a bug in either, and the Antithesis Discord (<https://discord.com/invite/antithesis>) for questions.
-
-### When snouty fails
-
-If a snouty command fails, run `snouty doctor` and follow `references/antithesis/snouty-setup.md`. Most work needs no tenant or credentials.
 
 ## Modules
 
@@ -45,6 +42,6 @@ If the first argument names a module, read only that module's `MODULE.md`.
 
 Otherwise the request is a free-form prompt: read `references/workflows/MODULE.md`, and derive a workflow from it.
 
-Once you've read the module's `MODULE.md`, if the task will run unattended for a long time, such as building a workload or launching and following runs, ask the user up front, in one message, for anything you can foresee needing: a compute budget, permission to change their code, the scope, where to report issues, and any choice the module leaves to the user. If the user gives no compute budget, use 300 compute hours for the whole task, across every module and run. The budget is there to be spent: don't hold back a run that would move the goal forward just to save hours. Then keep working toward the user's goal, within the budget, until it is met or you are blocked on something only the user can decide. A module's steps are a means to the goal, not its end. While other work remains, don't end your turn on a question: write it in a file the user will see, tell them where, and keep working.
+Once you've read the module's `MODULE.md`, if the task will run unattended for a long time, such as building a workload or launching and following runs, ask the user up front, in one message, for anything you can foresee needing: a compute budget, permission to change their code, the scope, where to report issues, any choice the module leaves to the user, and whether to go on without a tenant if `snouty doctor` found none. If the user gives no compute budget, use 300 compute hours for the whole task, across every module and run. The budget is there to be spent: don't hold back a run that would move the goal forward just to save hours. Then keep working toward the user's goal, within the budget, until it is met or you are blocked on something only the user can decide. A module's steps are a means to the goal, not its end. While other work remains, don't end your turn on a question: write it in a file the user will see, tell them where, and keep working.
 
 If your context is compacted or summarized during the task, keep the list of skill pages you have read in the summary. Afterwards, read this page and every page on that list again before you continue, or, without the list, the module's `MODULE.md` and the pages for your current step: a summary keeps what you did, but not these instructions.
