@@ -55,7 +55,7 @@ IMAGES_PAGE = "references/workload/images.md"
 _IMAGE_PLACEHOLDER = re.compile(r"<([A-Z][A-Za-z ]* image)>")
 
 
-def _prose_lines(text: str) -> Iterator[tuple[int, str, str]]:
+def prose_lines(text: str) -> Iterator[tuple[int, str, str]]:
     """Yield (line number, line, line with code spans blanked) for each line outside code fences."""
     fenced = False
     for number, line in enumerate(text.splitlines(), 1):
@@ -72,7 +72,7 @@ def section_names(text: str) -> set[str]:
     cell of each table row below a table's header."""
     names: set[str] = set()
     header = False
-    for _, line, _ in _prose_lines(text):
+    for _, line, _ in prose_lines(text):
         if m := _HEADING.match(line):
             names.add(m.group(1))
         elif m := _LIST_LABEL.match(line):
@@ -95,7 +95,7 @@ def image_placeholders(text: str) -> Iterator[tuple[int, str]]:
 
 def section_references(text: str) -> Iterator[tuple[int, str, str | None, str | None]]:
     """Yield (line number, name, page path or None, skill name or None) for each section reference."""
-    for number, line, prose in _prose_lines(text):
+    for number, line, prose in prose_lines(text):
         for m in _QUOTED.finditer(prose):
             after = line[m.end() :]
             page = _PAGE_TARGET.match(after)
@@ -105,7 +105,7 @@ def section_references(text: str) -> Iterator[tuple[int, str, str | None, str | 
 
 def step_numbers(text: str) -> Iterator[tuple[int, str]]:
     """Yield (line number, match) for each step number used outside headings and code."""
-    for number, line, prose in _prose_lines(text):
+    for number, line, prose in prose_lines(text):
         if not line.startswith("#"):
             for m in _STEP_NUMBER.finditer(prose):
                 yield number, m.group(0)

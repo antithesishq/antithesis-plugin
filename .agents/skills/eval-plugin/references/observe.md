@@ -18,7 +18,7 @@ Read the transcripts, not only the final answers. For each finding, note the tim
 - **Workload:** time to the first validated launch; how far it used the local loop and what the loop found; whether it committed before each launch, so each run's recorded commit matches the code; whether it confirmed the workload was healthy (instrumentation, reachability, the eventually and quiet-period checks) or only reported failures; its own triage of its runs.
 - **Triage:** whether it picked the right mode; subagent use; whether it checked for known issues upstream; how it separated SUT bugs from workload bugs; the quality of its evidence (inferred, logs, a reproducer, a debugging session).
 - **Debug:** which run it executed commands in (a new `snouty debug` run, or a ready run it borrowed, and whose); rewarm time; whether the evidence proves or kills the theory; whether it cancelled what it started.
-- **Properties:** whether it showed the user what it would import or just picked; whether it confirmed that the system actually promises each property; whether it broke each check on purpose to see it fail; whether the new property failed where it should.
+- **Properties:** whether it showed the user what it would import or just picked; whether it confirmed that the system promises each property; whether it broke each check on purpose to see it fail; whether the new property failed where it should.
 - **Patterns:** which patterns it adopted or rejected, and why; whether it changed the existing workload or rebuilt it; the long run's health (faults throughout, not starved by quiet periods), and its triage.
 
 ## Known failure modes

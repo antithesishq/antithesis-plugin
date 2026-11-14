@@ -41,7 +41,7 @@ Write everything you learn in `DATA/notes/observations.md` as you go, starting w
 The agents must not know that they're being evaluated, and must attempt each task as well as they can:
 
 - **Prompts read like a user's.** Fill in the templates in `references/prompts.md`, and change nothing else. Never mention evals, graders, or the plugin's internals, and never hint at bugs you know about, including those in the target's profile.
-- **Nothing in the sandbox says "eval".** Check `hostname`, paths, repo names and environment variables. A hostname that gives it away can be changed with `sudo hostname NAME` plus an `/etc/hosts` line. Note that artifact links the agents build from `$(hostname)` will then be wrong.
+- **Nothing in the sandbox says "eval".** Check `hostname`, paths, repo names and environment variables. A hostname that gives it away can be changed with `sudo hostname NAME` plus an `/etc/hosts` line. Artifact links the agents build from `$(hostname)` will then be wrong.
 - **No coaching.** When an agent stops and asks a question, answer as a user would, with `evalctl.py resume`. Don't steer it towards the docs.
 - **Carryover is acceptable.** A later session may find an earlier session's memory or files, as a real user's sessions would. Record it whenever it happens.
 
