@@ -34,7 +34,7 @@ If the first argument names a module, read only that module's `MODULE.md`.
 | Argument     | Module                            | Use when                                                      |
 | ------------ | --------------------------------- | ------------------------------------------------------------- |
 | `triage`     | `references/triage/MODULE.md`     | Analyze a run for failures, monitor an in progress run.       |
-| `debug`      | `references/debug/MODULE.md`      | Execute commands in Antithesis to debug a moment or property. |
+| `debug`      | `references/debug/MODULE.md`      | Execute commands at a moment of any run, even an ended one.   |
 | `workload`   | `references/workload/MODULE.md`   | Building or iterating on a workload.                          |
 | `launch`     | `references/launch/MODULE.md`     | Launching a new run of a workload with `snouty launch`.       |
 | `properties` | `references/properties/MODULE.md` | Importing the SUT's guarantees or defining a new one.         |
