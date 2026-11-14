@@ -120,7 +120,7 @@ Reviewers read the PR description, and the squash commit on `main` takes the PR'
 
 Before each push, compare the title and description with the whole branch: `git diff origin/main...HEAD`. Update them when the push changes the behavior, the scope or the reason: a reviewer asks for a different approach, a CI fix changes behavior, or the push adds or removes part of the change. A push that only fixes formatting, a typo or a lint finding needs no update.
 
-The description says what the PR does to `main`, as if the branch had been written in one pass. Leave out the earlier versions of the diff. When a reviewer asks for a different approach, rewrite the description for the new approach, and drop the old one from it. Don't add a change log or an `Update:` section: the commits and review threads keep that history. Only for a very large change, a sentence on an approach you tried and why you dropped it can stay, when it would save the next reader from trying it. Follow "Write the title and body" in the `open-pr` skill.
+The description says what the PR does to `main`, as if the branch had been written in one pass. Leave out the earlier versions of the diff. When a reviewer asks for a different approach, rewrite the description for the new approach, and drop the old one from it. Don't add a change log or an `Update:` section: the commits and review threads keep that history. Only for a large change, a sentence on an approach you tried and why you dropped it can stay, when it would save the next reader from trying it. Follow "Write the title and body" in the `open-pr` skill.
 
 Copy the current description to a file outside the checkout, edit it, and write it back over REST:
 

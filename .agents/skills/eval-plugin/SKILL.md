@@ -13,8 +13,8 @@ You don't set up the sandbox. The user hands you one that is ready, and you chec
 
 Ask for anything missing before you start:
 
-- **The sandbox host**, reachable with `ssh HOST`, where you have sudo.
-- **The harness under test**, installed and logged in on the sandbox, such as Claude Code. `scripts/sandbox_session.py` drives `claude`. For another harness, change its `harness_cmd`.
+- **The sandbox host**, reachable with `ssh HOST`, where you have sudo. When the sandbox is the machine you run on, pass `--host local`, and the scripts run commands there without ssh.
+- **The harness under test**, installed and logged in on the sandbox, such as Claude Code. `scripts/sandbox_session.py` drives `claude`, or `codex exec` when you pass `--harness codex` to `preflight` and `start`. Codex has no `/antithesis` command, so its prompts start with `$antithesis` instead, and `start --env CODEX_MODEL=M` picks its model. For another harness, add a branch to `harness_cmd`.
 - **snouty**, installed and logged in to a tenant on the sandbox, with the credentials in the login environment (for example `~/.localrc`).
 - **The plugin**, installed into the harness from a checkout on the sandbox, such as a skill symlink into `~/.claude/skills`.
 - **Docker**, jq and the toolchains the target project needs.
@@ -41,7 +41,7 @@ Write everything you learn in `DATA/notes/observations.md` as you go, starting w
 The agents must not know that they're being evaluated, and must attempt each task as well as they can:
 
 - **Prompts read like a user's.** Fill in the templates in `references/prompts.md`, and change nothing else. Never mention evals, graders, or the plugin's internals, and never hint at bugs you know about, including those in the target's profile.
-- **Nothing in the sandbox says "eval".** Check `hostname`, paths, repo names and environment variables. A hostname that gives it away can be changed with `sudo hostname NAME` plus an `/etc/hosts` line. Note that artifact links the agents build from `$(hostname)` will then be wrong.
+- **Nothing in the sandbox says "eval".** Check `hostname`, paths, repo names and environment variables. A hostname that gives it away can be changed with `sudo hostname NAME` plus an `/etc/hosts` line. Artifact links the agents build from `$(hostname)` will then be wrong.
 - **No coaching.** When an agent stops and asks a question, answer as a user would, with `evalctl.py resume`. Don't steer it towards the docs.
 - **Carryover is acceptable.** A later session may find an earlier session's memory or files, as a real user's sessions would. Record it whenever it happens.
 
@@ -80,7 +80,7 @@ Every 20 to 30 minutes, and whenever an event lands, run `evalctl.py ... sync` a
 
 Bring everything back to `DATA`:
 
-- `logs/` and `transcripts/` from `evalctl.py ... sync`, which holds the raw Claude transcripts, subagents included;
+- `logs/` and `transcripts/` from `evalctl.py ... sync`, which holds the raw Claude transcripts, subagents included, and the Codex rollouts in `transcripts/codex/`. For Codex, `runlog` reads only the parent session's commands, so check the subagents' rollouts for launches by hand;
 - `notes/`: the prompts and `sessions.json` that `evalctl.py` keeps, `observations.md`, each session's final answer, and `tasks.json`;
 - `runs/`: the run log `runs.json`, `usage.json` (from `evalctl.py ... usage --since START`, once every run is listed), and each run's `snouty runs show` and `snouty runs properties --failing` output;
 - `repos/`: the branches, diffs and reproducers that the agents produced, such as `git format-patch` of each workload branch and any memory files they wrote.

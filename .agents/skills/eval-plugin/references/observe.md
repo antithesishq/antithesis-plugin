@@ -18,7 +18,7 @@ Read the transcripts, not only the final answers. For each finding, note the tim
 - **Workload:** time to the first validated launch; how far it used the local loop and what the loop found; whether it committed before each launch, so each run's recorded commit matches the code; whether it confirmed the workload was healthy (instrumentation, reachability, the eventually and quiet-period checks) or only reported failures; its own triage of its runs.
 - **Triage:** whether it picked the right mode; subagent use; whether it checked for known issues upstream; how it separated SUT bugs from workload bugs; the quality of its evidence (inferred, logs, a reproducer, a debugging session).
 - **Debug:** which run it executed commands in (a new `snouty debug` run, or a ready run it borrowed, and whose); rewarm time; whether the evidence proves or kills the theory; whether it cancelled what it started.
-- **Properties:** whether it showed the user what it would import or just picked; whether it confirmed that the system actually promises each property; whether it broke each check on purpose to see it fail; whether the new property failed where it should.
+- **Properties:** whether it showed the user what it would import or just picked; whether it confirmed that the system promises each property; whether it broke each check on purpose to see it fail; whether the new property failed where it should.
 - **Patterns:** which patterns it adopted or rejected, and why; whether it changed the existing workload or rebuilt it; the long run's health (faults throughout, not starved by quiet periods), and its triage.
 
 ## Known failure modes
@@ -38,3 +38,6 @@ Earlier evals found these. Check whether each still happens.
 - A properties agent launched runs from uncommitted changes, so the run's recorded commit didn't match the code.
 - Two sessions on one machine that build the same image tags launch each other's images. Workload docs don't suggest tagging images per checkout.
 - In `claude -p`, a session's turn ends while it waits on background work, and it resumes on the notification. One session can log many `result` lines.
+- Codex ends a turn with `This content was flagged for possible cybersecurity risk` (a `turn.failed` event, exit 1) while it triages a distributed-systems failure: reading Raft source, or summarizing fault events. Once a thread trips it, a resume trips it again within minutes. Eval 4 hit it on `gpt-6-astra` and `gpt-6.1-sol`. Record each one with the commands just before it.
+- To make a run healthy, a workload agent patches the system under test in its image, such as a fix for a Raft race, or works around a bug in the entrypoint, instead of keeping the failing property and reporting the bug. Later runs then test a patched system.
+- Agents don't search upstream issues for a bug they find, and write their own fix for one that upstream already tracks.

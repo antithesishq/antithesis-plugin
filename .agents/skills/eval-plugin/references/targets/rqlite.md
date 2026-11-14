@@ -12,11 +12,12 @@ A distributed SQLite database on hashicorp/raft, in Go. Its HTTP API offers read
 ## Setup and cost
 
 - Images build in about 5 minutes. Setup in a run takes seconds, so a 12-compute-hour run fuzzes for almost all of its 15 minutes.
-- Billing: about 14.5 compute hours for a 12-hour cap, and 26.5 for 24.
+- Billing: about 14.5 compute hours for a 12-hour cap, and 26.5 for 24. Eval 4 (Codex, v10.7.1): 14.4 for a 12-hour cap, 29.2 for a 24-hour cap on the fast tier, and 3.8 and 9.3 for runs cancelled after 5 and 12 minutes.
+- Eval 4's Codex agent built a Rust driver, validated locally, and launched its first run 16 minutes after starting. On a 16-core VM the local three-node loop runs in a few minutes.
 
 ## Expected findings
 
-Evals 1 and 2 (2026-11-04/05) found these bugs at commit `8d71a376`, with plugin 0.0.8–0.0.9. Score whether each task finds them again, and how strong its evidence is. On a newer commit, a miss may mean upstream fixed the bug: check before you count it against the plugin. Never mention these in a prompt.
+Evals 1 and 2 (2026-11-04/05) found these bugs at commit `8d71a376`, with plugin 0.0.8–0.0.9. Eval 4 (2026-11-13, Codex, plugin 0.1.0) tested v10.7.1 (`5dd531a6`): its workload task found the boot-canceled exit and the `installSnapshot` stall again, and the heartbeat divergence below. Score whether each task finds them again, and how strong its evidence is. On a newer commit, a miss may mean upstream fixed the bug: check before you count it against the plugin. Never mention these in a prompt.
 
 | Bug | Where | First confirmed by |
 | --- | --- | --- |
@@ -29,6 +30,8 @@ Evals 1 and 2 (2026-11-04/05) found these bugs at commit `8d71a376`, with plugin
 | rqlite's snapshot store wedges: snapshot names (`term-index-msec`) collide (`rename … file exists`), leaving an unfinished reap that blocks every later restore | `snapshot/store.go` | Eval 2: logs and code, patterns session |
 | A restarted node that already has state still runs the bootstrapper and exits on `clustering failure: boot timeout` | `cmd/rqlited/main.go:252` | Eval 2: logs, patterns session's "never exits unless told" property |
 | `POST /snapshot?trailing_logs=N` panics while the store is still opening (`s.raft` is nil); net/http recovers it | `store.Snapshot` | Eval 2: logs, patterns session |
+| Raft logs diverge after a paused leader resumes: a heartbeat handled on the transport goroutine (`processHeartbeat`) demotes the leader and bumps its term while the leader loop is in `dispatchLogs`, which stamps queued writes with a term the node never won. Strong and linearizable reads miss acknowledged writes, and replicas at the same applied index hold different data. Upstream hashicorp/raft#695 (fix PR #701 closed unmerged) | hashicorp/raft v1.8.0 `processHeartbeat`, `dispatchLogs` | Eval 4 (rqlite v10.7.1): decoded `raft.db` from all three nodes showing a conflicting prefix at indexes 630-633, and a local Go test that forces the interleaving |
+| Not confirmed: linearizable reads still miss acknowledged writes (30 of 3.4k in a 12-hour run) with the heartbeat fast path disabled, so the race above doesn't explain them all | `store`, read path | Eval 4: property failures only, after the session ended |
 | Not confirmed: on `/db/request`, `level=auto` skips the leader check (`eqr.Level` instead of the resolved level) | `http/service.go` | Eval 2: reading the code only |
 
 ## Quirks
