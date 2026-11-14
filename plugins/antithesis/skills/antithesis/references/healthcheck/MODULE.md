@@ -23,7 +23,7 @@ This module checks how the workload spends a run's compute: CPU, log volume, mem
 Check each. Report an issue only with evidence from the run.
 
 - **Busy containers.** `Virtual time per wall time` times the number of containers is below 1, or a process in the sample uses CPU out of proportion to the work it does. Antithesis fast-forwards only through time when every process is idle, so CPU spent on nothing slows every timeline. Common causes:
-  - A Compose `healthcheck:`. It runs its command in its container at every `interval`, for the whole run, but serves only to order startup. Remove it, and have the driver wait for the service ("Starting up" in `references/workload/driver.md`), or raise its `interval` to minutes.
+  - A Compose `healthcheck:`. It runs its command in its container at every `interval`, for the whole run, but serves only to order startup. Remove it, change each `depends_on` on it from `condition: service_healthy` to `service_started`, and have the driver wait for the service ("Starting up" in `references/workload/driver.md`). Or raise its `interval` to minutes, with a short `start_interval` during its `start_period`, so dependents still start soon.
   - A loop that polls or spins while idle: a sidecar's `while true; do ...; sleep 0.1; done`, a SUT worker that busy-waits, a rule that polls. Make it block, or sleep for seconds.
   - Background work configured to run constantly, or a client that retries with no backoff.
   - Code that reads the clock in a tight loop: `RDTSC` and `RDRAND` are expensive in Antithesis.
