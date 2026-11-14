@@ -38,3 +38,6 @@ Earlier evals found these. Check whether each still happens.
 - A properties agent launched runs from uncommitted changes, so the run's recorded commit didn't match the code.
 - Two sessions on one machine that build the same image tags launch each other's images. Workload docs don't suggest tagging images per checkout.
 - In `claude -p`, a session's turn ends while it waits on background work, and it resumes on the notification. One session can log many `result` lines.
+- Codex ends a turn with `This content was flagged for possible cybersecurity risk` (a `turn.failed` event, exit 1) while it triages a distributed-systems failure: reading Raft source, or summarizing fault events. Once a thread trips it, a resume trips it again within minutes. Eval 4 hit it on `gpt-6-astra` and `gpt-6.1-sol`. Record each one with the commands just before it.
+- To make a run healthy, a workload agent patches the system under test in its image, such as a fix for a Raft race, or works around a bug in the entrypoint, instead of keeping the failing property and reporting the bug. Later runs then test a patched system.
+- Agents don't search upstream issues for a bug they find, and write their own fix for one that upstream already tracks.
