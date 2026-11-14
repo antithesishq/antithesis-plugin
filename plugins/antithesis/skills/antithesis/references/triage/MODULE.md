@@ -56,7 +56,7 @@ An incomplete run can still have property results. Read them as for any run, and
 
 ## Report
 
-Tell the user each failing property's likely cause, and whether it's a SUT bug, a workload bug or expected. Hand each likely SUT bug to `references/bug-report/MODULE.md`, which confirms it and writes the report.
+Tell the user each failing property's likely cause, and whether it's a SUT bug, a workload bug or expected. Write up SUT bugs only in `summary` mode, as `references/triage/summary.md` says.
 
 ## Before you report
 

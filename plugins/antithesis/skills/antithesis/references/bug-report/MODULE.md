@@ -16,7 +16,7 @@ Don't trust the workload's verdict. Run commands at the failing moment to read t
 
 ## Reproduce it outside Antithesis
 
-Where feasible, write a small program that triggers the bug deterministically without Antithesis. Inject the timing or fault the history shows, such as a pause between two calls, instead of hoping for it. Run it against the release under test. Ask the user whether to also run it against the latest upstream version, and record which versions reproduce. Keep it out of the user's repository unless they ask.
+Where feasible, write a small program that triggers the bug deterministically without Antithesis. Inject the timing or fault the history shows, such as a pause between two calls, instead of hoping for it. Run it against the release under test, and, if the user wants, the latest upstream version. Record which versions reproduce. Keep it out of the user's repository unless they ask.
 
 If a reproducer isn't feasible, say why in the report.
 
