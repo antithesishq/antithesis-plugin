@@ -39,7 +39,7 @@ snouty runs exec "$RUN_ID" --container client1 --timeout 5m -1469731053185852001
 
 ## Extracting files
 
-To copy a file out, such as a database or a core dump, compress it and split it into parts in one exec, then download the parts in parallel from that exec's end moment:
+To copy out a file, such as a database, compress and split it in one exec, then download the parts in parallel from its end moment:
 
 ```bash
 snouty runs exec "$RUN_ID" --container db1 --json -1469731053185852001 38.52 \
@@ -53,13 +53,11 @@ sha256sum -c --quiet parts.sha256 | cut -d: -f1 | get   # downloads any damaged 
 sha256sum -c --quiet parts.sha256 && cat part.* | gunzip > data.db
 ```
 
-- **Encode with base64.** The output is carried as text, so raw binary bytes arrive corrupted.
-- **Wrap at 1 MB with `base64 -w 1000000`.** An output line over about 9 MB is dropped. Each line is a separate event, so the default 76-column wrapping is many times slower.
-- **Check every part.** An exec can drop output lines and still exit 0, so only the checksums show a damaged part.
-- **Compress** if the image has `gzip` or `zstd`. Source and logs shrink 3x or more.
-- **Download parts of about 10 MB, 20 at a time.** One exec streams at a few hundred KB/s, and a proxy can cut a request after 10 minutes. 200 MB in 10 MB parts downloaded in 30 to 60 seconds. Smaller parts were slower, from the overhead of more execs, and larger parts were slower, as each exec streams more. The parts exist only on the first exec's branch, so download them from its end moment.
-- **Freeze writers first.** A file that changes while it's compressed arrives inconsistent, so first stop each process that writes it, such as with `kill -STOP <pid>` in the first exec. Or pause the whole container from the guest: run the first exec without `--container`, start it with `podman pause db1 && podman cp db1:/var/lib/db/data.db /tmp/f`, compress `/tmp/f`, and download without `--container` too. The guest has `gzip`, `split` and `gdb` even when the image lacks them. Each exec runs on a throwaway branch, so killing or pausing there changes nothing else.
-- The file must exist at the moment you run at. To extract what a command writes, run the command in the first exec.
+- **Encode with base64 in 1 MB lines.** Raw binary arrives corrupted, a line over about 9 MB is dropped, and short lines are slow.
+- **Check every part.** An exec can drop output lines and still exit 0.
+- **Download parts of about 10 MB, 20 at a time.** That was fastest: 200 MB in under a minute, where one exec streams only a few hundred KB/s. The parts exist only on the first exec's branch.
+- **Freeze writers first,** so the file doesn't change under you: `kill -STOP <pid>` in the first exec, or run it in the guest, without `--container`, starting with `podman pause db1 && podman cp db1:/var/lib/db/data.db /tmp/f`. The guest has `gzip` and `split` even when the image lacks them. Execs run on throwaway branches, so this changes nothing else.
+- The file must exist at the moment you run at. Run any command that writes it in the first exec.
 
 ## When you're done
 
