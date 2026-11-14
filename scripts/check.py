@@ -15,6 +15,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 import images
+import prose
 import references
 import release
 import tokens
@@ -283,6 +284,11 @@ def images_() -> int:
 @check
 def references_() -> int:
     return references.main()
+
+
+@check
+def prose_() -> int:
+    return prose.main()
 
 
 @check

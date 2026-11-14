@@ -8,7 +8,23 @@ This repo packages the Antithesis skills as one plugin, `plugins/antithesis`, fo
 
 ### Token budgets
 
-The token budgets that `check:tokens` enforces are soft. When a change goes over one, look for a shorter way to say the same thing: cut statements and words that aren't needed, and rely more on `snouty --help` and `snouty docs` than on restating them. Never trade the design for the budget. Don't change how pages reference each other, move content to another module, or leave out something important just to fit. If the right version is over budget, raise that module's budget in `mise.toml` (`MODULE_TOKEN_BUDGETS`), and say so in the change.
+`check:tokens` enforces two budgets. The top level, `SKILL.md` and the files it names outside any module, loads in every context that uses the skill, so its budget is tight. The whole skill, every file reachable from `SKILL.md`, is the worst case: an agent that reads every page. It also reports what each module adds, and, in CI, each file's change since the PR's base, so a reviewer can judge whether growth is earned. Neither budget catches wordiness inside a page; "Writing skill pages" does.
+
+The budgets are soft. When a change goes over one, look for a shorter way to say the same thing: cut statements and words that aren't needed, and rely more on `snouty --help` and `snouty docs` than on restating them. Never trade the design for the budget. Don't change how pages reference each other, move content to another module, or leave out something important just to fit. If the right version is over budget, raise the budget in `mise.toml`, and say so in the change.
+
+## Writing skill pages
+
+An agent reads every word of a page it loads, and pays for it in context. Write so each sentence changes what the agent does.
+
+- **Give the instruction, not a preamble.** Write `Run X`, not `Make sure to run X` or `It's important to run X`. Drop `note that`, `keep in mind`, `please`, and intensifiers such as `very` and `really`.
+- **State each fact once,** on the page that owns it, and name that page elsewhere ("Cross-references").
+- **Say why only when the agent needs it to decide,** such as when to break a rule, and in one clause.
+- **Don't restate snouty.** Name the command, `snouty --help` or the `snouty docs` path, and say only what the docs don't: which flag to use here, and why.
+- **Prefer one concrete example to a paragraph of description,** and cut an example the rule already makes clear.
+- **Cut hedges and asides** that don't change the action: `generally`, `in most cases`, `as mentioned above`.
+- **Read the page as an agent new to it.** Delete a sentence, and if the agent would still act the same, leave it out.
+
+`check:prose` (`scripts/prose.py`) fails on common filler phrases in every skill page, outside code, and says what to write instead. Add a phrase there when review keeps catching it.
 
 ## Cross-references
 

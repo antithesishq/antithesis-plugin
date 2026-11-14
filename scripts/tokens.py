@@ -3,15 +3,17 @@
 Skills under .agents/ are the repo's own tooling, so they have no budget and aren't reported.
 
 The top level is SKILL.md and the files it names outside any module. It loads in
-every context that uses the skill, so it gets a small budget. A module is what its
-MODULE.md adds on demand: everything reachable from it, up to another module's
-MODULE.md, that the top level doesn't already load. Each budget comes from the
-environment, and mise.toml sets both:
+every context that uses the skill, so it gets a small budget. The whole skill is every
+file reachable from SKILL.md: what an agent holds in the worst case, having read every
+page. A module is what its MODULE.md adds on demand: everything reachable from it, up
+to another module's MODULE.md, that the top level doesn't already load. Modules are
+reported, not budgeted: an optional page counts in full against every module that can
+reach it, though no agent reads more. Each budget comes from the environment, and
+mise.toml sets both:
 
-    SKILL_TOKEN_BUDGET   (default 2600)
-    MODULE_TOKEN_BUDGET  (default 20000)
-    MODULE_TOKEN_BUDGETS overrides for named modules, as `name=tokens,...`
-    TOKEN_BASE           a git ref: also show the change since it
+    SKILL_TOKEN_BUDGET        the top level (default 2600)
+    SKILL_TOTAL_TOKEN_BUDGET  the whole skill (default 36000)
+    TOKEN_BASE                a git ref: also show the change since it
 
 Counts use tiktoken's o200k_base encoding. Claude's tokenizer differs, so treat them
 as estimates for comparing files and changes, not as exact Claude counts. Under
@@ -34,8 +36,7 @@ BUDGET_NOTE = (
     "and words that aren't needed, and rely more on `snouty --help` and `snouty docs`. Never "
     "trade the design for the budget: don't change how pages reference each other, move content "
     "to another module, or leave out something important just to fit. If the right version is "
-    "over budget, raise that module's budget in mise.toml (MODULE_TOKEN_BUDGETS), and say so in "
-    "the change."
+    "over budget, raise the budget in mise.toml, and say so in the change."
 )
 
 
@@ -95,6 +96,11 @@ class Tree:
         files = self.top_level(skill)
         return sum(self.tokens(rel) or 0 for rel in files) if files else None
 
+    def total_cost(self, skill: str) -> int | None:
+        """Every file reachable from SKILL.md, through every module."""
+        files = self.reachable(skill, f"{skill}/SKILL.md", lambda _: False)
+        return sum(self.tokens(rel) or 0 for rel in files) if files else None
+
     def module_cost(self, skill: str, module_md: str) -> int | None:
         """What the module adds to the top level, which is loaded already."""
         if self.read(module_md) is None:
@@ -122,15 +128,7 @@ def table(headers: list[str], rows: list[list[str]]) -> list[str]:
 
 def main() -> int:
     skill_budget = int(os.environ.get("SKILL_TOKEN_BUDGET", "2600"))
-    module_budget = int(os.environ.get("MODULE_TOKEN_BUDGET", "20000"))
-    overrides = {
-        name.strip(): int(tokens)
-        for name, tokens in (
-            item.split("=", 1)
-            for item in os.environ.get("MODULE_TOKEN_BUDGETS", "").split(",")
-            if item.strip()
-        )
-    }
+    total_budget = int(os.environ.get("SKILL_TOTAL_TOKEN_BUDGET", "36000"))
     encoding = tiktoken.get_encoding("o200k_base")
     now = Tree(encoding)
     base = Tree(encoding, os.environ.get("TOKEN_BASE", "").strip() or None)
@@ -146,8 +144,9 @@ def main() -> int:
         "",
         (
             f"Estimated with tiktoken `o200k_base`. Budgets: top level {skill_budget} "
-            f"(SKILL.md and the files it names outside any module), each module {module_budget} "
-            "(what its MODULE.md adds), unless the table shows another."
+            f"(SKILL.md and the files it names outside any module), whole skill {total_budget} "
+            "(every file reachable from SKILL.md). A module's count is what its MODULE.md adds, "
+            "with every optional page, and has no budget."
         ),
         "",
     ]
@@ -164,6 +163,15 @@ def main() -> int:
                 f"the budget is {skill_budget}"
             )
             errors.append((f"{skill}/SKILL.md", message))
+        total = now.total_cost(skill) or 0
+        total_before = base.total_cost(skill) if base.ref else None
+        rows.append(["whole skill", str(total), str(total_budget), *compare(total, total_before)])
+        if total > total_budget:
+            message = (
+                f"the whole skill (every file reachable from SKILL.md) is {total} tokens; "
+                f"the budget is {total_budget}"
+            )
+            errors.append((f"{skill}/SKILL.md", message))
         modules = sorted(
             p.relative_to(ROOT).as_posix() for p in (ROOT / skill).glob("references/*/MODULE.md")
         )
@@ -171,10 +179,7 @@ def main() -> int:
             cost = now.module_cost(skill, module_md) or 0
             cost_before = base.module_cost(skill, module_md) if base.ref else None
             name = Path(module_md).parent.name
-            budget = overrides.get(name, module_budget)
-            rows.append([f"`{name}` module", str(cost), str(budget), *compare(cost, cost_before)])
-            if cost > budget:
-                errors.append((module_md, f"module `{name}` adds {cost} tokens; the budget is {budget}"))
+            rows.append([f"`{name}` module", str(cost), "—", *compare(cost, cost_before)])
         lines += table(["Loads", "Tokens", "Budget", *since], rows)
 
         files = now.markdown(skill)
