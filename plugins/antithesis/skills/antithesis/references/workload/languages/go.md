@@ -25,6 +25,8 @@ COPY driver/ .
 RUN go build -toolexec=antithesis-go-toolexec -o /out/driver .
 ```
 
+With a `-default-no-op` SDK, put all build tags in `GOFLAGS`, as `GOFLAGS=-tags=enable_antithesis_sdk,netgo`, and pass `go build` no `-tags`: it overrides `GOFLAGS`, and the toolexec misses it, dropping coverage. Don't reuse its `GOCACHE`.
+
 ## Local coverage
 
 - Build with `ANTITHESIS_SKIP_COVERAGE=true go build -toolexec=antithesis-go-toolexec -cover -covermode=atomic -coverpkg=./...`, and set `GOCOVERDIR=/coverage/<service>`. The toolexec still catalogs the assertions, so the local loop lists one that's never reached.
