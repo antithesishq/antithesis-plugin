@@ -41,7 +41,7 @@ snouty runs exec "$RUN_ID" --container client1 --timeout 5m -1469731053185852001
 To copy a file out, such as a database or a core dump, print it from `snouty runs exec` and decode it on your machine:
 
 ```bash
-snouty runs exec "$RUN_ID" --container db1 --timeout 30m -1469731053185852001 38.52 \
+snouty runs exec "$RUN_ID" --container db1 --timeout 10m -1469731053185852001 38.52 \
   'f=/var/lib/db/data.db; sha256sum "$f" >&2; gzip -c "$f" | base64 -w 1000000' \
   2>extract.err | base64 -d | gunzip > data.db
 sha256sum data.db; cat extract.err
@@ -51,7 +51,7 @@ sha256sum data.db; cat extract.err
 - **Wrap at 1 MB with `base64 -w 1000000`.** An output line over about 9 MB is dropped without an error, and the command still exits 0. Each line is a separate event, so the default 76-column wrapping is many times slower.
 - **Compress first** if the image has `gzip` or `zstd`. Source and logs shrink 3x or more, and the transfer time shrinks with them.
 - **Compare checksums.** A dropped line or a timeout leaves a shorter file, so check the `sha256sum` from `extract.err` against the local one.
-- The transfer runs at roughly 150 to 300 KB/s, so the default 10-minute `--timeout` fits about 60 MB of encoded output. Raise `--timeout` for more. The time counts against the timeout.
+- **Split a large file into parts.** The transfer runs at roughly 150 to 300 KB/s, and a proxy can cut a request after 10 minutes, so keep each exec under about 30 MB of output. Print each part from its own exec at the same moment, such as `tail -c +$((OFFSET + 1)) "$f" | head -c 25000000 | gzip -c | base64 -w 1000000`, and concatenate the decoded parts in order. The execs run on separate branches, so run them in parallel.
 - The file must exist at the moment you run at. To extract what a command writes, run the command in the same script, or extract from its end moment.
 
 ## When you're done
