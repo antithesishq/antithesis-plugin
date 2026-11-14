@@ -1,6 +1,12 @@
 <!-- Each version is a top-level `# Version` section, newest first, below these comments. -->
 <!-- markdownlint-disable-file MD025 -->
 
+# Version 0.1.1 (2026-11-13)
+
+- When users give no compute budget for a long unattended task, the agent now defaults to 300 compute hours instead of 60. It's also told to spend the budget on any run that moves the goal forward, not to hold runs back just to save hours ([#99](https://github.com/antithesishq/antithesis-plugin/pull/99)).
+- Properties and patterns: the agent now uses log forwarding only for conditions that no one node can see, such as at most one leader per term. When a node can see a condition from its own state or the messages it handles, the agent puts the assertion in that node's code. For example, a follower can check that it never truncates a committed entry. The agent also no longer adds `assert_sometimes` on internal states that every startup reaches, such as a node adopting a higher term in the first election ([#100](https://github.com/antithesishq/antithesis-plugin/pull/100)).
+- Getting help: the README has a new "Getting help" section. When the agent is stuck on something outside the user's control, it now points the user to the right place: support@antithesis.com for their tenant or runs, GitHub issues for bugs in the plugin or Snouty, and the Antithesis Discord for questions ([#98](https://github.com/antithesishq/antithesis-plugin/pull/98)).
+
 # Version 0.1.0 (2026-11-11)
 
 - **Breaking**: **snouty 0.10.0 or later**: the skill and the snouty MCP server now need snouty 0.10.0. The agent no longer sets `SNOUTY_UNSTABLE_FEATURES=teams` for `snouty launch`, and the plugin's `mcp.json` no longer sets `SNOUTY_UNSTABLE_FEATURES=mcp`, because snouty 0.10.0 makes those features stable. With an older snouty, launches fail on `--max-compute-hours` and the MCP server doesn't start. Run `snouty update`, or reinstall snouty if you didn't install it with the installer script. ([#78](https://github.com/antithesishq/antithesis-plugin/pull/78), [#83](https://github.com/antithesishq/antithesis-plugin/pull/83))
