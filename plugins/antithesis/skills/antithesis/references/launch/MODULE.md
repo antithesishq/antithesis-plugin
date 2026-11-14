@@ -16,11 +16,21 @@ Input: a workload to run in Antithesis, and optionally the launcher, compute bud
 
 The task's compute budget, from the user or the default in `SKILL.md`, covers every test run you start for the task. Debugging sessions don't count against it. Before each launch, add up:
 
-- the compute hours of your runs that have ended, from `snouty runs usage --after <when the task started>`. It lists every run on the tenant, so count only your run IDs;
+- the compute hours of your runs that have ended, from `snouty runs usage --after <when the task started>`. It lists every run on the tenant, so count only your runs ("Finding your runs");
 - the `--max-compute-hours` of your runs still going, which `runs usage` doesn't list until they end;
 - the new run's `--max-compute-hours`.
 
 Launch only if the total stays within the budget. Otherwise, stop and tell the user what you've spent and what you'd run next.
+
+## Finding your runs
+
+`snouty launch` records the agent session that ran it as run attrs, when it can detect one. After your first launch, read `attrs.agent_session_id` from the run's `parameters` in `snouty runs show <run_id> --json`, and keep it with your notes. To list the runs your session launched:
+
+```sh
+snouty runs list --json -n 200 | grep '"attrs.agent_session_id":"<session_id>"'
+```
+
+If the run has no `attrs.agent_session_id`, snouty didn't detect your session: keep a list of the run IDs you launch instead.
 
 ## Setup timeout
 
