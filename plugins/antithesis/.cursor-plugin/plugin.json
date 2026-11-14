@@ -1,0 +1,12 @@
+{
+  "name": "antithesis",
+  "displayName": "Antithesis",
+  "version": "0.1.0",
+  "description": "Autonomous testing with Antithesis: Write tests, triage runs, and debug failures",
+  "author": { "name": "Antithesis" },
+  "homepage": "https://antithesis.com",
+  "repository": "https://github.com/antithesishq/antithesis-plugin",
+  "license": "Apache-2.0",
+  "keywords": ["antithesis", "testing", "property based testing", "deterministic simulation testing"],
+  "logo": "assets/logo.svg"
+}

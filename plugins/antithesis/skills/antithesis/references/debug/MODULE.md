@@ -4,7 +4,7 @@ Antithesis can run scripts at any Moment in the Multiverse. Start by choosing th
 
 Running commands shows the system's real state, so always do it when investigating any kind of failure. Use an existing ready run if one exists, even from an unrelated source. Otherwise, start a debugging session.
 
-If the run you are using to run commands finishes, you can continue debugging by pulling the moments you need into another run.
+A run that has ended can't execute commands, but its moments can: pull them into another ready run with `--source-run-id`, or start a debugging session on them. If `snouty runs exec` fails because the run has ended, pick another run with the policy below, and keep running commands.
 
 ## Finding moments
 
@@ -34,6 +34,7 @@ snouty runs exec "$RUN_ID" --container client1 --timeout 5m -1469731053185852001
 - **Without `--container`,** it runs in the guest: the virtual machine in Antithesis's deterministic hypervisor that runs every container or Kubernetes manifest. You can't change its tools, but it has the basics, such as bash and the usual shell commands, `podman` and `kubectl`. Use it for Kubernetes pods, which `--container` doesn't support.
 - If a tool is missing in either place, process the output on your machine.
 - Rewarming a deep moment takes longer: a moment at vtime 10 rewarms faster than one at vtime 100.
+- If the moment comes from a run that filtered logs, which shows in that run's `parameters` in `snouty runs show --json`, add `--events --include-filtered-logs` to get the dropped lines logged while the command runs, the command's own included. The filter goes with the moment, not with the run that executes the command, so check the run each moment comes from.
 - To see how the system reacts to an action, such as killing a container, run `sleep 30` with `--events` from the action's end moment.
 
 ## When you're done
