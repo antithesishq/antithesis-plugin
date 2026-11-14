@@ -31,4 +31,4 @@ Keep what the prompt adds, such as the behaviors to focus on, where to report, o
 2. Launch a run, with `references/launch/MODULE.md`.
 3. Triage it live, with `references/triage/MODULE.md` in `monitor` mode, to verify which findings are real.
 4. Root-cause the likely bugs, in the triage module's `root-cause` mode.
-5. Report the findings, with the triage module's `summary` mode once the run ends.
+5. Summarize the run once it ends, with the triage module's `summary` mode, which writes up each SUT bug with `references/bug-report/MODULE.md`.

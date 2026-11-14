@@ -21,7 +21,7 @@ Check them as they arrive, not once the run ends. A result that is final on an `
 
 ## 4. Conclude before the next run
 
-Classify each failing property as a SUT bug, a workload bug or expected, with the evidence for each, before you change anything or launch again. Follow the triage module. Fix workload bugs first. Tell the user about SUT bugs, and keep their assertions. Never relaunch an unchanged workload to see whether a failure repeats. You don't need the run to finish to conclude: once a final failure shows a workload bug, fix it and go to "Fix and repeat".
+Classify each failing property as a SUT bug, a workload bug or expected, with the evidence for each, before you change anything or launch again. Follow the triage module. Fix workload bugs first. Hand each SUT bug to `references/bug-report/MODULE.md`, keep its assertion, and apply what the module returns to keep it from hiding other bugs. Never relaunch an unchanged workload to see whether a failure repeats. You don't need the run to finish to conclude: once a final failure shows a workload bug, fix it and go to "Fix and repeat".
 
 ## 5. Fix and repeat
 
