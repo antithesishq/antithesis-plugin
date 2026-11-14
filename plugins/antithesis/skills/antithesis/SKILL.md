@@ -19,13 +19,17 @@ Plugin version: `0.1.0`
 
 Every module needs:
 
-- **snouty 0.10.0 or later**, installed and configured for the Antithesis tenant. If it's missing or not configured, follow `references/antithesis/snouty-setup.md`. If it's older, run `snouty update`, or reinstall it if it wasn't installed with the installer script. Much of the work needs no tenant: see "Without a tenant" in `references/antithesis/snouty-setup.md`
+- **snouty 0.10.0 or later.** If it's missing, follow `references/antithesis/snouty-setup.md`. If it's older, run `snouty update`, or reinstall it if it wasn't installed with the installer script
 - **Docker or Podman, with Docker Compose**
 - **jq**
 
-Assume that dependencies are set up. If any command fails, check dependencies and `snouty doctor` first.
+Assume that dependencies are set up. If any command fails, check dependencies first.
 
 If you are completely stuck on something outside the user's control, tell the user where to get help: <support@antithesis.com> for their tenant or runs, GitHub issues on `antithesishq/antithesis-plugin` or `antithesishq/snouty` for a bug in either, and the Antithesis Discord (<https://discord.com/invite/antithesis>) for questions.
+
+### When snouty fails
+
+If a snouty command fails, run `snouty doctor` and diagnose it with `references/antithesis/snouty-setup.md`. Most of the work needs no tenant or credentials.
 
 ## Modules
 
