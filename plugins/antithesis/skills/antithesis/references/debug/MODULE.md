@@ -42,21 +42,23 @@ snouty runs exec "$RUN_ID" --container client1 --timeout 5m -1469731053185852001
 To copy a file out, such as a database or a core dump, compress it and split it into parts in one exec, then download the parts in parallel from that exec's end moment:
 
 ```bash
-snouty runs exec "$RUN_ID" --container db1 -1469731053185852001 38.52 \
+snouty runs exec "$RUN_ID" --container db1 --json -1469731053185852001 38.52 \
   'mkdir -p /tmp/x && cd /tmp/x && gzip -c /var/lib/db/data.db | split -b 10000000 -a 3 - part. && sha256sum part.*' \
-  > parts.sha256 2> prep.err
-read -r HASH VTIME < <(sed -n 's/^end moment: //p' prep.err)
-get() { snouty runs exec "$RUN_ID" --container db1 "$HASH" "$VTIME" "base64 -w 1000000 /tmp/x/$1" | base64 -d > "$1"; }
-for p in $(awk '{print $2}' parts.sha256); do get "$p" & done; wait
-sha256sum -c --quiet parts.sha256   # names any part to download again with get
-cat part.* | gunzip > data.db
+  > prep.json
+jq -r 'select(.source.stream == "info") | .output_text' prep.json > parts.sha256
+export RUN_ID; read -r HASH VTIME < <(jq -r '.end_moment // empty | "\(.input_hash) \(.vtime)"' prep.json); export HASH VTIME
+get() { xargs -P 20 -I{} sh -c 'snouty runs exec "$RUN_ID" --container db1 "$HASH" "$VTIME" "base64 -w 1000000 /tmp/x/{}" | base64 -d > {}'; }
+awk '{print $2}' parts.sha256 | get
+sha256sum -c --quiet parts.sha256 | cut -d: -f1 | get   # downloads any damaged part again
+sha256sum -c --quiet parts.sha256 && cat part.* | gunzip > data.db
 ```
 
 - **Encode with base64.** The output is carried as text, so raw binary bytes arrive corrupted.
 - **Wrap at 1 MB with `base64 -w 1000000`.** An output line over about 9 MB is dropped. Each line is a separate event, so the default 76-column wrapping is many times slower.
 - **Check every part.** An exec can drop output lines and still exit 0, so only the checksums show a damaged part.
 - **Compress** if the image has `gzip` or `zstd`. Source and logs shrink 3x or more.
-- **Download parts of about 10 MB in parallel.** One exec streams at a few hundred KB/s, and a proxy can cut a request after 10 minutes. 200 MB in 10 MB parts downloaded in 30 to 60 seconds. Smaller parts were slower, from the overhead of more execs, and larger parts were slower, as each exec streams more. The parts exist only on the first exec's branch, so download them from its end moment.
+- **Download parts of about 10 MB, 20 at a time.** One exec streams at a few hundred KB/s, and a proxy can cut a request after 10 minutes. 200 MB in 10 MB parts downloaded in 30 to 60 seconds. Smaller parts were slower, from the overhead of more execs, and larger parts were slower, as each exec streams more. The parts exist only on the first exec's branch, so download them from its end moment.
+- **Freeze writers first.** A file that changes while it's compressed arrives inconsistent, so first stop each process that writes it, such as with `kill -STOP <pid>` in the first exec. Or pause the whole container from the guest: run the first exec without `--container`, start it with `podman pause db1 && podman cp db1:/var/lib/db/data.db /tmp/f`, compress `/tmp/f`, and download without `--container` too. The guest has `gzip`, `split` and `gdb` even when the image lacks them. Each exec runs on a throwaway branch, so killing or pausing there changes nothing else.
 - The file must exist at the moment you run at. To extract what a command writes, run the command in the first exec.
 
 ## When you're done
