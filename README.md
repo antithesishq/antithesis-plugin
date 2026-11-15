@@ -29,6 +29,12 @@ The Antithesis Plugin requires the following tools to be installed.
 
 In addition, Snouty must be authenticated with your Antithesis tenant: `snouty login`. You can check that Snouty is setup correctly by running `snouty doctor`.
 
+## Recommended model
+
+We test and use the plugin mainly with Claude Opus 5.5 at medium effort, and recommend it. Other models, such as OpenAI Sol, work, but have been seen to issue many safety refusals.
+
+The plugin tests and fuzzes software comprehensively, so its work can trigger a model's safety refusals. Access to OpenAI Daybreak or Anthropic's Cyber Verification Program reduces them.
+
 ## Usage
 
 The Antithesis plugin provides a skill called `/antithesis` (or `$antithesis` in some harnesses). The skill should be invoked automatically for Antithesis related prompts.
