@@ -7,12 +7,13 @@
 - **Reference:** the sources jar, `https://repo1.maven.org/maven2/com/antithesis/sdk/<version>/sdk-<version>-sources.jar`, or the javadoc jar, `sdk-<version>-javadoc.jar` in the same directory.
 - **Init:** none.
 - **Setup complete:** `Lifecycle.setupComplete(details)`, in `com.antithesis.sdk`.
-- **Assertions:** static methods of `com.antithesis.sdk.Assert`, such as `always`, `sometimes`, `reachable` and `sometimesGreaterThan`.
+- **Assertions:** static methods of `com.antithesis.sdk.Assert`, such as `always`, `sometimes`, `reachable` and `sometimesGreaterThan`. Details are a Jackson `ObjectNode`, from `JsonNodeFactory.instance.objectNode()`.
+- **Locally:** with no catalog, the SDK writes an assertion only once it's hit, so an assertion never reached is missing from `sdk.jsonl`, not listed as unmet. Compare the messages in `sdk.jsonl` with the `Assert` calls in the source.
 - **Cataloging:** follow `snouty docs show /docs/reference/sdk/java/how_to_build_with_sdk/`.
 
 ## Instrumentation
 
-`snouty docs show /docs/reference/sdk/java/how_to_build_with_sdk/`.
+`snouty docs show /docs/reference/sdk/java/how_to_build_with_sdk/`. It has no local check: confirm the image's `/opt/antithesis/catalog/` holds the jars, and rely on the run's `Software was instrumented` property.
 
 ## Local coverage
 
@@ -35,4 +36,4 @@ Use JaCoCo.
 | Generate only               | `new Settings().phases(Phase.GENERATE)`, as the settings of `Hegel.main` |
 | Weighted boolean draw       | `tc.draw(Generators.booleans(p))`                                        |
 
-Run the driver with `java --enable-native-access=ALL-UNNAMED`. Image: build on the "Runtime image" row in `references/workload/images.md` with `openjdk-25-jdk-headless` and `maven` from apt, copy the dependencies next to the jar with `maven-dependency-plugin`, and run on the runtime image with `openjdk-25-jre-headless`.
+Image: build on the "Runtime image" row in `references/workload/images.md` with `openjdk-25-jdk-headless` and `maven` from apt. Copy the jar and its dependencies into one directory, such as `/opt/driver/`, with `maven-dependency-plugin`'s `copy-dependencies` goal; the example's `build-classpath` names paths that don't survive a multi-stage copy. Run on the runtime image with `openjdk-25-jre-headless`, catalog the directory with `ln -s /opt/driver /opt/antithesis/catalog/driver`, and start it with `CMD ["java", "--enable-native-access=ALL-UNNAMED", "-cp", "/opt/driver/*", "<main class>"]`, never `java -jar`: Antithesis adds its own jars beside the cataloged ones. For `hegel-jna`, use `openjdk-21-*`, and set `maven.compiler.release` to 21.
