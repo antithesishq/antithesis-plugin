@@ -80,7 +80,7 @@ Add exploration assertions to the driver, following "Exploration assertions" in 
 ## Choosing how often things happen
 
 - **Groups control overlap, not frequency.** Each round hegel picks one group, and every worker runs only its rules. Use separate groups only for rules that must never overlap. Groups can't be weighted.
-- **Each timeline runs a random subset of the rules.** hegel's swarm testing disables a random subset of each worker's rules for the whole test case, keeping at least one rule per group. Some timelines never run a given rule. In others, it's one of a few enabled rules, and runs far more often than its weight suggests. This is how swarm testing finds bugs that need an action to be absent.
+- **Each stretch of a timeline runs a random subset of the rules.** hegel's swarm testing disables a random subset of each worker's rules, keeping at least one rule per group, and redraws that subset, the concurrency level and the value distribution at the start of a round with probability 1/50. A rule can go unused for many rounds, then be one of a few enabled rules and run far more often than its weight suggests. This is how swarm testing finds bugs that need an action to be absent.
 - **Weights are a hint** for the mix among a worker's enabled rules, not a guarantee.
 - **Explicit draws set exact probabilities per call.** Draw a weighted boolean when a rate matters.
 - **The driver's state sets timing.** When an action must wait for something, or must not repeat too soon, record what it needs in the driver's state, such as a counter or the time it last ran, and check that before it acts.
@@ -92,7 +92,7 @@ Put a rare action in the main group behind a rare draw. A group of its own would
 
 An eventually stops faults for good, waits for the system to recover, asserts the guarantees that must hold once faults stop, like every node serving again or acknowledged writes being readable, and then ends its timeline. It is the driver's version of an Antithesis `eventually_` test command.
 
-Write it as a normal rule, so swarm testing leaves it out of some timelines. Leave its weight at the default: the draw below sets how often it fires. Consider adding it to other groups too, so it can also fire while other actions run. The rule returns at once unless a rare weighted boolean draw passes, then calls an `eventually` method. The draw starts eventuallys at varied depths, from right after `/workload-active` to deep into the timeline. The method:
+Write it as a normal rule, so swarm testing leaves it out for stretches of a timeline. Leave its weight at the default: the draw below sets how often it fires. Consider adding it to other groups too, so it can also fire while other actions run. The rule returns at once unless a rare weighted boolean draw passes, then calls an `eventually` method. The draw starts eventuallys at varied depths, from right after `/workload-active` to deep into the timeline. The method:
 
 1. Takes a global lock, so no other eventually can start.
 2. Stops faults for good, by running `$ANTITHESIS_STOP_FAULTS <seconds>` for far longer than the rest of the timeline can take, such as an hour. Skip this when `ANTITHESIS_STOP_FAULTS` is unset, as it is in the local loop.

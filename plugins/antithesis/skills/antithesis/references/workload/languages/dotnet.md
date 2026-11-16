@@ -20,4 +20,4 @@ Use the standard coverage tool for .NET.
 
 ## Hegel driver
 
-Not supported yet: hegel has no .NET frontend. Don't write the driver in .NET; pick another language with `references/workload/languages.md`.
+Not supported yet: hegel's .NET frontend has no main entry point. Don't write the driver in .NET; pick another language with `references/workload/languages.md`.
