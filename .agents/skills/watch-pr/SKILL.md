@@ -36,8 +36,11 @@ PR #123 comment by <login> (id <id>)
 PR #123 review comment by <login> on <path> (id <id>)
 PR #123 review by <login>: <APPROVED|CHANGES_REQUESTED|COMMENTED> (id <id>)
 PR #123 check <name>: <failure|timed_out|cancelled|...> (job <id>)
+PR #123 all checks passed for <short-sha>
+PR #123 has no checks
 PR #123 conflicts with <branch>
 PR #123 base changed to <branch>
+PR #123 base <branch> moved to <short-sha>
 PR #123 merged
 PR #123 closed without merge
 PR #123 reopened
@@ -47,9 +50,6 @@ gh failed on <N> polls in a row
 These need none. They are printed for the record, and you read them the next time an event wakes you:
 
 ```text
-PR #123 all checks passed for <short-sha>
-PR #123 has no checks
-PR #123 base <branch> moved to <short-sha>
 PR #123 is closed, as an earlier run reported
 gh failed: <message>
 ```
@@ -60,7 +60,7 @@ Every line names its PR, so one watcher covers several PRs.
 
 An event line carries only metadata. Read the full comment, review or log through the API before you act on it.
 
-**Checks.** The watcher prints each failed check once, and one "all checks passed" line per head commit once every check on it concludes success, skipped or neutral. So you never need to poll `gh pr checks`, or wait for the checks after a push: a failure wakes you, and a pass needs nothing from you. The "all checks passed" line names the head commit. Check that it names your latest push before you rely on it. CI runs each `check:*` task in `mise.toml` as its own check, so a failed check's name ends in the task to rerun locally.
+**Checks.** The watcher prints each failed check once, and one "all checks passed" line per head commit once every check on it concludes success, skipped or neutral. So you never need to poll `gh pr checks`, or wait for the checks after a push: a failure or a pass wakes you. A PR with no checks gets a "has no checks" line instead. The "all checks passed" line names the head commit. Check that it names your latest push before you rely on it. CI runs each `check:*` task in `mise.toml` as its own check, so a failed check's name ends in the task to rerun locally.
 
 **Your own replies.** When an app opened the PR, as an agent behind a GitHub integration does, the watcher leaves out that app's comments and reviews: they are your own replies. When a user opened it, the watcher leaves nothing out, because you may be posting under the user's own login, and their comments still count. Your replies then come back as events. Keep the ID that each reply call returns, and skip the events with those IDs. Never skip an event by its login.
 
@@ -102,7 +102,13 @@ Never pass `--paginate` to `gh api`. Behind a proxy set as gh's host, the first 
 
   Reproduce it with the check's own task, such as `mise run check:lychee`, fix it, update the description ("Keep the description current"), and push. A check that failed for a transient reason, like a link that was briefly down, can be rerun with `gh api -X POST repos/{owner}/{repo}/actions/jobs/<job id>/rerun`.
 
-- **Conflict**: merge `origin/<branch>`, the base that the event names, into the branch, resolve it, rerun the checks, and push. A base that moves without a conflict needs nothing.
+- **Conflict**: merge `origin/<branch>`, the base that the event names, into the branch, resolve it, rerun the checks, and push.
+
+- **Base moved**: the base branch has new commits. Merge `origin/<branch>` into the branch, rerun the checks that the merge touches, and push.
+
+- **All checks passed**: check that the line names your latest push. The PR can merge when its reviews allow, so tell the user. When a PR of a stack waits for this one, continue with that PR.
+
+- **No checks**: CI didn't run on the head commit. This is not a pass. Find out why, for example a conflict or a workflow that waits for approval, and tell the user.
 
 - **Base changed**: someone retargeted the PR. Compare the branch with the new base, and update the description ("Keep the description current") if what the PR contains has changed.
 
