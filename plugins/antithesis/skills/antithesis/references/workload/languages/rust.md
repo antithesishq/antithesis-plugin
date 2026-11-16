@@ -46,6 +46,7 @@ RUN cargo build --release \
 | Concurrent state machine    | `#[hegel::concurrent_state_machine]` on the `impl` block |
 | Rule, its groups and weight | `#[rule(groups = ["g"], weight = 6)]`                    |
 | Always-run invariant        | `#[invariant(always_run)]`                               |
+| Pause-faults flag           | `#[invariant(always_run, pause_faults = true)]`          |
 | Unbounded step count        | `.steps(i64::MAX)`                                       |
 | Generate only               | `#[hegel::main(phases = [hegel::Phase::Generate])]`      |
 | Weighted boolean draw       | `tc.draw(gs::weighted_booleans(p))`                      |

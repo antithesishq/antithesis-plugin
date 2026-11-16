@@ -88,6 +88,23 @@ Add exploration assertions to the driver, following "Exploration assertions" in 
 
 Put a rare action in the main group behind a rare draw. A group of its own would get as many rounds as any other.
 
+## Checks without faults
+
+Some checks hold only while faults are stopped. Put each in one of two places:
+
+- **A fault-free check,** when the check leaves the system as it found it, such as reading every key or comparing replicas. Faults pause for the check and resume after it, and the timeline goes on.
+- **An eventually** ("Eventually"), when the check may change or damage the system, such as stopping a node or draining it, or when it waits on actions in flight. It stops faults for good and ends the timeline.
+
+### Fault-free check
+
+Write it as an always-run invariant with hegel's pause-faults flag. Hegel pauses faults just before each run of the invariant and resumes them just after, and no rule runs meanwhile. Outside Antithesis the flag does nothing.
+
+- **Run it rarely.** Every round waits for it. A rule sets a `check_due` flag in the driver's state when a rare weighted boolean draw passes, and the invariant returns at once unless the flag is set, then clears it.
+- **Keep it apart from the other invariants.** Hegel pauses faults on every run, even one that returns at once, so never give an ordinary invariant the flag.
+- **Wait for recovery first.** Restarted containers take a while to come back. Wait, up to a deadline, until every node serves requests, as the eventually does, then assert.
+
+For the local loop, give the driver an environment variable that sets `check_due` every few seconds of workload, whatever the draw decides.
+
 ## Eventually
 
 An eventually stops faults for good, waits for the system to recover, asserts the guarantees that must hold once faults stop, like every node serving again or acknowledged writes being readable, and then ends its timeline. It is the driver's version of an Antithesis `eventually_` test command.

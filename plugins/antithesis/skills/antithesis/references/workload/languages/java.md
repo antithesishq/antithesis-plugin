@@ -31,6 +31,7 @@ Use JaCoCo.
 | Concurrent state machine    | `Stateful.run(machine, tc, Stateful.options().maxConcurrency(n))`        |
 | Rule, its groups and weight | `@Rule(groups = {"g"}, weight = 6)`                                      |
 | Always-run invariant        | `@Invariant(alwaysRun = true)`                                           |
+| Pause-faults flag           | `@Invariant(alwaysRun = true, pauseFaults = true)`                       |
 | Unbounded step count        | `.stepCount(Integer.MAX_VALUE)` on the options                           |
 | Generate only               | `new Settings().phases(Phase.GENERATE)`, as the settings of `Hegel.main` |
 | Weighted boolean draw       | `tc.draw(Generators.booleans(p))`                                        |

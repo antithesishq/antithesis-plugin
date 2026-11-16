@@ -35,6 +35,7 @@ Hegel's frontend is C++ only.
 | Concurrent state machine    | `hegel::stateful::run_concurrent(machine, tc, min_concurrency, max_concurrency)` |
 | Rule, its groups and weight | a rule's `.groups = {"g"}` and `.weight = 6.0`                                   |
 | Always-run invariant        | an invariant's `.always_check = true`                                            |
+| Pause-faults flag           | an invariant's `.pause_faults = true`                                            |
 | Unbounded step count        | the setting `.stateful_step_count = INT64_MAX`                                   |
 | Generate only               | the setting `.phases = {hegel::Phase::Generate}`                                 |
 | Weighted boolean draw       | no generator: draw an integer in a range, and compare it with a threshold        |
