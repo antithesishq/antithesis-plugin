@@ -265,7 +265,9 @@ def poll_pr(
         (gh_json(["api", f"repos/{slug}/branches/{quote(view['baseRefName'], safe='')}"]) or {}).get("commit")
         or {}
     ).get("sha")
-    if tip and changed(seen, "baseoid", tip, baseline=view["baseRefOid"]):
+    # The key is new since this event began to wake the watcher: a state file
+    # from a version that only printed it must not keep it from waking.
+    if tip and changed(seen, "basetip", tip, baseline=view["baseRefOid"]):
         emit(f"PR #{pr} base {view['baseRefName']} moved to {tip[:7]}")
     # GitHub answers UNKNOWN while it recomputes, after a push to either
     # branch. Seeding with MERGEABLE makes a PR that already conflicts say so
@@ -375,8 +377,9 @@ def poll_pr(
     if since is None or since[0] != last:
         verdict_since[pr] = (last, now)
     agreed = since is not None and since[0] == last and now - since[1] >= agree_seconds
-    if verdict and agreed and f"emitted:{last}" not in seen:
-        seen.add(f"emitted:{last}")
+    # A new key for the same reason as "basetip" above.
+    if verdict and agreed and f"woke:{last}" not in seen:
+        seen.add(f"woke:{last}")
         emit(f"PR #{pr} {verdict}")
 
     return True

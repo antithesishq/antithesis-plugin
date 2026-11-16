@@ -106,7 +106,7 @@ Never pass `--paginate` to `gh api`. Behind a proxy set as gh's host, the first 
 
 - **Base moved**: the base branch has new commits. Merge `origin/<branch>` into the branch, rerun the checks that the merge touches, and push.
 
-- **All checks passed**: check that the line names your latest push. The PR can merge when its reviews allow, so tell the user. When a PR of a stack waits for this one, continue with that PR.
+- **All checks passed**: the PR can merge when its reviews allow, so tell the user. When a PR of a stack waits for this one, continue with that PR.
 
 - **No checks**: CI didn't run on the head commit. This is not a pass. Find out why, for example a conflict or a workflow that waits for approval, and tell the user.
 
