@@ -25,7 +25,7 @@ With the log-forwarding pattern (`references/patterns/log-forwarding.md`), check
 
 ## After faults stop
 
-Guarantees that hold only once faults stop fail falsely during faults. Check them in a fault-free check or an eventually ("Checks without faults" in `references/workload/driver.md`), after it waits for the nodes:
+Guarantees that hold only once faults stop fail falsely during faults. Check them in an eventually (`references/workload/driver.md`), after it waits for the nodes:
 
-- **Recovery:** assert `assert_always` that the system recovered, such as every node serving requests again. When it passes, the system recovered at least once. If it fails, skip the rest.
+- **Recovery:** assert `assert_always` that the system recovered, such as every node serving requests again. This is the eventually's recovery assertion: when it passes, the system recovered at least once. If it fails, skip the rest.
 - **Durability:** with every node serving and no rule running, read every key and assert `assert_always` that `may_return` holds: "acknowledged writes survive once faults stop".

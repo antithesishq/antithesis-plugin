@@ -24,7 +24,7 @@ Pick the assertion type for each condition from "Types" in `references/propertie
 Put the check where it can see the condition, following `references/properties/checks.md`:
 
 - **A driver rule**, for what clients see. See "Responses, against the model" in `references/properties/checks.md`. With the stateful-clients pattern (`references/patterns/stateful-clients.md`), put it in the model's `complete` instead, which also sees outcomes that arrive after the rule stopped waiting.
-- **A fault-free check or an eventually**, for what must hold once faults stop. See "After faults stop" in `references/properties/checks.md`.
+- **An eventually**, for what must hold once faults stop. See "After faults stop" in `references/properties/checks.md`.
 - **The system's code**, for what one node can see, from its own state or the messages it handles, or when nothing outside it can see the condition, if you can change that code. Tell the user, since it changes their code. Read the SDK's API from the system's language page (`references/workload/languages.md`).
 - **The log thread**, only for a condition on node state that no one node can see, such as at most one leader per term, or that needs the driver's model, or a system whose code can't take assertions, such as a third-party binary. It needs the log-forwarding pattern (`references/patterns/log-forwarding.md`). See "Node state, from forwarded logs" in `references/properties/checks.md`.
 
