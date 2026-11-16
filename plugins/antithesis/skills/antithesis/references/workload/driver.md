@@ -80,7 +80,7 @@ Add exploration assertions to the driver, following "Exploration assertions" in 
 ## Choosing how often things happen
 
 - **Groups control overlap, not frequency.** Each round hegel picks one group, and every worker runs only its rules. Use separate groups only for rules that must never overlap. Groups can't be weighted.
-- **Each stretch of a timeline runs a random subset of the rules.** hegel's swarm testing disables a random subset of each worker's rules, keeping at least one rule per group, and redraws that subset, the concurrency level and the value distribution at the start of a round with probability 1/50. A rule can go unused for many rounds, then be one of a few enabled rules and run far more often than its weight suggests. This is how swarm testing finds bugs that need an action to be absent.
+- **Each stretch of a timeline runs a random subset of the rules.** hegel's swarm testing disables a random subset of each worker's rules, keeping at least one rule per group, and occasionally redraws that subset, the concurrency level and the value distribution between rounds. A rule can go unused for many rounds, then be one of a few enabled rules and run far more often than its weight suggests. This is how swarm testing finds bugs that need an action to be absent.
 - **Weights are a hint** for the mix among a worker's enabled rules, not a guarantee.
 - **Explicit draws set exact probabilities per call.** Draw a weighted boolean when a rate matters.
 - **The driver's state sets timing.** When an action must wait for something, or must not repeat too soon, record what it needs in the driver's state, such as a counter or the time it last ran, and check that before it acts.
