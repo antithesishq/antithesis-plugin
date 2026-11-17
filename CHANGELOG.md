@@ -1,6 +1,20 @@
 <!-- Each version is a top-level `# Version` section, newest first, below these comments. -->
 <!-- markdownlint-disable-file MD025 -->
 
+# Version 0.1.2 (2026-11-16)
+
+- The skill works without an Antithesis tenant. Before it starts, the agent runs `snouty doctor`. If no tenant or credentials are configured, the agent asks the user up front, with its other questions, to configure snouty or to confirm going on without one. Without a tenant, it still builds and validates workloads through the local loop and imports properties. It reports the launch, triage and debug steps as needing a tenant. On Replit, missing secrets no longer stop the agent outright. ([#109](https://github.com/antithesishq/antithesis-plugin/pull/109))
+- New retroactive logging pattern. The system logs at a verbose level, and the launch filters those lines out with `--filter-logs-matching` or `--filter-source-matching`. The agent recovers them at a moment with `snouty runs exec --events --include-filtered-logs`. Root-causing also uses it to add temporary debug prints, even in hot loops. The debug module checks each moment's source run for a log filter, and adds `--include-filtered-logs` when it finds one. ([#102](https://github.com/antithesishq/antithesis-plugin/pull/102))
+- Agents keep debugging a run after it has ended. They no longer fall back to logs alone. They pull its moments into another ready run with `--source-run-id`, or start a `snouty debug` session. The explainer, the module table, triage and the debug module all say so. ([#107](https://github.com/antithesishq/antithesis-plugin/pull/107))
+- The debug module explains how to extract files, such as a database, from a moment. The agent compresses and splits the file in one exec, freezing writers first. Then it downloads base64-encoded parts in parallel and checks each part's checksum. ([#111](https://github.com/antithesishq/antithesis-plugin/pull/111))
+- Agents find their own runs and debugging sessions, after a compaction for example, by the `attrs.agent_session_id` that snouty records on each launch. The compute budget counts only the runs the agent launched. ([#116](https://github.com/antithesishq/antithesis-plugin/pull/116))
+- After a context compaction, the agent reads `SKILL.md` and the skill pages it was following again before it continues. ([#101](https://github.com/antithesishq/antithesis-plugin/pull/101))
+- Go: with a `-default-no-op` SDK, the agent puts every build tag, `enable_antithesis_sdk` included, in `GOFLAGS`, and passes `go build` no `-tags`. Before, the toolexec missed the tag and the build sent no coverage. ([#108](https://github.com/antithesishq/antithesis-plugin/pull/108))
+- The README adds install steps for GitHub Copilot CLI. ([#118](https://github.com/antithesishq/antithesis-plugin/pull/118))
+- The plugin ships a Cursor manifest, `.cursor-plugin/plugin.json`. ([#106](https://github.com/antithesishq/antithesis-plugin/pull/106), [#115](https://github.com/antithesishq/antithesis-plugin/pull/115))
+- The Cursor, Devin and Replit setup docs now name the registry secret `ANTITHESIS_REGISTRY` (the Antithesis container registry URL) instead of `ANTITHESIS_REPOSITORY`. Only snouty 0.11 or later reads `ANTITHESIS_REGISTRY`, so keep `ANTITHESIS_REPOSITORY` while you use snouty 0.10. ([#105](https://github.com/antithesishq/antithesis-plugin/pull/105))
+- The README recommends Claude Opus 5.5 at medium effort. It also explains that other models may issue safety refusals, and what reduces them. ([#124](https://github.com/antithesishq/antithesis-plugin/pull/124))
+
 # Version 0.1.1 (2026-11-13)
 
 - When users give no compute budget for a long unattended task, the agent now defaults to 300 compute hours instead of 60. It's also told to spend the budget on any run that moves the goal forward, not to hold runs back just to save hours ([#99](https://github.com/antithesishq/antithesis-plugin/pull/99)).
