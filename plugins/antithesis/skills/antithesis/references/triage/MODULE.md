@@ -32,7 +32,7 @@ If the run is `in_progress`, don't wait for it to finish. Follow `snouty runs st
 
 If a `completed` or `cancelled` run has no properties, it has no results to triage. Report that and stop.
 
-Also check the instrumentation properties, and include their status in your report. Read `references/triage/instrumentation.md` to find and interpret them.
+Also check the run's instrumentation, with `snouty runs modules` and the instrumentation properties, and include its status in your report. Read `references/triage/instrumentation.md` to find and interpret them.
 
 ## Investigate a failing property
 

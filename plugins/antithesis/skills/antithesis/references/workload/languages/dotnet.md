@@ -14,7 +14,7 @@
 
 `snouty docs show /docs/reference/sdk/dotnet/instrumentation/`.
 
-**Check instrumentation:** in each runtime image that runs the code, its assemblies are under `/opt/antithesis/catalog/`, at most one symlink deep. In a run, each assembly registers a module named after it.
+**Check instrumentation:** in each runtime image that runs the code, its assemblies are under `/opt/antithesis/catalog/`, at most one symlink deep. In a run, each assembly is a module named after it. Antithesis assigns its module ID, so look for it by name and container.
 
 ## Local coverage
 

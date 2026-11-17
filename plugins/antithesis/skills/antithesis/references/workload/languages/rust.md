@@ -28,7 +28,7 @@ RUN cargo build --release \
  && cp /out/driver /symbols/
 ```
 
-**Check instrumentation:** as the page's validation section says, in the build stage, for the unstripped copy in `/symbols` of each binary the runtime image gets: `nm <binary> | grep antithesis_load_libvoidstar` shows a `T` symbol, and `readelf -S <binary> | grep sancov` lists the `__sancov_guards` and `__sancov_pcs` sections. Both are needed: without the rustflags, `nm` still finds the symbol. `readelf -S <binary> | grep -c debug_info` is also above 0: a release build has no debug info unless `profile.release.debug` is on, and without it the symbol catalog has no source locations. In a run, each binary registers one module named after its executable.
+**Check instrumentation:** as the page's validation section says, in the build stage, for the unstripped copy in `/symbols` of each binary the runtime image gets: `nm <binary> | grep antithesis_load_libvoidstar` shows a `T` symbol, and `readelf -S <binary> | grep sancov` lists the `__sancov_guards` and `__sancov_pcs` sections. Both are needed: without the rustflags, `nm` still finds the symbol. `readelf -S <binary> | grep -c debug_info` is also above 0: a release build has no debug info unless `profile.release.debug` is on, and without it the symbol catalog has no source locations. In a run, each binary is one module, named after its executable. Its module ID is its GNU build ID, from `readelf -n <binary>`.
 
 ## Local coverage
 

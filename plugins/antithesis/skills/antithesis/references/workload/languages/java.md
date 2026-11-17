@@ -16,7 +16,7 @@
 
 Antithesis's instrumented bytecode calls the SDK's `com.antithesis:ffi` package, so every instrumented program needs it on its classpath at run time, as a dependency of `com.antithesis:sdk` or on its own. Without it the program exits at startup with `NoClassDefFoundError: com/antithesis/ffi/internal/FfiHandler`.
 
-**Check instrumentation:** in each runtime image that runs the code, its jars are under `/opt/antithesis/catalog/`, at most one symlink deep, and the program starts with `com.antithesis:ffi` on its classpath. In a run, each jar registers a module named after the jar file, without `.jar`.
+**Check instrumentation:** in each runtime image that runs the code, its jars are under `/opt/antithesis/catalog/`, at most one symlink deep, and the program starts with `com.antithesis:ffi` on its classpath. In a run, each jar is a module named after the jar file, without `.jar`. Antithesis assigns its module ID, so look for it by name and container.
 
 ## Local coverage
 
