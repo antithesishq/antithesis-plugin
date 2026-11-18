@@ -26,7 +26,7 @@ Hegel has one engine, shared by a frontend for each language, so the driver in `
 2. The language of the system's client library, so the driver calls the real client in-process.
 3. Rust.
 
-If the user asks for a language hegel can't write the driver in, tell them why, and use the next that applies. If Antithesis can't instrument the language you pick, as for OCaml, tell the user that Antithesis won't see which branches the driver takes, so they can't guide its search.
+If the user asks for a language hegel can't write the driver in, tell them why, and use the next that applies. If Antithesis can't instrument the language you pick, tell the user that Antithesis won't see which branches the driver takes, so they can't guide its search.
 
 ## Instrument the software
 
@@ -40,7 +40,7 @@ Build every binary in the workload with Antithesis coverage instrumentation, the
 - If a component can't be instrumented, instrument the rest.
 - Instrument the driver too, the same way as any other code in its language. Its branches are where the workload decides what to do next, so they're part of the state space Antithesis searches.
 
-Check it, for every component you instrumented, the SUT's first. A build can write symbol files and run assertions, and still report no coverage:
+Check it, for every component you instrumented. A build can write symbol files and run assertions, and still report no coverage:
 
 - **Locally:** the instrumentation check under "Instrumentation" in `references/workload/languages/<language>.md` passes for each binary or code directory that a runtime image gets. The runtime image also has the expected `/symbols` or catalog contents.
-- **In the first run:** list the components you instrumented, each with the module ID or name that "Instrumentation" in `references/workload/languages/<language>.md` gives, and whether its process starts with its container. Follow `references/triage/instrumentation.md` with that list, which compares it with `snouty runs modules`, and confirm every component that starts with its container before a longer run. Passing properties aren't enough: `Software was instrumented` passes when any one module loads, such as the driver's. Fix the build of any component it reports as uninstrumented, and check it locally again.
+- **In the first run:** follow `references/triage/instrumentation.md` to check that every component is instrumented in Antithesis, before a longer run. Fix the build of any component it reports as uninstrumented, and check it locally again.

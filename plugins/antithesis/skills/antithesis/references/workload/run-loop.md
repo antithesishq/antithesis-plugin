@@ -14,7 +14,7 @@ If a run fails because the driver didn't report setup complete within `--setup-t
 
 Check them as they arrive, not once the run ends. A result that is final on an `in_progress` run (`references/triage/properties.md`) is final for the run.
 
-- **Instrumentation.** The run confirms every component you instrumented, not only that the instrumentation properties pass ("Instrument the software" in `references/workload/languages.md`).
+- **Instrumentation.** Every component you instrumented is instrumented in the run: follow `references/triage/instrumentation.md`.
 - **The workload starts.** `the workload starts` passes. If it fails, the first command didn't run, or the driver didn't see `/workload-active`. `snouty runs events <run_id> first_start_workload` shows whether the first command ran.
 - **Behavior that needs faults.** The exploration assertions on situations and code that need faults, in the driver and in the SUT ("Exploration assertions" in `references/properties/assertions.md`), are reached, and eventuallys fire and find the system recovered.
 - **Patterns.** Each pattern you adopted passes its own run checks.
