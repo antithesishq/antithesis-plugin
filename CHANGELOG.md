@@ -1,6 +1,29 @@
 <!-- Each version is a top-level `# Version` section, newest first, below these comments. -->
 <!-- markdownlint-disable-file MD025 -->
 
+# Version 0.2.0 (2026-11-17)
+
+- **Breaking**: **snouty 0.11.0 or later**: the skill now needs snouty 0.11.0. Its `snouty login` reads the container registry from the tenant, and triage uses `snouty runs modules`. Run `snouty update`, or reinstall snouty if you didn't install it with the installer script. Setting up the plugin no longer means configuring a registry: the Cursor, Devin and Replit setup docs drop the `ANTITHESIS_REPOSITORY` and `ANTITHESIS_GAR_KEY` secrets, and `ANTITHESIS_API_KEY` and `ANTITHESIS_TENANT` are enough. You can remove the old secrets. In a headless environment, the agent runs `snouty login --tenant "$ANTITHESIS_TENANT"` to save the registry. ([#132](https://github.com/antithesishq/antithesis-plugin/pull/132), [#133](https://github.com/antithesishq/antithesis-plugin/pull/133))
+- **Instrumentation checks**: the agent now checks that every component it instrumented really is, not only that `Software was instrumented` passes. That property passes as soon as any one module loads, such as the driver's. Triage lists a run's modules with `snouty runs modules` and compares them against the expected components. A running component with no module is reported as uninstrumented. One that starts only when something triggers it is judged after the run. Every language page gains a local instrumentation check, and says how its code shows up as a module in a run. Language fixes:
+  - Python is collected through the SDK, which must be installed and imported or run with `python -m antithesis`.
+  - Java programs need `com.antithesis:ffi` on their classpath.
+  - Rust builds turn on release debug info, so the symbol catalog has source locations.
+  - Go builds with a `-default-no-op` SDK pass every build tag through `GOFLAGS`, not `-tags`, so the toolexec sees `enable_antithesis_sdk` and the binary reports coverage.
+
+  The workload's first run now checks instrumentation this way before any longer run. ([#94](https://github.com/antithesishq/antithesis-plugin/pull/94), [#108](https://github.com/antithesishq/antithesis-plugin/pull/108))
+- **Java hegel drivers**: the agent can now write the workload's driver in Java with `dev.hegel:hegel` (Java 22 or later), or with `dev.hegel:hegel-jna` (Java 17 to 21). A new page maps the driver's parts to Java, and covers the image and cataloging. The driver page now explains that hegel's swarm testing occasionally redraws the enabled rules, the concurrency level and the value distribution between rounds, so a rule can be unused for a while and then run often. The Rust driver no longer needs the `static-engine` feature of `hegeltest`. ([#128](https://github.com/antithesishq/antithesis-plugin/pull/128))
+- **Retroactive logging pattern**: a new workload pattern. The system logs at a verbose level, and the launch filters those lines out with `--filter-logs-matching` or `--filter-source-matching`. The agent gets them back at a moment with `snouty runs exec --events --include-filtered-logs`. The pattern also lets the agent root-cause a hard failure with temporary debug prints in a targeted run. When debugging a moment from a run that filtered logs, the agent asks for the filtered lines. ([#102](https://github.com/antithesishq/antithesis-plugin/pull/102))
+- **Debugging ended runs and extracting files**: the agent knows that an ended run's moments can still be debugged. It pulls them into another ready run with `--source-run-id`, or starts a debugging session, and no longer falls back to logs alone. Triage runs commands at the failing moment even when the run has ended. The debug module adds a recipe for copying a file, such as a database, out of a moment: compress and split it in one exec, download the parts in parallel as base64, and check every part. ([#107](https://github.com/antithesishq/antithesis-plugin/pull/107), [#111](https://github.com/antithesishq/antithesis-plugin/pull/111))
+- **Working without a tenant**: the agent runs `snouty doctor` at the start. If it finds no tenant or credentials, the agent asks up front whether to go on without one. Without a tenant, the agent can still build and validate a workload locally and import properties. It reports the launch, triage and debug steps as needing a tenant. On Replit, missing secrets follow the same path instead of stopping. ([#109](https://github.com/antithesishq/antithesis-plugin/pull/109))
+- **Finding your own runs**: the agent reads the `attrs.agent_session_id` that snouty records on runs and debugging sessions. It uses that to find its session's runs, such as after compaction, and counts only the runs it launched against the compute budget. ([#116](https://github.com/antithesishq/antithesis-plugin/pull/116))
+- **Context compaction**: when the agent's context is compacted, it keeps the list of skill pages it has read, then reads them again before it continues. ([#101](https://github.com/antithesishq/antithesis-plugin/pull/101))
+- **Installing**:
+  - The README adds install steps for GitHub Copilot CLI.
+  - The README adds a "Recommended model" section. It recommends Claude Opus 5.5 at medium effort and notes that some other models issue many safety refusals.
+  - The plugin ships a Cursor plugin manifest.
+
+  ([#118](https://github.com/antithesishq/antithesis-plugin/pull/118), [#124](https://github.com/antithesishq/antithesis-plugin/pull/124), [#106](https://github.com/antithesishq/antithesis-plugin/pull/106), [#115](https://github.com/antithesishq/antithesis-plugin/pull/115))
+
 # Version 0.1.1 (2026-11-13)
 
 - When users give no compute budget for a long unattended task, the agent now defaults to 300 compute hours instead of 60. It's also told to spend the budget on any run that moves the goal forward, not to hold runs back just to save hours ([#99](https://github.com/antithesishq/antithesis-plugin/pull/99)).
