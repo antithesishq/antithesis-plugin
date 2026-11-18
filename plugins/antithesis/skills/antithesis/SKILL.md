@@ -20,7 +20,7 @@ Plugin version: `0.1.1`
 
 Every module needs:
 
-- **snouty 0.10.0 or later.** If it's missing, follow `references/antithesis/snouty-setup.md`. If it's older, run `snouty update`, or reinstall it if it wasn't installed with the installer script
+- **snouty 0.11.0 or later.** If it's missing, follow `references/antithesis/snouty-setup.md`. If it's older, run `snouty update`, or reinstall it if it wasn't installed with the installer script
 - **Docker or Podman, with Docker Compose**
 - **jq**
 

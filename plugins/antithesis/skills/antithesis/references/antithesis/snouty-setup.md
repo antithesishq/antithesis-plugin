@@ -21,7 +21,7 @@ Source: <https://github.com/antithesishq/snouty>.
 
 ## Configure snouty
 
-Configure the tenant, registry and credentials with `snouty login`; it is interactive. In a headless environment, use environment variables or a settings file instead (see `snouty launch --help` and `snouty settings --help`).
+Run `snouty login`. It signs in and saves the tenant and the tenant's container registry. In a headless environment, set `ANTITHESIS_TENANT` and `ANTITHESIS_API_KEY`, then run `snouty login --tenant "$ANTITHESIS_TENANT"` to save the registry.
 
 ## Verify snouty
 
