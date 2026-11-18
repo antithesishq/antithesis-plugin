@@ -10,14 +10,14 @@ Read the driver, the workload's README and the last run. Write for a reader who 
 
 Open with: `Antithesis tests <system> by running this workload against it. Antithesis only tests what this workload does: any action or workflow it doesn't perform goes untested.` Then write these sections:
 
-- **The system under test.** A symetrically laid out diagram of how the nodes are releated with arrows. Don't label the arrows. Show how the driver or equivalent fits in to the SUT.
-- **The workload.** A diagram of what the driver sends the system and what comes back, and table or explaintion of the state tests starts from.
+- **The system under test.** A symmetrically laid out diagram of how the nodes are related with arrows. Don't label the arrows. Show how the driver or equivalent fits into the SUT.
+- **The workload.** A diagram of what the driver sends the system and what comes back, and a table or explanation of the state tests start from.
 - **Actions.** A table of each action, grouped by kind, with what it does and its chance of being picked.
 - **One test over time.** A timeline of one test shown horizontally, with actions, faults and the check after faults stop, and a short note on each key moment.
 - **Coverage.** How many tests in the last run reached each situation, named as a state of the system, such as "a transfer from an empty account". Then the situations not reached yet, and why a longer run should reach them.
 - **Scope.** What the workload doesn't test, from the "Map what the workload must reach" step in `references/workload/MODULE.md`.
 
-Keep each section simple: a diagram or table, and a sentence or two around it. Where showing everything would crowd it, show a few examples and say how many there are, such as 3 of up to 24 runs on a timeline. Start simple, and add detail only when the user asks. Leave out the driver's code. Don't invent anything. Say what each number means.
+Keep each section simple: a diagram or table, and a sentence or two around it. Where showing everything would crowd it, show a few examples and say how many there are, such as 3 of up to 24 runs on a timeline. Add detail only if the user asks. Leave out the driver's code. Don't invent anything. Say what each number means.
 
 ## Get an independent check
 
@@ -36,12 +36,11 @@ Ask the user:
 1. Is there anything about the workload you don't understand?
 2. Are there actions, or guarantees of the system, you want tested that aren't?
 
-This step needs the user's answers: wait for the user's response, despite the rule in `SKILL.md` against ending on a question.
+Wait for the user's answers before going on to other work.
 
 Then, each round:
 
-- **If the user asks for no changes,** make none, and launch no run.
-- **Change the workload** for every missing action the user asks for, all in one round, following `references/workload/MODULE.md`. It repeats the local loop and the run loop until the workload is green again. Tell the user first that the next explainer waits on that run.
+- **Change the workload** for every missing action the user asks for, all in one round, following `references/workload/MODULE.md`. Tell the user to wait for the run loop for the next explainer.
 - **Collect guarantees** for `references/properties/MODULE.md`. Don't add assertions for finding bugs here.
 - **Update the explainer,** show it again, and repeat the questions.
 
