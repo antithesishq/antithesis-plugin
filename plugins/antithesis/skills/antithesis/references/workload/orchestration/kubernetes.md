@@ -20,7 +20,7 @@ Tell the user what you dropped or changed.
 
 **Restarts.** Antithesis can't restart a killed pod: Kubernetes does, with its usual restart policy, so a pod comes back after a crash backoff that grows to 5 minutes. Give the driver's eventually a deadline that allows for it.
 
-**Images.** Name every image fully qualified, with its registry and a tag other than `latest`, or a digest: `docker.io/library/postgres:17`. Never set `imagePullPolicy: Always`: the cluster has no internet. Name each image you build as `<registry>/<name>:<tag>`, with the `registry` from `snouty settings show`. `snouty launch` doesn't push them for Kubernetes ("Launch"). An operator's images that no manifest names need `--param antithesis.images=...` (`snouty launch --help`).
+**Images.** Name every image fully qualified, with its registry and a tag other than `latest`, or a digest: `docker.io/library/postgres:17`. Never set `imagePullPolicy: Always`: the cluster has no internet. Name each image you build as `<registry>/<name>:<tag>`, with the `registry` from `snouty settings show`, and give each build a new tag, such as the commit, which the build script writes into the manifests. `snouty launch` doesn't push them for Kubernetes ("Launch"). An operator's images that no manifest names need `--param antithesis.images=...` (`snouty launch --help`).
 
 ## The driver
 
@@ -53,7 +53,7 @@ Share a volume between pods with one `PersistentVolumeClaim` on `local-path`, `R
 
 ## Build and validate
 
-Build each image with `docker build` under its full name, then run `snouty validate <config_dir>`. For Kubernetes it only checks the manifests, without running them: fix every finding it denies. Then deploy locally ("Run locally") until setup complete arrives, which is the check `snouty validate` gives a Compose workload.
+Build each image with `docker build` under its full name, then run `snouty validate <config_dir>`. For Kubernetes it only checks the manifests, without running them: fix every finding it denies. It warns that the driver is a bare Pod without a readiness probe: that's by design ("The driver"). Then deploy locally ("Run locally") until setup complete arrives, which is the check `snouty validate` gives a Compose workload.
 
 ## Run locally
 
@@ -67,10 +67,10 @@ kubectl config set-context --current --namespace <namespace>
 k3d image import -c <workload> <each image you built>
 ```
 
-Write the coverage build as a Kustomize overlay outside `config/`, such as `coverage/kustomization.yaml`, that swaps in each system service's coverage image, mounts a `coverage` claim at `/coverage` in every pod, and sets the local-loop variables on the driver ("Run the workload" in `references/workload/local-loop.md`). Write the driver's SDK output to the claim, `ANTITHESIS_SDK_LOCAL_OUTPUT=/coverage/driver/sdk.jsonl`, so it survives the driver's exit. Then:
+Write the coverage build as a Kustomize overlay outside `config/`, such as `coverage/kustomization.yaml`, that lists each file in `config/manifests/` as a resource, swaps in each system service's coverage image, mounts a `coverage` claim at `/coverage` in every pod, with one directory per pod, such as `/coverage/$(POD_NAME)` from the downward API, created before the process starts, and sets the local-loop variables on the driver ("Run the workload" in `references/workload/local-loop.md`). Write the driver's SDK output to the claim, `ANTITHESIS_SDK_LOCAL_OUTPUT=/coverage/driver/sdk.jsonl`, so it survives the driver's exit. Then:
 
 ```bash
-kapp delete -a <workload> --yes; kubectl kustomize coverage | kapp deploy -a <workload> -f - --yes &&
+kapp delete -a <workload> --yes; kubectl kustomize --load-restrictor LoadRestrictionsNone coverage | kapp deploy -a <workload> -f - --yes &&
 kubectl exec driver -- /opt/antithesis/test/v1/main/first_start_workload &&
 timeout 600 sh -c 'until kubectl exec <a SUT pod> -- grep -qs antithesis_setup /coverage/driver/sdk.jsonl; do sleep 5; done' &&
 sleep 300
