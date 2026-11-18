@@ -4,6 +4,7 @@
     fixture.py build           build every image
     fixture.py check-local     run each language's local instrumentation check on the images
     fixture.py check-run RUN   compare `snouty runs modules RUN` with what each component should load
+    fixture.py export DIR      copy the build files without the answers, for a blind triage session
 
 Each command prints one row per component, with what was expected and what was found, and
 exits 1 if any row differs. Run it where Docker can build linux/amd64 images, and, for
@@ -13,6 +14,7 @@ check-run, where snouty is logged in. See README.md for launching the fixture.
 import argparse
 import json
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -20,120 +22,145 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-TAG = "instr-fixture"
+# Neutral names throughout (images, containers, modules), so an agent triaging a run of the
+# fixture can't tell the broken builds from their names.
+TAG = "shop"
 
 
 @dataclass
 class Component:
     container: str
-    image: str  # image name suffix: instr-fixture-<image>
     context: str  # build context directory
     program: str  # path of the program or launcher in the image
     check: str  # which local check applies: go, native, java, dotnet, node, python
     healthy: bool  # whether the local check should pass
     modules: list[str]  # module names the run should list in this container
+    what: str  # what this component is, for the reports
     args: dict[str, str] = field(default_factory=dict)
-    note: str = ""
 
 
 COMPONENTS = [
     Component(
         "driver",
-        "go-driver",
         "go",
         "/usr/local/bin/driver",
         "go",
         True,
-        ["instrfixture/cmd/driver", "instrfixture/internal/work"],
+        ["shop/cmd/driver", "shop/internal/work"],
+        "Go, toolexec",
         {"TEST_TEMPLATE": "1"},
     ),
     Component(
-        "goworker",
-        "go-worker",
+        "orders",
         "go",
-        "/usr/local/bin/worker",
+        "/usr/local/bin/orders",
         "go",
         True,
-        ["instrfixture/cmd/worker", "instrfixture/internal/work"],
+        ["shop/cmd/orders", "shop/internal/work"],
+        "Go, toolexec, shares shop/internal/work with the driver",
     ),
     Component(
-        "gonoop",
-        "go-noop",
-        "gonoop",
-        "/usr/local/bin/gonoop",
+        "ledger",
+        "ledger",
+        "/usr/local/bin/ledger",
         "go",
         False,
         [],
-        note="-default-no-op SDK, -tags on the command line",
+        "Go, -default-no-op SDK with -tags on the command line",
     ),
-    Component("rustok", "rust-ok", "rust", "/usr/local/bin/rustfixture", "native", True, ["rustfixture"]),
     Component(
-        "rustnoflags",
-        "rust-noflags",
+        "pricing",
         "rust",
-        "/usr/local/bin/rustfixture",
+        "/usr/local/bin/rust-service",
+        "native",
+        True,
+        ["rust-service"],
+        "Rust, rustflags and release debug info",
+    ),
+    Component(
+        "search",
+        "rust",
+        "/usr/local/bin/rust-service",
         "native",
         False,
         [],
+        "Rust, no coverage rustflags",
         {"FLAGS": "0"},
-        "no coverage rustflags",
     ),
     Component(
-        "rustnodebug",
-        "rust-nodebug",
+        "shipping",
         "rust",
-        "/usr/local/bin/rustfixture",
+        "/usr/local/bin/rust-service",
         "native",
         False,
-        ["rustfixture"],
+        ["rust-service"],
+        "Rust, no release debug info",
         {"DEBUG": "0"},
-        "no debug info: its symbol catalog has no source locations",
     ),
-    Component("cppok", "cpp-ok", "cpp", "/usr/local/bin/cppfixture", "native", True, ["cppfixture"]),
     Component(
-        "cppnoflags",
-        "cpp-noflags",
+        "cache",
         "cpp",
-        "/usr/local/bin/cppfixture",
+        "/usr/local/bin/cpp-service",
+        "native",
+        True,
+        ["cpp-service"],
+        "C++, header and coverage flags",
+    ),
+    Component(
+        "index",
+        "cpp",
+        "/usr/local/bin/cpp-service",
         "native",
         False,
         [],
+        "C++, header without the coverage flags",
         {"FLAGS": "0"},
-        "header without the coverage flags",
     ),
-    Component("java", "java", "java", "/usr/local/bin/javafixture", "java", True, ["javafixture"]),
     Component(
-        "javanoffi",
-        "java-noffi",
+        "billing",
         "java",
-        "/usr/local/bin/javafixture",
+        "/usr/local/bin/java-service",
+        "java",
+        True,
+        ["java-service"],
+        "Java, com.antithesis:ffi on the classpath",
+    ),
+    Component(
+        "audit",
+        "java",
+        "/usr/local/bin/java-service",
         "java",
         False,
         [],
+        "Java, no com.antithesis:ffi: crashes at startup",
         {"FFI": "0"},
-        "no com.antithesis:ffi: crashes at startup",
     ),
-    Component("dotnet", "dotnet", "dotnet", "/usr/share/dotnet/dotnet", "dotnet", True, ["dotnetfixture"]),
-    Component("node", "node", "node", "/usr/local/bin/node", "node", True, ["nodefixture"]),
+    Component("accounts", "dotnet", "/usr/share/dotnet/dotnet", "dotnet", True, ["DotnetService"], ".NET"),
+    Component("web", "node", "/usr/local/bin/node", "node", True, ["node-service"], "JavaScript"),
     Component(
-        "python", "python", "python", "/usr/local/bin/pythonfixture", "python", True, ["pythonfixture"]
-    ),
-    Component(
-        "pythonnosdk",
-        "python-nosdk",
+        "reports",
         "python",
-        "/usr/local/bin/pythonfixture",
+        "/usr/local/bin/python-service",
+        "python",
+        True,
+        ["python-service"],
+        "Python, antithesis package, python -m antithesis",
+    ),
+    Component(
+        "alerts",
+        "python",
+        "/usr/local/bin/python-service",
         "python",
         False,
         [],
+        "Python, no SDK: no coverage",
         {"SDK": "0"},
-        "no antithesis package: no coverage",
     ),
 ]
 
 
 def image(c: Component) -> str:
-    return f"{TAG}-{c.image}:latest"
+    return f"{TAG}-{c.container}:latest"
 
 
 def sh(*cmd: str, check: bool = True) -> str:
@@ -178,9 +205,9 @@ def build(_: argparse.Namespace) -> int:
 # property, (binary, reason) pairs, and for build errors, the error codes.
 EXPECTED_PROPERTIES = {
     "every instrumented module has symbols": {
-        ("cppfixture", "not coverage-instrumented"),
-        ("rustfixture", "not coverage-instrumented"),
-        ("rustfixture", "no source locations"),
+        ("cpp-service", "not coverage-instrumented"),
+        ("rust-service", "not coverage-instrumented"),
+        ("rust-service", "no source locations"),
     },
     "No Antithesis build errors": {("code", "4010")},
 }
@@ -307,7 +334,7 @@ def check_run(a: argparse.Namespace) -> int:
         bad += not match
         print(
             f"{'ok ' if match else 'BAD'}  {c.container:12} expected {c.modules or 'no module'}  got {found or 'no module'}"
-            + (f"  ({c.note})" if c.note else "")
+            + f"  ({c.what})"
         )
     print()
     for name, want in EXPECTED_PROPERTIES.items():
@@ -321,6 +348,22 @@ def check_run(a: argparse.Namespace) -> int:
     return 1 if bad else 0
 
 
+def export(a: argparse.Namespace) -> int:
+    """Copy what a user's checkout would hold: the sources, Dockerfiles without their
+    comments, and the compose file. Leave out this script and the README, which name the
+    broken builds."""
+    dest = Path(a.dir)
+    if dest.exists():
+        sys.exit(f"{dest} exists")
+    for c in sorted({c.context for c in COMPONENTS}) + ["config"]:
+        shutil.copytree(HERE / c, dest / c, ignore=shutil.ignore_patterns("__pycache__"))
+    for dockerfile in dest.rglob("Dockerfile"):
+        lines = dockerfile.read_text().splitlines(keepends=True)
+        dockerfile.write_text("".join(line for line in lines if not line.lstrip().startswith("#")))
+    print(f"exported to {dest}")
+    return 0
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(required=True)
@@ -329,6 +372,9 @@ def main() -> None:
     run = sub.add_parser("check-run", help="compare a run's modules with the expected ones")
     run.add_argument("run_id")
     run.set_defaults(func=check_run)
+    exp = sub.add_parser("export", help="copy the build files, without the answers, for a blind triage")
+    exp.add_argument("dir")
+    exp.set_defaults(func=export)
     a = p.parse_args()
     sys.exit(a.func(a))
 

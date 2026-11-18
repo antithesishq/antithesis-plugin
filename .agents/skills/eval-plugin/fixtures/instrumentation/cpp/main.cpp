@@ -17,7 +17,7 @@ static void spin(long x) {
 }
 
 int main() {
-  REACHABLE("cpp worker started", {});
+  REACHABLE("cpp service started", {});
   std::vector<std::thread> threads;
   for (long i = 1; i < 4; i++) threads.emplace_back(spin, i);
   for (auto& t : threads) t.join();

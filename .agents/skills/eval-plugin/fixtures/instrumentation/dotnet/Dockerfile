@@ -7,4 +7,4 @@ RUN dotnet publish -c Release -o /app
 FROM mcr.microsoft.com/dotnet/runtime:8.0
 COPY --from=build /app /app
 RUN mkdir -p /opt/antithesis && ln -s /app /opt/antithesis/catalog
-CMD ["dotnet", "/app/dotnetfixture.dll"]
+CMD ["dotnet", "/app/DotnetService.dll"]

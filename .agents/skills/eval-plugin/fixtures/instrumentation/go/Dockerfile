@@ -1,12 +1,12 @@
-# Go, instrumented correctly: the driver and a worker, sharing one package.
+# Go, instrumented correctly: the driver and the orders service, sharing one package.
 FROM golang:1-trixie AS build
 WORKDIR /src
 RUN go install github.com/antithesishq/antithesis-sdk-go/tools/antithesis-go-toolexec@latest
 COPY . .
-RUN go mod init instrfixture && go get github.com/antithesishq/antithesis-sdk-go@latest && go mod tidy
+RUN go mod init shop && go get github.com/antithesishq/antithesis-sdk-go@latest && go mod tidy
 RUN mkdir -p /symbols /out \
  && CGO_ENABLED=1 go build -toolexec=antithesis-go-toolexec -o /out/driver ./cmd/driver \
- && CGO_ENABLED=1 go build -toolexec=antithesis-go-toolexec -o /out/worker ./cmd/worker
+ && CGO_ENABLED=1 go build -toolexec=antithesis-go-toolexec -o /out/orders ./cmd/orders
 
 FROM debian:trixie-slim
 COPY --from=build /out/ /usr/local/bin/

@@ -1,4 +1,4 @@
-public class JavaFixture {
+public class JavaService {
   static void spin(long x) {
     while (true) {
       if (x % 3 == 0) x += 7; else if (x % 3 == 1) x *= 3; else x -= 1;

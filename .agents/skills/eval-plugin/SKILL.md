@@ -64,6 +64,15 @@ The agents must not know that they're being evaluated, and must attempt each tas
 
 The second round of triage tests whether properties and patterns lead to more and better findings than the first workload did. Compare the two rounds in the report.
 
+**Instrumentation triage,** once per eval, before the first target's track: the fixture in `fixtures/instrumentation/` is a deployment of small services, some built correctly and some with an instrumentation problem, under neutral names. Its README says which are which.
+
+1. On the sandbox, run `fixture.py build` and `fixture.py check-local`, then launch it with the README's command. Add the run to the run log with `"session": "evaluator"` and the task `instrumentation`.
+2. Once the run completes, run `fixture.py check-run <run_id>`. If a row is `BAD`, the platform, an SDK or snouty has changed: note it, and score the sessions against what the run shows, not the README.
+3. Run `fixture.py export ~/src/shop` on the sandbox, and start the triage session with source in `~/src/shop`, with the instrumentation-triage template in `references/prompts.md`.
+4. Start the same prompt without source, in an empty directory.
+
+Score each session against the README's table: which broken components it reported, and with what evidence, which it missed, and whether it called a healthy one broken.
+
 With several targets, run each target's tasks as one track, one track after another, in its own clones, and split the budget between tracks. Separate sandboxes, one per target, can run tracks at the same time.
 
 **Keep a run log.** The tenant is almost always shared, so other people's runs show up in `snouty runs list`, sometimes on the same project. Never decide which runs belong to the eval by their name. `scripts/evalctl.py ... runlog` finds every `snouty launch` and `snouty debug` in the sessions' transcripts, subagents included, and records each run's ID, session, launch time, purpose and cap in `DATA/runs/runs.json`. Fill in each run's `task` there for the cost report. Run `scripts/evalctl.py ... watch` in the background and feed it to a Monitor: it keeps the run log current, and prints a line for each new or changed run in it, and for each session that finishes. When a session's answer mentions a run that isn't in the run log, note it: the agent has looked at someone else's run.
@@ -104,7 +113,3 @@ Build a single HTML page, and publish it where the user asked, at a new path tha
 Then update each target's profile: add new confirmed bugs to its expected findings, with how they were confirmed, and fill in its setup and cost notes.
 
 Tell the user the link, the total compute and token spend, and the top proposed changes.
-
-## Checking the instrumentation claims
-
-The language pages' instrumentation checks, and the run check in the triage module, can go stale when an SDK, an instrumentor or snouty changes. `fixtures/instrumentation/README.md` describes a deployment with a correct and a broken build in every instrumented language, and a script that checks both against what the pages say. Run it when you change one of those pages, or when an eval finds a component that a check misjudged.

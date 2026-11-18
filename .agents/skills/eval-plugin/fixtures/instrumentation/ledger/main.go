@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	assert.Reachable("go noop worker started", nil)
+	assert.Reachable("ledger started", nil)
 	x := 1
 	for {
 		if x%2 == 0 {

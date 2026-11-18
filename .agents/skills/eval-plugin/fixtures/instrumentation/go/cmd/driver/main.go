@@ -2,7 +2,7 @@
 package main
 
 import (
-	"instrfixture/internal/work"
+	"shop/internal/work"
 
 	"github.com/antithesishq/antithesis-sdk-go/assert"
 	"github.com/antithesishq/antithesis-sdk-go/lifecycle"

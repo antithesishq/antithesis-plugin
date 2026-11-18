@@ -5,8 +5,8 @@ FROM golang:1-trixie AS build
 WORKDIR /src
 RUN go install github.com/antithesishq/antithesis-sdk-go/tools/antithesis-go-toolexec@latest
 COPY . .
-RUN go mod init noopfixture && go get github.com/antithesishq/antithesis-sdk-go@v0.9.0-default-no-op && go mod tidy
-RUN mkdir -p /symbols /out && CGO_ENABLED=1 go build -tags enable_antithesis_sdk -toolexec=antithesis-go-toolexec -o /out/gonoop .
+RUN go mod init ledger && go get github.com/antithesishq/antithesis-sdk-go@v0.9.0-default-no-op && go mod tidy
+RUN mkdir -p /symbols /out && CGO_ENABLED=1 go build -tags enable_antithesis_sdk -toolexec=antithesis-go-toolexec -o /out/ledger .
 
 FROM debian:trixie-slim
 COPY --from=build /out/ /usr/local/bin/

@@ -15,7 +15,7 @@ fn spin(id: u64) {
 
 fn main() {
     antithesis_sdk::antithesis_init();
-    antithesis_sdk::assert_reachable!("rust worker started", &serde_json::json!({}));
+    antithesis_sdk::assert_reachable!("rust service started", &serde_json::json!({}));
     let threads: Vec<_> = (1..4).map(|i| thread::spawn(move || spin(i))).collect();
     for t in threads {
         t.join().unwrap();
