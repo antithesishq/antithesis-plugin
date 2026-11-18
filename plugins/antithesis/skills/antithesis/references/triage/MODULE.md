@@ -32,7 +32,7 @@ If the run is `in_progress`, don't wait for it to finish. Follow `snouty runs st
 
 If a `completed` or `cancelled` run has no properties, it has no results to triage. Report that and stop.
 
-Also check the instrumentation properties, and include their status in your report. Read `references/triage/instrumentation.md` to find and interpret them.
+Also check the run's instrumentation, with `snouty runs modules` and the instrumentation properties, and include its status in your report. Read `references/triage/instrumentation.md` to find and interpret them.
 
 ## Investigate a failing property
 
@@ -65,4 +65,4 @@ Check each report against these:
 - Every property status you report came from the properties data or the stream, not inference.
 - Conclusions about failures with moments rest on evidence from the run, with specific log lines, command output, timestamps and property names.
 - The report separates what the run shows from what you interpret.
-- A claim that a binary isn't instrumented follows `references/triage/instrumentation.md` and doesn't rest only on the deduplicated examples of `Software was instrumented`.
+- A claim that a component is or isn't instrumented follows `references/triage/instrumentation.md`, checking that component's own module, not only that `Software was instrumented` passes.
