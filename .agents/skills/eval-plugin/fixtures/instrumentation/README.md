@@ -26,7 +26,7 @@ The programs only loop doing a little branching work. The Go `driver` reports se
 `fixture.py` needs Docker that can build `linux/amd64` images, and for `check-run`, a snouty that is logged in and has `snouty runs modules`. Run it from this directory:
 
 ```sh
-./fixture.py build          # build every image, with the latest SDKs
+./fixture.py build          # build every image from scratch, with the latest SDKs
 ./fixture.py check-local    # each language's local check, against the table above
 snouty validate config
 snouty launch --launcher basic_test --config config --test-name instr-fixture \
@@ -34,6 +34,6 @@ snouty launch --launcher basic_test --config config --test-name instr-fixture \
 ./fixture.py check-run <run_id>
 ```
 
-Each check prints one row per container, and exits 1 if any row differs from the table. Modules appear a few minutes after the run is ready, so run `check-run` again if early rows are missing. The setup properties, such as `Every instrumented module has symbols`, are reported only near the end of the run, which takes about 22 minutes and bills about 13 compute hours at a 12-hour cap. `check-run` prints that property's counterexamples once they're there. If you only need the modules, cancel the run once `check-run` passes: cancelled after a few minutes, it bills about 2.5 compute hours.
+Each check prints one row per container, and exits 1 if any row differs from the table. `check-run` also compares the setup properties' counterexamples with the table, as one row per property. Modules appear a few minutes after the run is ready, so run `check-run` again if early rows are missing. The setup properties, such as `Every instrumented module has symbols`, are reported only near the end of the run, which takes about 22 minutes and bills about 13 compute hours at a 12-hour cap. Until they're reported, `check-run` marks their rows `wait`, and doesn't count them. If you only need the modules, cancel the run once `check-run` passes: cancelled after a few minutes, it bills about 2.5 compute hours.
 
 To add a language or a failure mode, add a directory with a Dockerfile, a row to `COMPONENTS` in `fixture.py`, a service to `config/docker-compose.yaml`, and a row to the table above.

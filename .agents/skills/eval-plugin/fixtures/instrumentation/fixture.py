@@ -163,12 +163,49 @@ def build(_: argparse.Namespace) -> int:
             "--platform",
             "linux/amd64",
             "-q",
+            # Every image installs the latest SDKs and tools, so never reuse a cached layer.
+            "--pull",
+            "--no-cache",
             "-t",
             image(c),
             *flags,
             str(HERE / c.context),
         )
     return 0
+
+
+# The setup properties' counterexamples a run of the fixture should report: for the symbols
+# property, (binary, reason) pairs, and for build errors, the error codes.
+EXPECTED_PROPERTIES = {
+    "every instrumented module has symbols": {
+        ("cppfixture", "not coverage-instrumented"),
+        ("rustfixture", "not coverage-instrumented"),
+        ("rustfixture", "no source locations"),
+    },
+    "No Antithesis build errors": {("code", "4010")},
+}
+
+
+def property_findings(run_id: str, name: str) -> set[tuple[str, str]] | None:
+    """A setup property's counterexamples, in the shape of EXPECTED_PROPERTIES, or None
+    if the run hasn't reported the property yet."""
+    out = sh("snouty", "runs", "properties", run_id, "--name", name, "--json", check=False).strip()
+    if not out:
+        return None
+    prop = json.loads(out.splitlines()[0])
+    found: set[tuple[str, str]] = set()
+    stack = list(prop.get("counterexamples") or [])
+    while stack:
+        item = stack.pop()
+        if isinstance(item, list):
+            stack.extend(item)
+        elif "binary" in item:
+            reason = item.get("reason", "")
+            key = "no source locations" if "no source locations" in reason else reason.split(",")[0]
+            found.add((Path(item["binary"]).name, key))
+        elif "code" in item:
+            found.add(("code", str(item["code"])))
+    return found
 
 
 def run_in(img: str, script: str) -> str:
@@ -217,8 +254,10 @@ def local_check(c: Component, tmp: Path) -> tuple[bool, str]:
             " echo sancov=$(readelf -S /b | grep -c '__sancov_');"
             " echo debug=$(readelf -S /b | grep -c '.debug_info')",
         )
-        found = dict(line.split("=") for line in out.split())
-        ok = found.get("nm") != "0" and found.get("sancov") != "0" and found.get("debug") != "0"
+        found = dict(line.split("=") for line in out.split() if "=" in line)
+        counts = [found.get(k, "") for k in ("nm", "sancov", "debug")]
+        # A tool container that didn't run leaves the counts missing: that's a failure too.
+        ok = all(n.isdigit() and int(n) > 0 for n in counts)
         return (
             ok,
             f"libvoidstar {found.get('nm')}, sancov sections {found.get('sancov')}, debug_info {found.get('debug')}",
@@ -270,18 +309,15 @@ def check_run(a: argparse.Namespace) -> int:
             f"{'ok ' if match else 'BAD'}  {c.container:12} expected {c.modules or 'no module'}  got {found or 'no module'}"
             + (f"  ({c.note})" if c.note else "")
         )
-    props = sh(
-        "snouty",
-        "runs",
-        "properties",
-        a.run_id,
-        "--detail",
-        "--name",
-        "every instrumented module has symbols",
-        check=False,
-    )
-    print("\nEvery instrumented module has symbols:")
-    print("\n".join("  " + line for line in props.strip().splitlines()[3:]) or "  (not reported yet)")
+    print()
+    for name, want in EXPECTED_PROPERTIES.items():
+        got = property_findings(a.run_id, name)
+        if got is None:
+            print(f"wait {name:40} not reported yet: it appears near the end of the run")
+            continue
+        match = got == want
+        bad += not match
+        print(f"{'ok ' if match else 'BAD'}  {name:40} expected {sorted(want)}  got {sorted(got)}")
     return 1 if bad else 0
 
 
