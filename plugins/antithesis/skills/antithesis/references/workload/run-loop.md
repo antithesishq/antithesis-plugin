@@ -2,7 +2,7 @@
 
 ## 1. Launch a run
 
-Start with a short run, `--max-compute-hours 12` on the standard tier. As the workload passes the checks below and you trust it more, raise it toward 24. A longer run shows whether the workload holds up with more compute. You're done iterating when a 24-compute-hour run passes these checks. Follow `references/launch/MODULE.md` with the launcher and fault flags in `references/workload/harness.md`, and follow the run live with the triage module's monitor mode.
+Start with a short run, `--max-compute-hours 12` on the standard tier. As the workload passes the checks below and you trust it more, raise it toward 24. A longer run shows whether the workload holds up with more compute. You're done iterating when a 24-compute-hour run passes these checks. The workload must be green before guarantees are added: fix every workload bug. The only failures left may be SUT bugs and the rare conditions in "Fix and repeat". Follow `references/launch/MODULE.md` with the launcher and fault flags in `references/workload/harness.md`, and follow the run live with the triage module's monitor mode.
 
 ## 2. Keep setup fast
 
@@ -25,4 +25,4 @@ Classify each failing property as a SUT bug, a workload bug or expected, with th
 
 ## 5. Fix and repeat
 
-Launch one run at a time, unless the user asks for more. If the previous run you launched is still going, cancel it with `snouty runs cancel <run_id>` before you launch the next: it tests the old workload. Run the local loop (`references/workload/local-loop.md`) again after every change, then launch the next run. A few runs are usually enough. Expect a short run to miss `assert_sometimes` assertions for rare conditions, but not common ones.
+Launch one run at a time, unless the user asks for more. If the previous run you launched is still going, cancel it with `snouty runs cancel <run_id>` before you launch the next: it tests the old workload. Run the local loop (`references/workload/local-loop.md`) again after every change, then launch the next run. A few runs are usually enough. Expect a short run to miss `assert_sometimes` assertions for rare conditions, but not common ones. If you believe only a longer run would reach one, tell the user why.
