@@ -20,7 +20,7 @@ snouty runs properties "${RUN_ID}" --detail --name "every instrumented module ha
 
 It fails when a module loaded without its symbols, or a file in a `/symbols` directory has nothing to symbolize. Its counterexamples name the file and the reason, such as `not coverage-instrumented`, which means a binary built without coverage, or `symbol catalog has no source locations`, which means a binary built without debug info.
 
-For code in `/opt/antithesis/catalog/` (Java, .NET, JavaScript and Python), also check the properties whose names contain `paths found` and `invalid paths`. `Paths found for Antithesis instrumentation` lists each image's catalog directories by language, and `No invalid paths found during Antithesis instrumentation` fails on a symlink to a symlink there. Python has no module, so its directory in `paths found` is the only sign its assertions are cataloged. See `snouty docs show /docs/reference/default_properties/`.
+For code in `/opt/antithesis/catalog/` (Java, .NET, JavaScript and Python), also check the properties whose names contain `paths found` and `invalid paths`. `Paths found for Antithesis instrumentation` lists each image's catalog directories by language, and `No invalid paths found during Antithesis instrumentation` fails on a symlink to a symlink there. A Python program without the SDK has no module, and the `No Antithesis build errors` property fails with code 4010. See `snouty docs show /docs/reference/default_properties/`.
 
 ## Step 3: compare against the expected components
 
