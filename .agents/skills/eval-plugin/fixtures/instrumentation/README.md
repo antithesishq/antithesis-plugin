@@ -34,7 +34,7 @@ snouty validate config
 snouty launch --launcher basic_test --config config --test-name shop \
   --description "shop services" --max-compute-hours 12
 ./fixture.py check-run <run_id>
-./fixture.py export ~/src/shop   # the build files without this README, the script or comments
+./fixture.py export ~/src/shop   # the build files and a build.sh, without this README, the script or comments
 ```
 
 Each check prints one row per container, and exits 1 if any row differs from the table. `check-run` also compares the setup properties' counterexamples with the table, as one row per property. Modules appear a few minutes after the run is ready, so run `check-run` again if early rows are missing. The setup properties, such as `Every instrumented module has symbols`, are reported only near the end of the run, which takes about 22 minutes and bills about 13 compute hours at a 12-hour cap. Until they're reported, `check-run` marks their rows `wait`, and doesn't count them.

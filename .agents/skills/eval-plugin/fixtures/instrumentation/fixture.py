@@ -350,7 +350,7 @@ def check_run(a: argparse.Namespace) -> int:
 
 def export(a: argparse.Namespace) -> int:
     """Copy what a user's checkout would hold: the sources, Dockerfiles without their
-    comments, and the compose file. Leave out this script and the README, which name the
+    comments, the compose file, and a build script with each image's build args. Leave out this script and the README, which name the
     broken builds."""
     dest = Path(a.dir)
     if dest.exists():
@@ -360,6 +360,19 @@ def export(a: argparse.Namespace) -> int:
     for dockerfile in dest.rglob("Dockerfile"):
         lines = dockerfile.read_text().splitlines(keepends=True)
         dockerfile.write_text("".join(line for line in lines if not line.lstrip().startswith("#")))
+    # A checkout holds how each image is built. Without it, every Dockerfile's defaults
+    # say the image is built correctly.
+    cpp_tag = latest_cpp_sdk_tag()
+    script = ["#!/bin/sh", "set -e", 'cd "$(dirname "$0")"']
+    for c in COMPONENTS:
+        args = dict(c.args)
+        if c.context == "cpp":
+            args["SDK_TAG"] = cpp_tag
+        flags = "".join(f" --build-arg {k}={v}" for k, v in args.items())
+        script.append(f"docker build --platform linux/amd64 -t {image(c)}{flags} {c.context}")
+    build_sh = dest / "build.sh"
+    build_sh.write_text("\n".join(script) + "\n")
+    build_sh.chmod(0o755)
     print(f"exported to {dest}")
     return 0
 
