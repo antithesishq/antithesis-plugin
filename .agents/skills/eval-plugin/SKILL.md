@@ -104,3 +104,7 @@ Build a single HTML page, and publish it where the user asked, at a new path tha
 Then update each target's profile: add new confirmed bugs to its expected findings, with how they were confirmed, and fill in its setup and cost notes.
 
 Tell the user the link, the total compute and token spend, and the top proposed changes.
+
+## Checking the instrumentation claims
+
+The language pages' instrumentation checks, and the run check in the triage module, can go stale when an SDK, an instrumentor or snouty changes. `fixtures/instrumentation/README.md` describes a deployment with a correct and a broken build in every instrumented language, and a script that checks both against what the pages say. Run it when you change one of those pages, or when an eval finds a component that a check misjudged.

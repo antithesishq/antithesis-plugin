@@ -1,0 +1,82 @@
+# One container per component of the instrumentation fixture; `fixture.py build` builds the images.
+x-svc: &svc
+  platform: linux/amd64
+services:
+  driver:
+    <<: *svc
+    image: instr-fixture-go-driver:latest
+    container_name: driver
+    hostname: driver
+    command: ["/usr/local/bin/driver"]
+  goworker:
+    <<: *svc
+    image: instr-fixture-go-worker:latest
+    container_name: goworker
+    hostname: goworker
+    command: ["/usr/local/bin/worker"]
+  gonoop:
+    <<: *svc
+    image: instr-fixture-go-noop:latest
+    container_name: gonoop
+    hostname: gonoop
+    command: ["/usr/local/bin/gonoop"]
+  rustok:
+    <<: *svc
+    image: instr-fixture-rust-ok:latest
+    container_name: rustok
+    hostname: rustok
+    command: ["/usr/local/bin/rustfixture"]
+  rustnoflags:
+    <<: *svc
+    image: instr-fixture-rust-noflags:latest
+    container_name: rustnoflags
+    hostname: rustnoflags
+    command: ["/usr/local/bin/rustfixture"]
+  rustnodebug:
+    <<: *svc
+    image: instr-fixture-rust-nodebug:latest
+    container_name: rustnodebug
+    hostname: rustnodebug
+    command: ["/usr/local/bin/rustfixture"]
+  cppok:
+    <<: *svc
+    image: instr-fixture-cpp-ok:latest
+    container_name: cppok
+    hostname: cppok
+    command: ["/usr/local/bin/cppfixture"]
+  cppnoflags:
+    <<: *svc
+    image: instr-fixture-cpp-noflags:latest
+    container_name: cppnoflags
+    hostname: cppnoflags
+    command: ["/usr/local/bin/cppfixture"]
+  java:
+    <<: *svc
+    image: instr-fixture-java:latest
+    container_name: java
+    hostname: java
+  javanoffi:
+    <<: *svc
+    image: instr-fixture-java-noffi:latest
+    container_name: javanoffi
+    hostname: javanoffi
+  dotnet:
+    <<: *svc
+    image: instr-fixture-dotnet:latest
+    container_name: dotnet
+    hostname: dotnet
+  node:
+    <<: *svc
+    image: instr-fixture-node:latest
+    container_name: node
+    hostname: node
+  python:
+    <<: *svc
+    image: instr-fixture-python:latest
+    container_name: python
+    hostname: python
+  pythonnosdk:
+    <<: *svc
+    image: instr-fixture-python-nosdk:latest
+    container_name: pythonnosdk
+    hostname: pythonnosdk
