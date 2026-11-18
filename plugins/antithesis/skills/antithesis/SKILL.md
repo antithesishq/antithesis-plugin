@@ -20,7 +20,7 @@ Plugin version: `0.1.1`
 
 Every module needs:
 
-- **snouty 0.10.0 or later.** If it's missing, follow `references/antithesis/snouty-setup.md`. If it's older, run `snouty update`, or reinstall it if it wasn't installed with the installer script
+- **snouty 0.11.0 or later.** If it's missing, follow `references/antithesis/snouty-setup.md`. If it's older, run `snouty update`, or reinstall it if it wasn't installed with the installer script
 - **Docker or Podman, with Docker Compose**
 - **jq**
 
@@ -36,7 +36,7 @@ If the first argument names a module, read only that module's `MODULE.md`.
 | ------------ | --------------------------------- | ------------------------------------------------------------- |
 | `triage`     | `references/triage/MODULE.md`     | Analyze a run for failures, monitor an in progress run.       |
 | `debug`      | `references/debug/MODULE.md`      | Execute commands at a moment of any run, even an ended one.   |
-| `bug-report` | `references/bug-report/MODULE.md` | Confirm and write up a SUT bug, or verify a fix for one.      |
+| `bug-report` | `references/bug-report/MODULE.md` | Confirm and write up a SUT bug, or verify its fix.            |
 | `workload`   | `references/workload/MODULE.md`   | Building or iterating on a workload.                          |
 | `launch`     | `references/launch/MODULE.md`     | Launching a new run of a workload with `snouty launch`.       |
 | `properties` | `references/properties/MODULE.md` | Importing the SUT's guarantees or defining a new one.         |
