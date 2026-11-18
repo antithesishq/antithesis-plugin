@@ -6,7 +6,7 @@ Assertions that one node can check, from its own state or the messages it handle
 
 ## 1. Find the log lines
 
-Find the log lines, at any level, that show the state the assertions and rules need. Turn on that level through the system's own configuration in `docker-compose.yaml`, only for the module or logger that writes those lines, never globally. Every line costs the system CPU in Antithesis.
+Find the log lines, at any level, that show the state the assertions and rules need. Turn on that level through the system's own configuration in the deployment, only for the module or logger that writes those lines, never globally. Every line costs the system CPU in Antithesis.
 
 The forwarder sends lines over a Unix socket in a shared volume. Antithesis never faults it, and it delivers one container's lines in order. Within one boot of a container, the driver sees every line, except:
 
@@ -52,7 +52,7 @@ ENTRYPOINT ["forward-logs", "kv-server"]
 
 Put the wrapper in front of whatever the image ran before. If the base image has its own `ENTRYPOINT`, keep it after `forward-logs`, and restate the base image's `CMD`, which setting `ENTRYPOINT` drops. For a base with `ENTRYPOINT ["docker-entrypoint.sh"]` and `CMD ["postgres"]`, use `ENTRYPOINT ["forward-logs", "docker-entrypoint.sh"]` and `CMD ["postgres"]`. Forward a client container's logs (`references/patterns/stateful-clients.md`) the same way.
 
-In `docker-compose.yaml`, mount a `logs` volume in the driver and in every container that forwards, and set the forwarder's variables on each forwarding service. Give each one a `hostname` equal to its `container_name`, as the harness does for the driver:
+Mount a `logs` volume in the driver and in every container that forwards, and set the forwarder's variables on each forwarding container. Under Kubernetes, share the volume as "Shared volumes" in `references/workload/orchestration/kubernetes.md` says. Under Docker Compose, give each one a `hostname` equal to its `container_name`, as the harness does for the driver:
 
 ```yaml
 kv1:

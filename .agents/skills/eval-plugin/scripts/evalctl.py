@@ -100,6 +100,7 @@ def cmd_preflight(a) -> None:
         "snouty auth + tenant": "snouty doctor 2>&1 | tail -3",
         "docker": "docker info --format '{{.ServerVersion}}'",
         "jq": "jq --version",
+        "kubernetes tools (Kubernetes targets only)": "kubectl version --client | head -1; k3d version | head -1; kapp version | head -1; helm version --short",
         "plugin version": f"grep -m1 'Plugin version' {a.plugin_dir}/plugins/antithesis/skills/antithesis/SKILL.md",
         "plugin checkout": f"git -C {a.plugin_dir} log --oneline -1 && git -C {a.plugin_dir} status --short | head",
         "hostname": "hostname",

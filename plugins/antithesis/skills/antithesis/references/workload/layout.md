@@ -6,7 +6,7 @@ Unless the user or the repository's conventions call for something else, put a n
 antithesis/
   README.md
   <workload>/
-    config/     # docker-compose.yaml and the files it mounts; the --config dir
+    config/     # docker-compose.yaml or manifests/, and the files they need; the --config dir
     driver/     # the driver's source and Dockerfile
     scripts/    # the commands you repeat
 ```

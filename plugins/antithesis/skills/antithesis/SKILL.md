@@ -21,7 +21,7 @@ Plugin version: `0.2.0`
 Every module needs:
 
 - **snouty 0.11.0 or later.** If it's missing, follow `references/antithesis/snouty-setup.md`. If it's older, run `snouty update`, or reinstall it if it wasn't installed with the installer script
-- **Docker or Podman, with Docker Compose**
+- **Docker or Podman,** with Docker Compose, or for Kubernetes, `kubectl`, `k3d` and `kapp`
 - **jq**
 
 Assume that dependencies are set up. If any command fails, check dependencies and `snouty doctor` first.

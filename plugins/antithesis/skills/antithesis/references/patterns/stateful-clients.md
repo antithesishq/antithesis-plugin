@@ -96,7 +96,7 @@ Never hold a model lock while sending or waiting.
 
 ## The harness
 
-Add one service per client container to `docker-compose.yaml` (`references/workload/harness.md`), and mount the `clients` volume in each and in the driver:
+Add the client containers to the deployment (`references/workload/harness.md`), and mount the `clients` volume in each and in the driver. Under Docker Compose:
 
 ```yaml
 client1:
@@ -118,9 +118,9 @@ volumes:
   clients:
 ```
 
-The driver keeps `KV_URLS` for its readiness checks, admin setup and eventually reads. If a client program runs as a non-root user, create `/clients` owned by that user in its Dockerfile, as for any shared volume. Exclude only the driver from faults: the client containers are there to be faulted.
+Under Kubernetes, run them as a StatefulSet, and share the volume as "Shared volumes" in `references/workload/orchestration/kubernetes.md` says. The driver keeps `KV_URLS` for its readiness checks, admin setup and eventually reads. If a client program runs as a non-root user, create `/clients` owned by that user in its Dockerfile, as for any shared volume. Exclude only the driver from faults: the client containers are there to be faulted.
 
 ## Checking it
 
-- **Locally,** every client answers `health`, both from the driver and from its own shell with the JSON-RPC tool, `a client can't run a request` is never hit, and every method reaches `ok` sometimes. `failed` and `unknown` mostly need faults. After `docker compose restart client1` while the workload is active, `a client restarts` is reached. After `docker compose pause client1` for longer than `ABANDON`, then `unpause`, the workload carries on through the other clients, and client1 drains.
+- **Locally,** every client answers `health`, both from the driver and from its own shell with the JSON-RPC tool, `a client can't run a request` is never hit, and every method reaches `ok` sometimes. `failed` and `unknown` mostly need faults. After restarting client1 while the workload is active, `a client restarts` is reached. After pausing client1 for longer than `ABANDON`, then resuming it, the workload carries on through the other clients, and client1 drains.
 - **In a short run** under `high_availability`, clients restart and get partitioned from the servers, `a client restarts` passes, and `every client answers once faults stop` passes.

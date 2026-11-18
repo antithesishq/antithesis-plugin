@@ -1,42 +1,22 @@
 # Iterate locally
 
+Run the commands in "Run locally" in `references/workload/orchestration/<orchestration>.md`.
+
 ## 1. Build the system for coverage
 
-Antithesis instrumentation records nothing locally, so measure local coverage with the language's own tool. Add a `docker-compose.coverage.yaml` that overrides each system service with a coverage Dockerfile and a shared `coverage` volume, one directory per service. Client containers, if a pattern adds them, count as system services: the client library is code under test.
+Antithesis instrumentation records nothing locally, so measure local coverage with the language's own tool. Add a coverage variant of the deployment that builds each system service with a coverage Dockerfile and mounts a shared `coverage` volume, one directory per service. Client containers, if a pattern adds them, count as system services: the client library is code under test.
 
-Build each service as "Local coverage" in `references/workload/languages/<language>.md` says, for its language. Check that the data survives `docker compose stop` and a container restart before trusting it.
+Build each service as "Local coverage" in `references/workload/languages/<language>.md` says, for its language. Check that the data survives a stop and a restart of the container before trusting it.
 
 ## 2. Run the workload
 
-In `docker-compose.coverage.yaml`, also set `ANTITHESIS_SDK_LOCAL_OUTPUT` on the driver:
+In the coverage variant, also set `ANTITHESIS_SDK_LOCAL_OUTPUT` on the driver, and the driver's variable that turns the eventually off ("Eventually" in `references/workload/driver.md`), so the driver doesn't exit partway through the run. The driver's SDK then writes its assertions and its setup-complete event, `{"antithesis_setup": {"status": "complete", ...}}`, to that file. If the SUT's code has assertions (`references/properties/assertions.md`), set the variable on each of those services too, as `/coverage/<service>/sdk.jsonl`, and copy each file out as `sdk-<service>.jsonl` next to the driver's.
 
-```yaml
-  driver:
-    environment:
-      ANTITHESIS_SDK_LOCAL_OUTPUT: /tmp/sdk.jsonl
-```
+Nothing runs test commands locally, so run the driver's first command yourself right after the deployment starts, which also checks it. Running it before setup complete is fine.
 
-Also set the driver's variable that turns the eventually off there ("Eventually" in `references/workload/driver.md`), so the driver doesn't exit partway through the run. The driver's SDK then writes its assertions and its setup-complete event, `{"antithesis_setup": {"status": "complete", ...}}`, to that file. If the SUT's code has assertions (`references/properties/assertions.md`), set it on each of those services too, as `/coverage/<service>/sdk.jsonl`, and copy each file out as `sdk-<service>.jsonl` next to the driver's.
+Start the coverage build from scratch, wait for setup complete, let the workload run for a few minutes, copy out the `sdk.jsonl` files, then stop the system. Copy each run's logs and `sdk.jsonl` files into a fresh directory, outside the config directory, so a run never overwrites the last one's evidence or ends up in the config image.
 
-Nothing runs test commands locally, so run the driver's first command yourself right after `up`, which also checks it. Running it before setup complete is fine.
-
-Start the coverage build from scratch, wait for setup complete, let the workload run for a few minutes, then stop the system. Run it as one command, since `COMPOSE_FILE` applies only within it:
-
-```bash
-export COMPOSE_FILE=docker-compose.yaml:docker-compose.coverage.yaml
-docker compose down -v && docker compose up -d --build &&
-docker compose exec -T driver /opt/antithesis/test/v1/main/first_start_workload &&
-timeout 600 sh -c 'until docker compose exec -T driver grep -qs antithesis_setup /tmp/sdk.jsonl; do sleep 5; done' &&
-sleep 300
-docker compose cp driver:/tmp/sdk.jsonl .
-# For each SUT service with assertions:
-docker compose cp <service>:/coverage/<service>/sdk.jsonl sdk-<service>.jsonl
-docker compose stop
-```
-
-Copy each run's logs and `sdk.jsonl` files into a fresh directory, outside the config directory, so a run never overwrites the last one's evidence or ends up in the config image.
-
-If setup complete never arrives, the driver stopped in its startup. `docker compose logs driver`, with the same `COMPOSE_FILE`, shows what it was waiting for or which request failed.
+If setup complete never arrives, the driver stopped in its startup. Its logs show what it was waiting for or which request failed.
 
 ## 3. Check the behavior
 
@@ -52,9 +32,9 @@ If setup complete never arrives, the driver stopped in its startup. `docker comp
   ```
 
   Any other unmet `assert_sometimes` or `assert_reachable` means the workload doesn't reach that situation or code: change the actions or their mix.
-- **Eventually.** Run once more with the eventually on and its direct call set to a minute or two of workload. The driver logs that its assertions start and that it's ending the timeline, then exits with status 0 (`docker compose ps -a`), and the eventually's assertions pass. `docker compose cp` still copies `sdk.jsonl` from the stopped container.
-- **Shutdown.** `docker stop` on a system container shuts its process down cleanly, without a kill.
-- **Debug tools.** Each debug tool ("Debug tools" in `references/workload/harness.md`) runs in its container. Check them in the session above, before `docker compose stop`, such as `docker compose exec -T <service> jq --version`.
+- **Eventually.** Run once more with the eventually on and its direct call set to a minute or two of workload. The driver logs that its assertions start and that it's ending the timeline, then exits with status 0, and the eventually's assertions pass.
+- **Shutdown.** Stopping a system container shuts its process down cleanly, without a kill.
+- **Debug tools.** Each debug tool ("Debug tools" in `references/workload/harness.md`) runs in its container, such as `jq --version`. Check them while the system runs.
 - **Patterns.** Each pattern you adopted passes its own local checks.
 
 ## 4. Read the coverage
