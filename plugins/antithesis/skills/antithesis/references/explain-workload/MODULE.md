@@ -10,10 +10,10 @@ Read the driver, the workload's README and the last run. Write for a reader who 
 
 Open with: `Antithesis tests <system> by running this workload against it. Antithesis only tests what this workload does: any action or workflow it doesn't perform goes untested.` Then write these sections:
 
-- **The system under test.** A diagram of its nodes, as the workload deploys them, and the calls between them. Show how the driver or equivalent fits in to the SUT.
-- **The workload.** What the driver sends the system and what comes back, and the state every test starts from.
+- **The system under test.** A diagram of how its nodes are releated as deployed buy the workload. Show how the driver or equivalent fits in to the SUT.
+- **The workload.** A diagram of what the driver sends the system and what comes back, and table or explaintion of the state tests starts from.
 - **Actions.** A table of each action, grouped by kind, with what it does and its chance of being picked.
-- **One test over time.** A timeline of one test, with actions, faults and the check after faults stop, and a short note on each key moment.
+- **One test over time.** A timeline of one test shown horizontally, with actions, faults and the check after faults stop, and a short note on each key moment.
 - **Coverage.** How many tests in the last run reached each situation, named as a state of the system, such as "a transfer from an empty account". Then the situations not reached yet, and why a longer run should reach them.
 - **Scope.** What the workload doesn't test, from the "Map what the workload must reach" step in `references/workload/MODULE.md`.
 
