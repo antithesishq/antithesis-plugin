@@ -68,8 +68,8 @@ The second round of triage tests whether properties and patterns lead to more an
 
 1. On the sandbox, run `fixture.py build` and `fixture.py check-local`, then launch it with the README's command. Add the run to the run log with `"session": "evaluator"` and the task `instrumentation`.
 2. Once the run completes, run `fixture.py check-run <run_id>`. If a row is `BAD`, the platform, an SDK or snouty has changed: note it, and score the sessions against what the run shows, not the README.
-3. Run `fixture.py export ~/src/shop` on the sandbox, and start the triage session with source in `~/src/shop`, with the instrumentation-triage template in `references/prompts.md`.
-4. Start the same prompt without source, in an empty directory.
+3. Hide the answers from the session without source. It will search the machine, so remove everything that shows how the images were built: delete the local `shop-*` images (`docker rmi`), the fixture's directory and any copy of it, such as the sandbox's plugin checkout's `fixtures/instrumentation/`. Then start the instrumentation-triage template in `references/prompts.md` in an empty directory.
+4. Run `fixture.py export ~/src/shop` from a fresh copy of the fixture, such as the plugin checkout restored with `git checkout`, and start the same prompt with source, in `~/src/shop`.
 
 Score each session against the README's table: which broken components it reported, and with what evidence, which it missed, and whether it called a healthy one broken.
 
