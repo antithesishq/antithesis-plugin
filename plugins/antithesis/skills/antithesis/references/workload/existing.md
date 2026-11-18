@@ -36,20 +36,22 @@ Describe the workload to the user, and ask whether to improve it as it is or bui
 
 ## Convert a test composer workload
 
-Build a hegel driver workload with "Steps" in `references/workload/MODULE.md`, beside the old one, and port what each test command does:
+Aim for a workload that explores the system's state space well, not a port of the old one. Build a new hegel driver workload for the system with "Steps" in `references/workload/MODULE.md`, and treat the old test commands' actions and properties as input to its surface map and model. This mapping is a starting point, not a rule:
 
-| Test command              | In the driver                                                                                       |
-| ------------------------- | --------------------------------------------------------------------------------------------------- |
-| `first_`                  | Admin setup, in "Starting up" in `references/workload/driver.md`, before setup complete.            |
-| `parallel_driver_`        | One rule per action, in the main group.                                                             |
-| `serial_driver_`          | Rules in a group of their own, each holding one lock for the whole rule, so they run one at a time. |
-| `singleton_driver_`       | Its steps as rules, grouped and locked as for `serial_driver_` if they need the system alone.       |
-| `anytime_`                | A check without requests becomes an always-run invariant; one with requests, a rule in every group. |
-| `eventually_`, `finally_` | Assertions in the driver's eventually ("Eventually" in `references/workload/driver.md`).            |
+| Test command              | In the driver                                                                              |
+| ------------------------- | ------------------------------------------------------------------------------------------ |
+| `first_`                  | Code at the start of the test case, before the state machine, so it can vary per timeline. |
+| `parallel_driver_`        | One rule per action, in the main group.                                                    |
+| `serial_driver_`          | Rules in their own group, each holding one lock throughout, so they run one at a time.     |
+| `singleton_driver_`       | Rules, as for `serial_driver_`; keep the command if it wraps a test framework.             |
+| `anytime_`                | An always-run invariant, or a rule in every group if it sends requests.                    |
+| `eventually_`, `finally_` | Assertions in the driver's eventually ("Eventually" in `references/workload/driver.md`).   |
 
-- **Random choices** a command makes, such as `$RANDOM`, become hegel draws in rules. Make a `first_` command's choices fixed in setup, or move them into a rule: nothing before the state machine draws from hegel.
-- **State** commands share through files, databases or environment variables becomes the driver's model.
-- **Assertions** move into the driver unchanged, with the same messages, so their properties keep their history. Leave assertions in the SUT's code where they are.
+- **Fixed setup** in a `first_` command can move to admin setup before setup complete ("Starting up" in `references/workload/driver.md`), shared by every timeline, when it isn't something to test or vary.
+- **Random choices,** such as `$RANDOM`, become hegel draws, and **state** commands share through files or databases becomes the driver's model.
+- **Assertions** you keep stay unchanged, with the same messages, so their properties keep their history. Leave assertions in the SUT's code where they are.
 - **Setup complete** comes only from the driver. Turn off every other reporter in the new workload only, such as with an environment variable its compose file sets, so the old workload still starts.
 
-The conversion is done when a run of the new workload reaches every property the old workload's recent runs reached (per the triage module), and fails none they passed unless the failure is a SUT bug. Then ask the user before you delete the old workload's test templates.
+Migrate in steps if that's easier: Antithesis picks one test template per timeline, so the driver's template can run beside old templates not yet worth porting, whatever "The test template" in `references/workload/harness.md` says.
+
+The conversion is done when the new workload, with any old templates you kept, reaches every property the old workload's recent runs reached (per the triage module), and fails none they passed unless the failure is a SUT bug. Then ask the user before you delete the old templates you didn't keep.
