@@ -21,7 +21,12 @@ Source: <https://github.com/antithesishq/snouty>.
 
 ## Configure snouty
 
-Run `snouty login`. It signs in and saves the tenant and the tenant's container registry. In a headless environment, set `ANTITHESIS_TENANT` and `ANTITHESIS_API_KEY`, then run `snouty login --tenant "$ANTITHESIS_TENANT"` to save the registry.
+If `ANTITHESIS_TENANT` and `ANTITHESIS_API_KEY` are set, such as from a platform's secrets, run `snouty login --tenant "$ANTITHESIS_TENANT"` to configure Snouty.
+
+Otherwise, `snouty login` reads the credential only at an interactive terminal, so don't run `snouty login` yourself or through your harness, such as Claude Code's `!` prefix. Ask the user to run it in their own terminal on this machine, and walk them through it:
+
+- It asks for the tenant, the `<tenant>` in `<tenant>.antithesis.com`.
+- It offers a choice between an API key and **Single sign-on (OAuth)** (if sso is enabled). SSO waits for a browser redirect to `localhost`, so on a headless machine the user should either forward the port or use the API key option.
 
 ## Verify snouty
 
