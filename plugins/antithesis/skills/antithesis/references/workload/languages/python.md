@@ -12,7 +12,9 @@
 
 ## Instrumentation
 
-Python isn't among the languages Antithesis instruments.
+Antithesis collects Python coverage at run time through the SDK, for the code in `/opt/antithesis/catalog/` ("Cataloging"). Install `antithesis` in the program's environment, and either import it or start the program with `python -m antithesis <script>`. Without the SDK, no coverage is reported, and the run's `No Antithesis build errors` property fails with code 4010.
+
+**Check instrumentation:** in each runtime image that runs the code, its directory is under `/opt/antithesis/catalog/`, at most one symlink deep, `python -c 'import antithesis'` succeeds, and the program starts with `python -m antithesis` or imports `antithesis`. In a run, the code is a module named after the `name` in a `pyproject.toml` at the top of that directory, or else after the directory. Antithesis assigns its module ID, so look for it by name and container.
 
 ## Local coverage
 
