@@ -2,13 +2,15 @@
 
 ## Classify it
 
-Read the workload's `docker-compose.yaml` and the images it builds, and classify it:
+Read the workload's deployment, a `docker-compose.yaml` or Kubernetes manifests, and the images it builds, and classify it:
 
 - **Hegel driver:** one container runs a driver that depends on hegel ("Hegel driver" in its language's page under `references/workload/languages/`), and its test template holds one `first_` command.
 - **Test composer:** test templates, `/opt/antithesis/test/v1/<test>/`, hold commands such as `parallel_driver_` and `eventually_`, and Antithesis picks which runs when.
 - **Unknown:** anything else.
 
-Tell the user the class and the evidence. Never convert a workload to another class unless the user asks. To convert one, follow "Convert a test composer workload".
+On Kubernetes, the same classes hold, with pods in place of containers. Keep it on Kubernetes, and adapt this module's Compose commands with `snouty docs show /docs/setup/kubernetes/`.
+
+Tell the user the class, the deployment, and the evidence. Never convert a workload to another class unless the user asks. To convert one, follow "Convert a test composer workload".
 
 ## Find what to improve
 
@@ -36,21 +38,19 @@ Describe the workload to the user, and ask whether to improve it as it is or bui
 
 ## Convert a test composer workload
 
-Aim for a workload that explores the system's state space well, not a port of the old one. Build a new hegel driver workload for the system with "Steps" in `references/workload/MODULE.md`, and treat the old test commands' actions and properties as input to its surface map and model. This mapping is a starting point, not a rule:
+Don't translate the old workload command by command. Build a new one:
 
-| Test command              | In the driver                                                                              |
-| ------------------------- | ------------------------------------------------------------------------------------------ |
-| `first_`                  | Code at the start of the test case, before the state machine, so it can vary per timeline. |
-| `parallel_driver_`        | One rule per action, in the main group.                                                    |
-| `serial_driver_`          | Rules in their own group, each holding one lock throughout, so they run one at a time.     |
-| `singleton_driver_`       | Rules, as for `serial_driver_`; keep the command if it wraps a test framework.             |
-| `anytime_`                | An always-run invariant, or a rule in every group if it sends requests.                    |
-| `eventually_`, `finally_` | Assertions in the driver's eventually ("Eventually" in `references/workload/driver.md`).   |
+1. **Learn the SUT,** with `references/workload/surface.md`.
+2. **Learn the old workload:** what it aims to test, its setup, and what each test command does and asserts. Read each command by its type:
+   - `first_`: setup every timeline needs, run without faults. Decide whether it's something to test or vary per timeline, or fixed setup that belongs before setup complete.
+   - `parallel_driver_`: the actions clients take concurrently, the core of what to exercise.
+   - `serial_driver_`: actions that need the system to themselves.
+   - `singleton_driver_`: a whole scenario, once per timeline, often an existing test. One that wraps a unit or integration test framework may not port at all.
+   - `anytime_`: checks meant to hold at any moment, while actions run.
+   - `eventually_`, `finally_`: guarantees that must hold once faults stop and the system recovers.
+3. **Build a hegel driver workload** with "Steps" in `references/workload/MODULE.md`. Draw on the old workload when you pick rules, invariants and assertions, and reuse what you can: its container machinery, setup logic, configuration, actions, checks and assertions. Keep each reused assertion's message, so its property keeps its history.
 
-- **Fixed setup** in a `first_` command can move to admin setup before setup complete ("Starting up" in `references/workload/driver.md`), shared by every timeline, when it isn't something to test or vary.
-- **Random choices,** such as `$RANDOM`, become hegel draws, and **state** commands share through files or databases becomes the driver's model.
-- **Assertions** you keep stay unchanged, with the same messages, so their properties keep their history. Leave assertions in the SUT's code where they are.
-- **Setup complete** comes only from the driver. Turn off every other reporter in the new workload only, such as with an environment variable its compose file sets, so the old workload still starts.
+Setup complete comes only from the driver. Turn off every other reporter in the new workload only, such as with an environment variable its deployment sets, so the old workload still starts.
 
 Migrate in steps if that's easier: Antithesis picks one test template per timeline, so the driver's template can run beside old templates not yet worth porting, whatever "The test template" in `references/workload/harness.md` says.
 
