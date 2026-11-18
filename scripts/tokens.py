@@ -11,8 +11,8 @@ reported, not budgeted: an optional page counts in full against every module tha
 reach it, though no agent reads more. Each budget comes from the environment, and
 mise.toml sets both:
 
-    SKILL_TOKEN_BUDGET        the top level (default 2750)
-    SKILL_TOTAL_TOKEN_BUDGET  the whole skill (default 41100)
+    SKILL_TOKEN_BUDGET        the top level (default 5000)
+    SKILL_TOTAL_TOKEN_BUDGET  the whole skill (default 50000)
     TOKEN_BASE                a git ref: also show the change since it
 
 Counts use tiktoken's o200k_base encoding. Claude's tokenizer differs, so treat them
@@ -127,8 +127,8 @@ def table(headers: list[str], rows: list[list[str]]) -> list[str]:
 
 
 def main() -> int:
-    skill_budget = int(os.environ.get("SKILL_TOKEN_BUDGET", "2750"))
-    total_budget = int(os.environ.get("SKILL_TOTAL_TOKEN_BUDGET", "41100"))
+    skill_budget = int(os.environ.get("SKILL_TOKEN_BUDGET", "5000"))
+    total_budget = int(os.environ.get("SKILL_TOTAL_TOKEN_BUDGET", "50000"))
     encoding = tiktoken.get_encoding("o200k_base")
     now = Tree(encoding)
     base = Tree(encoding, os.environ.get("TOKEN_BASE", "").strip() or None)
