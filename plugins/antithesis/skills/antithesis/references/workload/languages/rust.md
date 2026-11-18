@@ -38,8 +38,8 @@ RUN cargo build --release \
 
 ## Hegel driver
 
-- **Package:** the `hegeltest` crate, imported as `hegel`, with `features = ["static-engine"]`, which links the engine into the binary.
-- **Latest version:** `curl -sA antithesis-skill https://crates.io/api/v1/crates/hegeltest | jq -r .crate.max_stable_version`, or `cargo add hegeltest --features static-engine`, which takes it.
+- **Package:** the `hegeltest` crate, imported as `hegel`, which links the engine into the binary.
+- **Latest version:** `curl -sA antithesis-skill https://crates.io/api/v1/crates/hegeltest | jq -r .crate.max_stable_version`, or `cargo add hegeltest`, which takes it.
 - **Docs:** <https://docs.rs/hegeltest/latest/hegel/>.
 - **Example workload:** <https://github.com/hegeldev/hegel/tree/main/frontends/rust/examples/sqlite>, a concurrent bank workload run from `#[hegel::main]`.
 
