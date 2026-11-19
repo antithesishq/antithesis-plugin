@@ -348,6 +348,28 @@ def check_run(a: argparse.Namespace) -> int:
     return 1 if bad else 0
 
 
+def hide(_: argparse.Namespace) -> int:
+    """Delete what Docker keeps of the builds: the images, and BuildKit's build history and
+    cache, whose records hold each build's args and its Dockerfile with the comments."""
+    images = [
+        i
+        for i in sh("docker", "images", "--format", "{{.Repository}}:{{.Tag}}").split()
+        if i.startswith(f"{TAG}-")
+    ]
+    if images:
+        sh("docker", "rmi", "-f", *images)
+    sh("docker", "buildx", "history", "rm", "--all")
+    sh("docker", "builder", "prune", "-af")
+    left = [
+        i for i in sh("docker", "images", "--format", "{{.Repository}}").split() if i.startswith(f"{TAG}-")
+    ]
+    history = sh("docker", "buildx", "history", "ls", "--format", "{{.Ref}}").split()
+    if left or history:
+        sys.exit(f"still there: images {left}, build records {history}")
+    print(f"deleted {len(images)} images, the build history and the build cache")
+    return 0
+
+
 def export(a: argparse.Namespace) -> int:
     """Copy what a user's checkout would hold: the sources, Dockerfiles without their
     comments, the compose file, and a build script with each image's build args. Leave out this script and the README, which name the
@@ -385,6 +407,7 @@ def main() -> None:
     run = sub.add_parser("check-run", help="compare a run's modules with the expected ones")
     run.add_argument("run_id")
     run.set_defaults(func=check_run)
+    sub.add_parser("hide", help="delete the images and their build records").set_defaults(func=hide)
     exp = sub.add_parser("export", help="copy the build files, without the answers, for a blind triage")
     exp.add_argument("dir")
     exp.set_defaults(func=export)

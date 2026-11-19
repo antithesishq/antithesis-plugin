@@ -34,6 +34,7 @@ snouty validate config
 snouty launch --launcher basic_test --config config --test-name shop \
   --description "shop services" --max-compute-hours 12
 ./fixture.py check-run <run_id>
+./fixture.py hide             # delete the images, and Docker's build history and cache
 ./fixture.py export ~/src/shop   # the build files and a build.sh, without this README, the script or comments
 ```
 
