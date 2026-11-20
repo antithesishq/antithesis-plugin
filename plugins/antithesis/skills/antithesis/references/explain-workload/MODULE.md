@@ -11,7 +11,7 @@ Read the driver, the workload's README and the last run. Write for a reader who 
 Open with: `Antithesis tests <system> by running this workload against it. Antithesis only tests what this workload does: any action or workflow it doesn't perform goes untested.` Then write these sections:
 
 - **The system under test.** A symmetrically laid out diagram of how the nodes are related with arrows. Don't label the arrows. Show how the driver or equivalent fits into the SUT.
-- **The workload.** A diagram of what the driver sends the system and what comes back, and a table or explanation of the state tests start from.
+- **The workload.** A diagram of what the driver sends the system and what comes back, and a table or explanation of the starting state of a test.
 - **Actions.** A table of each action, grouped by kind, with what it does and its weight. Say that weights only guide the mix, which varies from test to test because each test turns a random subset of actions off.
 - **One test over time.** A timeline of one test shown horizontally, with actions, faults and the check after faults stop, and a short note on each key moment.
 - **Covered.** Each situation the last run reached, named as a state of the system, such as "a transfer from an empty account", how many time it was reached which isn't how many tests reached it. Then the situations not reached yet, and why a longer run should reach them.
@@ -44,4 +44,4 @@ Then, each round:
 - **Collect guarantees** for `references/properties/MODULE.md`. Don't add assertions for finding bugs here.
 - **Update the explainer,** show it again, and repeat the questions.
 
-Stop when the user doesn't ask for changes or says the workload is good. Report the changes you made and any guarantees you collected, to hand to the properties module.
+Stop when the user asks for no changes. Report the changes you made and any guarantees you collected, to hand to the properties module.
