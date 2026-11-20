@@ -1,0 +1,81 @@
+x-svc: &svc
+  platform: linux/amd64
+services:
+  driver:
+    <<: *svc
+    image: shop-driver:latest
+    container_name: driver
+    hostname: driver
+    command: ["/usr/local/bin/driver"]
+  orders:
+    <<: *svc
+    image: shop-orders:latest
+    container_name: orders
+    hostname: orders
+    command: ["/usr/local/bin/orders"]
+  ledger:
+    <<: *svc
+    image: shop-ledger:latest
+    container_name: ledger
+    hostname: ledger
+    command: ["/usr/local/bin/ledger"]
+  pricing:
+    <<: *svc
+    image: shop-pricing:latest
+    container_name: pricing
+    hostname: pricing
+    command: ["/usr/local/bin/rust-service"]
+  search:
+    <<: *svc
+    image: shop-search:latest
+    container_name: search
+    hostname: search
+    command: ["/usr/local/bin/rust-service"]
+  shipping:
+    <<: *svc
+    image: shop-shipping:latest
+    container_name: shipping
+    hostname: shipping
+    command: ["/usr/local/bin/rust-service"]
+  cache:
+    <<: *svc
+    image: shop-cache:latest
+    container_name: cache
+    hostname: cache
+    command: ["/usr/local/bin/cpp-service"]
+  index:
+    <<: *svc
+    image: shop-index:latest
+    container_name: index
+    hostname: index
+    command: ["/usr/local/bin/cpp-service"]
+  billing:
+    <<: *svc
+    image: shop-billing:latest
+    container_name: billing
+    hostname: billing
+  audit:
+    <<: *svc
+    image: shop-audit:latest
+    container_name: audit
+    hostname: audit
+  accounts:
+    <<: *svc
+    image: shop-accounts:latest
+    container_name: accounts
+    hostname: accounts
+  web:
+    <<: *svc
+    image: shop-web:latest
+    container_name: web
+    hostname: web
+  reports:
+    <<: *svc
+    image: shop-reports:latest
+    container_name: reports
+    hostname: reports
+  alerts:
+    <<: *svc
+    image: shop-alerts:latest
+    container_name: alerts
+    hostname: alerts

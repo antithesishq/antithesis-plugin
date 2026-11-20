@@ -2,6 +2,8 @@
 
 Input: a system to test in Antithesis, and optionally the behaviors to focus on.
 
+If the system already has a workload, follow `references/workload/existing.md` instead of "Steps".
+
 ## Compute budget
 
 Runs launched while working on the workload spend the task's compute budget, from the user or the default in `SKILL.md`.

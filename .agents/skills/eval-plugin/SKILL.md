@@ -64,6 +64,15 @@ The agents must not know that they're being evaluated, and must attempt each tas
 
 The second round of triage tests whether properties and patterns lead to more and better findings than the first workload did. Compare the two rounds in the report.
 
+**Instrumentation triage,** once per eval, before the first target's track: the fixture in `fixtures/instrumentation/` is a deployment of small services, some built correctly and some with an instrumentation problem, under neutral names. Its README says which are which.
+
+1. On the sandbox, run `fixture.py build` and `fixture.py check-local`, then launch it with the README's command. Add the run to the run log with `"session": "evaluator"` and the task `instrumentation`.
+2. Once the run completes, run `fixture.py check-run <run_id>`. If a row is `BAD`, the platform, an SDK or snouty has changed: note it, and score the sessions against what the run shows, not the README.
+3. Hide the answers from the session without source. It will search the machine, so remove everything that shows how the images were built: run `fixture.py hide`, which deletes the images and Docker's build history and cache, whose records hold the build args, and then delete the fixture's directory and any copy of it, such as the sandbox's plugin checkout's `fixtures/instrumentation/`. Then start the instrumentation-triage template in `references/prompts.md` in an empty directory. With `--host local`, skip this session, and note that you did: it would run as you, and your transcript and `DATA` hold the answers.
+4. Run `fixture.py export ~/src/shop` from a fresh copy of the fixture, such as the plugin checkout restored with `git checkout`, and start the same prompt with source, in `~/src/shop`.
+
+Score each session against the README's table: which broken components it reported, and with what evidence, which it missed, and whether it called a healthy one broken.
+
 With several targets, run each target's tasks as one track, one track after another, in its own clones, and split the budget between tracks. Separate sandboxes, one per target, can run tracks at the same time.
 
 **Keep a run log.** The tenant is almost always shared, so other people's runs show up in `snouty runs list`, sometimes on the same project. Never decide which runs belong to the eval by their name. `scripts/evalctl.py ... runlog` finds every `snouty launch` and `snouty debug` in the sessions' transcripts, subagents included, and records each run's ID, session, launch time, purpose and cap in `DATA/runs/runs.json`. Fill in each run's `task` there for the cost report. Run `scripts/evalctl.py ... watch` in the background and feed it to a Monitor: it keeps the run log current, and prints a line for each new or changed run in it, and for each session that finishes. When a session's answer mentions a run that isn't in the run log, note it: the agent has looked at someone else's run.
