@@ -4,7 +4,7 @@ Input: an optional mode, then an Antithesis run ID. If you were given something 
 
 Work through the run without asking the user for input unless you are blocked.
 
-Don't read the other pages in `references/triage/` up front. Read each one only when you reach the step that points to it. For example, you need `issues.md` only to report.
+Don't read the other pages in `references/triage/` up front. Read each one only when you reach the step that points to it. For example, you need `logs.md` only once you download a log.
 
 ## Find the run
 
@@ -56,7 +56,7 @@ An incomplete run can still have property results. Read them as for any run, and
 
 ## Report
 
-Follow `references/triage/issues.md` to report what you found.
+Tell the user each failing property's likely cause, and whether it's a SUT bug, a workload bug or expected. Write up SUT bugs only in `summary` and `root-cause` modes, as their pages say.
 
 ## Before you report
 
