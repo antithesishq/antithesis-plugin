@@ -1,7 +1,7 @@
 ---
 name: antithesis
 description: Entry point to Antithesis. Use for any task that involves Antithesis.
-argument-hint: "[triage|debug|workload|launch|properties] <prompt>"
+argument-hint: "[triage|debug|workload|launch|properties|healthcheck] <prompt>"
 ---
 
 # Antithesis
@@ -32,13 +32,14 @@ If you are completely stuck on something outside the user's control, tell the us
 
 If the first argument names a module, read only that module's `MODULE.md`.
 
-| Argument     | Module                            | Use when                                                      |
-| ------------ | --------------------------------- | ------------------------------------------------------------- |
-| `triage`     | `references/triage/MODULE.md`     | Analyze a run for failures, monitor an in progress run.       |
-| `debug`      | `references/debug/MODULE.md`      | Execute commands at a moment of any run, even an ended one.   |
-| `workload`   | `references/workload/MODULE.md`   | Building or iterating on a workload.                          |
-| `launch`     | `references/launch/MODULE.md`     | Launching a new run of a workload with `snouty launch`.       |
-| `properties` | `references/properties/MODULE.md` | Importing the SUT's guarantees or defining a new one.         |
+| Argument      | Module                             | Use when                                                    |
+| ------------- | ---------------------------------- | ----------------------------------------------------------- |
+| `triage`      | `references/triage/MODULE.md`      | Analyze a run for failures, monitor an in progress run.     |
+| `debug`       | `references/debug/MODULE.md`       | Execute commands at a moment of any run, even an ended one. |
+| `workload`    | `references/workload/MODULE.md`    | Building or iterating on a workload.                        |
+| `launch`      | `references/launch/MODULE.md`      | Launching a new run of a workload with `snouty launch`.     |
+| `properties`  | `references/properties/MODULE.md`  | Importing the SUT's guarantees or defining a new one.       |
+| `healthcheck` | `references/healthcheck/MODULE.md` | Checking how a workload spends a run's compute.             |
 
 Otherwise the request is a free-form prompt: read `references/workflows/MODULE.md`, and derive a workflow from it.
 
