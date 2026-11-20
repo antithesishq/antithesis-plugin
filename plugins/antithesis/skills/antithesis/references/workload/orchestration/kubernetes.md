@@ -72,7 +72,7 @@ Write the coverage build as a Kustomize overlay outside `config/`, such as `cove
 ```bash
 kapp delete -a <workload> --yes; kubectl kustomize --load-restrictor LoadRestrictionsNone coverage | kapp deploy -a <workload> -f - --yes &&
 kubectl exec driver -- /opt/antithesis/test/v1/main/first_start_workload &&
-timeout 600 sh -c 'until kubectl exec <a SUT pod> -- grep -qs antithesis_setup /coverage/driver/sdk.jsonl; do sleep 5; done' &&
+timeout 600 sh -c 'until kubectl exec <a pod that mounts the claim> -- grep -qs antithesis_setup /coverage/driver/sdk.jsonl; do sleep 5; done' &&
 sleep 300
 kubectl scale statefulset,deployment --all --replicas 0   # stops the system gracefully
 kubectl wait --for=delete pod -l <SUT pod label> --timeout 2m
@@ -89,4 +89,4 @@ The last line copies the whole claim from the node. Rename each `<service>/sdk.j
 
 ## Launch
 
-Use the `basic_k8s_test` launcher. `snouty launch` builds and pushes only the config image, so push each image you built first, with `docker push <registry>/<name>:<tag>`, after setting up the credential helper (`snouty docker-credential --help`).
+Use the `basic_k8s_test` launcher. `snouty launch` builds and pushes only the config image, so push each image you built first, with `docker push <registry>/<name>:<tag>`. If Docker isn't logged in to that registry yet, and it's `registry.<tenant>.antithesis.com`, set up the credential helper (`snouty docker-credential --help`); for another registry, ask the user for its credentials.
