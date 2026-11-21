@@ -2,6 +2,8 @@
 
 Antithesis runs the manifests on a single-node K3s cluster with CoreDNS and the `local-path` storage class, and no Ingress controller, ServiceLB, metrics-server or IPv6 (`snouty docs show /docs/setup/kubernetes/`). Read `snouty docs show /docs/best_practices/k8s_best_practices/` before you write the manifests.
 
+A Kubernetes workload also needs `kubectl`, [k3d](https://k3d.io) and [kapp](https://carvel.dev/kapp/), and `helm` to render a Helm chart. If one is missing, ask the user to install it.
+
 ## The config directory
 
 `config/manifests/` holds raw manifests, and nothing else goes in `config/` but the files they need. Render a Helm chart with `helm template <release> <chart> -n <namespace> --include-crds -f <values> --output-dir`, and Kustomize with `kubectl kustomize`. Ask the user for the values file their deployment uses; a chart's own `values.yaml` holds defaults, not their setup.
@@ -57,7 +59,7 @@ Build each image with `docker build` under its full name, then run `snouty valid
 
 ## Run locally
 
-Use a [k3d](https://k3d.io) cluster of your own, with its own kubeconfig, so the user's current `kubectl` context never changes. Never deploy to a cluster you didn't create without asking the user. Delete the cluster when you're done with it.
+Use a k3d cluster of your own, with its own kubeconfig, so the user's current `kubectl` context never changes. Never deploy to a cluster you didn't create without asking the user. Delete the cluster when you're done with it.
 
 ```bash
 k3d cluster create <workload> --no-lb --kubeconfig-update-default=false \
