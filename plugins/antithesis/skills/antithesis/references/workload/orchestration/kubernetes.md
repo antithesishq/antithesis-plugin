@@ -59,13 +59,12 @@ Build each image with `docker build` under its full name, then run `snouty valid
 
 ## Run locally
 
-Use a k3d cluster of your own, with its own kubeconfig, so the user's current `kubectl` context never changes. Never deploy to a cluster you didn't create without asking the user. Delete the cluster when you're done with it. An export lasts only for the shell it runs in, so start every command that runs `kubectl` or `kapp` with `export KUBECONFIG=$(k3d kubeconfig write <workload>)`, or kapp and kubectl act on the user's own cluster.
+Use a k3d cluster of your own, with its own kubeconfig, so the user's current `kubectl` context never changes. Never deploy to a cluster you didn't create without asking the user. Delete the cluster when you're done with it. An export lasts only for the shell it runs in, so start every command that runs `kubectl` or `kapp` with `export KUBECONFIG=$HOME/.config/k3d/kubeconfig-<workload>.yaml`, or kapp and kubectl act on the user's own cluster. Use that path, not `$(k3d kubeconfig write <workload>)`: if the file is missing, they fail instead of falling back to the user's kubeconfig. Pass `-n <namespace>` to every `kubectl`, since the context's namespace doesn't survive a rewrite of the file.
 
 ```bash
 k3d cluster create <workload> --no-lb --kubeconfig-update-default=false \
   --k3s-arg '--disable=traefik,servicelb,metrics-server@server:0'
-export KUBECONFIG=$(k3d kubeconfig write <workload>)
-kubectl config set-context --current --namespace <namespace>
+k3d kubeconfig write <workload>   # writes $HOME/.config/k3d/kubeconfig-<workload>.yaml
 k3d image import -c <workload> <each image you built>
 ```
 
@@ -74,23 +73,23 @@ Write the coverage build as a Kustomize overlay outside `config/`, such as `cove
 kapp keeps its app record in `-n default`, since the workload's namespace exists only once kapp creates it. Run this as one command:
 
 ```bash
-export KUBECONFIG=$(k3d kubeconfig write <workload>)
+export KUBECONFIG=$HOME/.config/k3d/kubeconfig-<workload>.yaml
 kapp delete -n default -a <workload> --yes; kubectl kustomize --load-restrictor LoadRestrictionsNone coverage | kapp deploy -n default -a <workload> -f - --yes &&
-kubectl exec driver -- /opt/antithesis/test/v1/main/first_start_workload &&
-timeout 600 sh -c 'until kubectl exec <a pod that mounts the claim> -- grep -qs antithesis_setup /coverage/driver/sdk.jsonl; do sleep 5; done' &&
+kubectl -n <namespace> exec driver -- /opt/antithesis/test/v1/main/first_start_workload &&
+timeout 600 sh -c 'until kubectl -n <namespace> exec <a pod that mounts the claim> -- grep -qs antithesis_setup /coverage/driver/sdk.jsonl; do sleep 5; done' &&
 sleep 300
-kubectl scale statefulset,deployment --all --replicas 0   # stops the system gracefully
-kubectl wait --for=delete pod -l <SUT pod label> --timeout 2m
+kubectl -n <namespace> scale statefulset,deployment --all --replicas 0   # stops the system gracefully
+kubectl -n <namespace> wait --for=delete pod -l <SUT pod label> --timeout 2m
 docker exec k3d-<workload>-server-0 sh -c 'cd /var/lib/rancher/k3s/storage/*_<namespace>_coverage && tar -c .' | tar -x -C <run directory>
 ```
 
-The last line copies the whole claim from the node. Rename each `<service>/sdk.jsonl` in it to `sdk-<service>.jsonl`, as "Check the behavior" in `references/workload/local-loop.md` expects. kapp waits until every resource is ready, and fails on one that never is: `kubectl get events` and `kubectl describe pod <pod>` say why.
+The last line copies the whole claim from the node. Rename each `<service>/sdk.jsonl` in it to `sdk-<service>.jsonl`, as "Check the behavior" in `references/workload/local-loop.md` expects. kapp waits until every resource is ready, and fails on one that never is: `kubectl -n <namespace> get events` and `kubectl -n <namespace> describe pod <pod>` say why.
 
-- **Logs:** `kubectl logs <pod>`, and `--previous` for the container before its last restart.
-- **A command in a pod:** `kubectl exec <pod> -- <command>`.
-- **Exit status:** `kubectl get pod driver`, which shows `Completed` after an exit with status 0.
-- **A clean stop:** `kubectl delete pod <pod>` returns well before the 30-second grace period ends, and `kubectl logs` beforehand, with `-f`, shows a clean shutdown.
-- **Restart and pause:** `kubectl delete pod <pod>` restarts it. To pause one, `docker exec k3d-<workload>-server-0 kill -STOP <pid>`, then `-CONT`, with the PID from `ps` there.
+- **Logs:** `kubectl -n <namespace> logs <pod>`, and `--previous` for the container before its last restart.
+- **A command in a pod:** `kubectl -n <namespace> exec <pod> -- <command>`.
+- **Exit status:** `kubectl -n <namespace> get pod driver`, which shows `Completed` after an exit with status 0.
+- **A clean stop:** `kubectl -n <namespace> delete pod <pod>` returns well before the 30-second grace period ends, and `kubectl -n <namespace> logs` beforehand, with `-f`, shows a clean shutdown.
+- **Restart and pause:** `kubectl -n <namespace> delete pod <pod>` restarts it. To pause one, `docker exec k3d-<workload>-server-0 kill -STOP <pid>`, then `-CONT`, with the PID from `ps` there.
 
 ## Launch
 
