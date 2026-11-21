@@ -20,4 +20,4 @@ For every item, name the action or setup that exercises it, or decide it's out o
 ## 3. Design the deployment to reach it
 
 - Run multiple nodes or replicas if the system supports them.
-- Make the system's process the container's main process (`exec` it), or run it under a wrapper that passes signals on, so it receives them. Don't restart the process in a shell loop: Antithesis or Kubernetes restarts a killed or stopped node, after the time the fault chose.
+- Make the system's process the container's main process (`exec` it), or run it under a wrapper that passes signals on, so it receives them. Don't restart the process in a shell loop: the orchestration restarts a killed or stopped node (`references/workload/orchestration/<orchestration>.md` says when).

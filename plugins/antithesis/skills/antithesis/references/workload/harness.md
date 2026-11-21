@@ -48,7 +48,7 @@ Launch every run of the workload with the launcher in "Launch" in `references/wo
 
 `--fault-tolerance` picks the fault profile (`references/antithesis/faults.md`). `high_availability` kills, stops and partitions nodes. Use `resilient` only for a system that isn't meant to survive losing a node or a partition, such as a single-node system; it pauses containers and degrades the network, but never kills or partitions them.
 
-`--fault-exclusions` is a regex matched against container or pod names, so `^driver$` relies on the driver's name being exactly `driver` (section 1). Exclude only the driver.
+`--fault-exclusions` is a regex matched against container or pod names, so `^driver$` relies on the driver's name being exactly `driver` ("The driver" in `references/workload/orchestration/<orchestration>.md`). Exclude only the driver.
 
 ## 5. Debug tools
 

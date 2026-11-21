@@ -2,7 +2,9 @@
 
 ## The config directory
 
-`config/` holds `docker-compose.yaml` and the files it mounts. Every service needs an explicit `image:`. snouty rejects services without one. Give no service a `restart:` policy: Antithesis restarts killed and stopped containers itself, and Compose would bring them back early, cancelling the fault.
+`config/` holds `docker-compose.yaml` and the files it mounts. Every service needs an explicit `image:`. snouty rejects services without one.
+
+**Restarts.** Antithesis restarts a killed or stopped container after the time the fault chose. Give no service a `restart:` policy: Compose would bring it back early, cancelling the fault.
 
 ## The driver
 

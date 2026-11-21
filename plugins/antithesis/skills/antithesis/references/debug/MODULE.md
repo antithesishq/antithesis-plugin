@@ -56,7 +56,7 @@ sha256sum -c --quiet parts.sha256 && cat part.* | gunzip > data.db
 - **Encode with base64 in 1 MB lines.** Raw binary arrives corrupted, a line over about 9 MB is dropped, and short lines are slow.
 - **Check every part.** An exec can drop output lines and still exit 0.
 - **Download parts of about 10 MB, 20 at a time.** That was fastest: 200 MB in under a minute, where one exec streams only a few hundred KB/s. The parts exist only on the first exec's branch.
-- **Freeze writers first,** so the file doesn't change under you: `kill -STOP <pid>` in the first exec, or run it in the guest, without `--container`, starting with `podman pause db1 && podman cp db1:/var/lib/db/data.db /tmp/f`, or for a pod, `kubectl cp`. The guest has `gzip` and `split` even when the image lacks them. Execs run on throwaway branches, so this changes nothing else.
+- **Freeze writers first,** so the file doesn't change under you: `kill -STOP <pid>` in the first exec, or run it in the guest, without `--container`, starting with `podman pause db1 && podman cp db1:/var/lib/db/data.db /tmp/f`. For a pod, `kill -STOP <pid>` its process from the guest, then copy the file from `/proc/<pid>/root/<path>`, which needs no tools in the image, unlike `kubectl cp`. The guest has `gzip` and `split` even when the image lacks them. Execs run on throwaway branches, so this changes nothing else.
 - The file must exist at the moment you run at. Run any command that writes it in the first exec.
 
 ## When you're done

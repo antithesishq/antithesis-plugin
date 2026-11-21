@@ -2,7 +2,7 @@
 
 Antithesis runs the manifests on a single-node K3s cluster with CoreDNS and the `local-path` storage class, and no Ingress controller, ServiceLB, metrics-server or IPv6 (`snouty docs show /docs/setup/kubernetes/`). Read `snouty docs show /docs/best_practices/k8s_best_practices/` before you write the manifests.
 
-A Kubernetes workload also needs `kubectl`, [k3d](https://k3d.io) and [kapp](https://carvel.dev/kapp/), and `helm` to render a Helm chart. If one is missing, ask the user to install it.
+A Kubernetes workload also needs `kubectl`, [k3d](https://k3d.io) and [kapp](https://carvel.dev/kapp/), and `helm` to render a Helm chart. The local loop runs `docker` directly, since k3d needs Docker, not Podman. If one is missing, ask the user to install it.
 
 ## The config directory
 
@@ -59,7 +59,7 @@ Build each image with `docker build` under its full name, then run `snouty valid
 
 ## Run locally
 
-Use a k3d cluster of your own, with its own kubeconfig, so the user's current `kubectl` context never changes. Never deploy to a cluster you didn't create without asking the user. Delete the cluster when you're done with it.
+Use a k3d cluster of your own, with its own kubeconfig, so the user's current `kubectl` context never changes. Never deploy to a cluster you didn't create without asking the user. Delete the cluster when you're done with it. An export lasts only for the shell it runs in, so start every command that runs `kubectl` or `kapp` with `export KUBECONFIG=$(k3d kubeconfig write <workload>)`, or kapp and kubectl act on the user's own cluster.
 
 ```bash
 k3d cluster create <workload> --no-lb --kubeconfig-update-default=false \
@@ -71,8 +71,11 @@ k3d image import -c <workload> <each image you built>
 
 Write the coverage build as a Kustomize overlay outside `config/`, such as `coverage/kustomization.yaml`, that lists each file in `config/manifests/` as a resource, swaps in each system service's coverage image, mounts a `coverage` claim at `/coverage` in every pod, with one directory per pod, such as `/coverage/$(POD_NAME)` from the downward API, created before the process starts, and sets the local-loop variables on the driver ("Run the workload" in `references/workload/local-loop.md`). Write the driver's SDK output to the claim, `ANTITHESIS_SDK_LOCAL_OUTPUT=/coverage/driver/sdk.jsonl`, so it survives the driver's exit. Then:
 
+kapp keeps its app record in `-n default`, since the workload's namespace exists only once kapp creates it. Run this as one command:
+
 ```bash
-kapp delete -a <workload> --yes; kubectl kustomize --load-restrictor LoadRestrictionsNone coverage | kapp deploy -a <workload> -f - --yes &&
+export KUBECONFIG=$(k3d kubeconfig write <workload>)
+kapp delete -n default -a <workload> --yes; kubectl kustomize --load-restrictor LoadRestrictionsNone coverage | kapp deploy -n default -a <workload> -f - --yes &&
 kubectl exec driver -- /opt/antithesis/test/v1/main/first_start_workload &&
 timeout 600 sh -c 'until kubectl exec <a pod that mounts the claim> -- grep -qs antithesis_setup /coverage/driver/sdk.jsonl; do sleep 5; done' &&
 sleep 300
