@@ -23,6 +23,8 @@ driver:
     KV_URLS: http://kv1:8000,http://kv2:8000
 ```
 
+Give every other container, such as a pattern's, a `container_name` and a `hostname` equal to it, so the container, its logs and its faults share one name.
+
 ## Shared volumes
 
 Mount one named volume in each container that shares it:

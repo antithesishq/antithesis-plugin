@@ -6,7 +6,7 @@ Assertions that one node can check, from its own state or the messages it handle
 
 ## 1. Find the log lines
 
-Find the log lines, at any level, that show the state the assertions and rules need. Turn on that level through the system's own configuration in the deployment, only for the module or logger that writes those lines, never globally. Every line costs the system CPU in Antithesis.
+Find the log lines, at any level, that show the state the assertions and rules need. Turn on that level through the system's own configuration, only for the module or logger that writes those lines, never globally. Every line costs the system CPU in Antithesis.
 
 The forwarder sends lines over a Unix socket in a shared volume. Antithesis never faults it, and it delivers one container's lines in order. Within one boot of a container, the driver sees every line, except:
 
@@ -22,7 +22,7 @@ Add a forwarder, `driver/log-forward/`, to the harness: a small Rust binary that
 
 - copies stdin to stdout, flushing each line;
 - sends each line that contains one of the substrings in `LOG_FORWARD_MATCH` (comma-separated), such as `msg=raft-state`, to the Unix datagram socket at `LOG_FORWARD_SOCKET`, as `{"container": <$HOSTNAME>, "boot": <id>, "seq": <n>, "line": <text>}`. It skips other lines;
-- takes `container` from `$HOSTNAME`, which the harness sets to the container name;
+- takes `container` from `$HOSTNAME`, which is the container's name ("The driver" in `references/workload/orchestration/<orchestration>.md`);
 - takes `boot` from the clock at startup, since the PID is the same on every container restart;
 - counts `seq` from 0, over every matching line, sent or not, so a dropped line leaves a gap;
 - sends each line once, with a non-blocking `send_to`, and drops it on any error, such as a full queue or a socket the driver hasn't bound yet. It never queues, retries, blocks or exits on a send error, so a slow driver can't slow the system;
@@ -52,7 +52,7 @@ ENTRYPOINT ["forward-logs", "kv-server"]
 
 Put the wrapper in front of whatever the image ran before. If the base image has its own `ENTRYPOINT`, keep it after `forward-logs`, and restate the base image's `CMD`, which setting `ENTRYPOINT` drops. For a base with `ENTRYPOINT ["docker-entrypoint.sh"]` and `CMD ["postgres"]`, use `ENTRYPOINT ["forward-logs", "docker-entrypoint.sh"]` and `CMD ["postgres"]`. Forward a client container's logs (`references/patterns/stateful-clients.md`) the same way.
 
-Mount a `logs` volume in the driver and in every container that forwards, and set the forwarder's variables on each forwarding container. Under Kubernetes, share the volume as "Shared volumes" in `references/workload/orchestration/kubernetes.md` says. Under Docker Compose, give each one a `hostname` equal to its `container_name`, as "The driver" in `references/workload/orchestration/compose.md` does:
+Mount a `logs` volume in the driver and in every container that forwards ("Shared volumes" in `references/workload/orchestration/<orchestration>.md`), and set the forwarder's variables on each forwarding container. For example:
 
 ```yaml
 kv1:

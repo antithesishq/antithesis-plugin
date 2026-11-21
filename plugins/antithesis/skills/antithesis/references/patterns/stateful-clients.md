@@ -96,7 +96,7 @@ Never hold a model lock while sending or waiting.
 
 ## The harness
 
-Add the client containers to the deployment (`references/workload/harness.md`), and mount the `clients` volume in each and in the driver. Under Docker Compose:
+Add the client containers to the deployment (`references/workload/harness.md`), each with a stable name, and mount the `clients` volume in each and in the driver ("Shared volumes" in `references/workload/orchestration/<orchestration>.md`). For example:
 
 ```yaml
 client1:
@@ -118,7 +118,7 @@ volumes:
   clients:
 ```
 
-Under Kubernetes, run them as a StatefulSet, and share the volume as "Shared volumes" in `references/workload/orchestration/kubernetes.md` says. The driver keeps `KV_URLS` for its readiness checks, admin setup and eventually reads. If a client program runs as a non-root user, create `/clients` owned by that user in its Dockerfile, as for any shared volume. Exclude only the driver from faults: the client containers are there to be faulted.
+The driver keeps `KV_URLS` for its readiness checks, admin setup and eventually reads. If a client program runs as a non-root user, create `/clients` owned by that user in its Dockerfile, as for any shared volume. Exclude only the driver from faults: the client containers are there to be faulted.
 
 ## Checking it
 
