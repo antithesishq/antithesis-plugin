@@ -56,7 +56,7 @@ sha256sum -c --quiet parts.sha256 && cat part.* | gunzip > data.db
 - **Encode with base64 in 1 MB lines.** Raw binary arrives corrupted, a line over about 9 MB is dropped, and short lines are slow.
 - **Check every part.** An exec can drop output lines and still exit 0.
 - **Download parts of about 10 MB, 20 at a time.** That was fastest: 200 MB in under a minute, where one exec streams only a few hundred KB/s. The parts exist only on the first exec's branch.
-- **Freeze writers first,** so the file doesn't change under you, then read it in place: no copy needed. In the first exec, `kill -STOP` the processes that write it. `kill -KILL` works too, except on the container's main process: its death stops the container, and the downloads with it. Or, from the guest, `podman pause` the container, or `kill -STOP` a pod's process, then read the file as `/proc/<pid>/root/<path>`, write the parts in the guest, and download them without `--container`.
+- **Freeze writers first,** so the file doesn't change under you, then read it in place: no copy needed. In the first exec, `kill -STOP` the processes that write it. `kill -KILL` works too, except on the container's main process or the command a wrapper such as `forward-logs` runs: its death stops the container, and the downloads with it. Or, from the guest, `podman pause` the container, or `kill -STOP` a pod's process, then read the file as `/proc/<pid>/root/<path>`, write the parts in the guest, and download them without `--container`.
 - **Use the guest's tools** when the image lacks them: the guest has `gzip` and `split`. Execs run on throwaway branches, so nothing you do there changes anything else.
 - The file must exist at the moment you run at. Run any command that writes it in the first exec.
 
