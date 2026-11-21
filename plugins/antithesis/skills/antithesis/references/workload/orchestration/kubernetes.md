@@ -64,7 +64,7 @@ Use a k3d cluster of your own, with its own kubeconfig, so the user's current `k
 ```bash
 k3d cluster create <workload> --no-lb --kubeconfig-update-default=false \
   --k3s-arg '--disable=traefik,servicelb,metrics-server@server:0'
-k3d kubeconfig write <workload>   # writes $HOME/.config/k3d/kubeconfig-<workload>.yaml
+k3d kubeconfig write <workload> --output $HOME/.config/k3d/kubeconfig-<workload>.yaml
 k3d image import -c <workload> <each image you built>
 ```
 
