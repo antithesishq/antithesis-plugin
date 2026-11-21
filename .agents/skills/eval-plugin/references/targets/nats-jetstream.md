@@ -3,6 +3,7 @@
 The persistence layer of the NATS server, in Go. JetStream replicates each stream across servers with its own Raft implementation, and offers acknowledged publishing, message deduplication, and durable consumers. It's the durable-queue target, for the message-queue property catalog.
 
 - **Repository:** <https://github.com/nats-io/nats-server>. The sandbox needs Go.
+- **Deployment:** Docker Compose, the plugin's default. Leave `[deployment]` out of the workload prompt.
 - **Focus:** durable, replicated streams: a 3-server JetStream cluster with streams replicated to all three servers, publishing with acknowledgements, durable consumers, and surviving leader changes and server failures.
 - **Catalog:** message queue property catalog.
 - **Property to define:** "a message published twice with the same Nats-Msg-Id inside the stream's duplicate window is stored only once, even when the publisher retries across a stream leader change." Why: our publishers retry on timeout and rely on message IDs to keep orders from being processed twice.
