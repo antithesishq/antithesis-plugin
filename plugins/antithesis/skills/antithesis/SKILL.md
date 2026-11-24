@@ -10,11 +10,11 @@ Plugin version: `0.2.1`
 
 ## Before starting
 
-1. If you are running on one of these platforms, read its notes:
-   - Devin: `references/platforms/devin.md`
-   - Replit: `references/platforms/replit.md`
-2. Read `references/antithesis/explainer.md`.
-3. Run `snouty doctor`. If it reports a problem, follow `references/antithesis/snouty-setup.md`.
+- If you are running on one of these platforms, read its notes:
+  - Devin: `references/platforms/devin.md`
+  - Replit: `references/platforms/replit.md`
+- Read `references/antithesis/explainer.md`.
+- Run `snouty doctor`. If it reports a problem, follow `references/antithesis/snouty-setup.md`.
 
 ### Dependencies
 
