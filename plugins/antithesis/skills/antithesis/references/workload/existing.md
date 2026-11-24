@@ -4,7 +4,7 @@
 
 Read the workload's deployment, a `docker-compose.yaml` or Kubernetes manifests, and the images it builds, and classify it:
 
-- **Hegel driver:** one container runs a driver that depends on hegel ("Hegel driver" in its language's page under `references/workload/languages/`), and its test template holds one `first_` command.
+- **Hegel driver:** one container runs a driver that depends on hegel ("Hegel driver" in its language's page under `references/workload/languages/`), and its test template holds a `first_` command, and maybe a `serial_driver_` that only sleeps.
 - **Test composer:** test templates, `/opt/antithesis/test/v1/<test>/`, hold commands such as `parallel_driver_` and `eventually_`, and Antithesis picks which runs when.
 - **Unknown:** anything else.
 
