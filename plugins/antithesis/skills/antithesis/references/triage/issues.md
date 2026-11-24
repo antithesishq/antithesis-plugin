@@ -53,7 +53,7 @@ If you can't find or search a tracker, say so, and report each failure's known s
 
 Search the tracker and the destination for existing issues before reporting. Check open and closed issues.
 
-If the bug already exists in the destination, edit that issue to add a bullet point to its `{duplicate_details}`. If it exists only in the tracker, link that issue from your report, and never edit it.
+If the bug matches an open issue in the destination, edit that issue to add a bullet point to its `{duplicate_details}`. If it matches a closed issue, or one only in the tracker, report it and link that issue, as a possible regression if it's closed. Never edit an issue outside the destination.
 
 `{duplicate_details}` has the following format:
 
