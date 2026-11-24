@@ -7,10 +7,10 @@ description: Release the Antithesis plugin. Use when the user asks to "release t
 
 You drive a release end to end, and watch every step until it finishes:
 
-1. Open a pull request, from a `release/vX.Y.Z` branch, that bumps the plugin's version and adds its notes to `CHANGELOG.md`, and watch its checks.
-2. Wait while the user reviews the PR and merges it.
-3. Watch the Tag release workflow (`.github/workflows/tag-release.yml`). The merge of a `release/` branch starts it: it tags the merge commit as `vX.Y.Z`, and runs the Release workflow (`.github/workflows/release.yml`) on the tag.
-4. Watch the Release workflow. It verifies the tag, runs every check, and creates the GitHub release with that version's `CHANGELOG.md` section as its notes.
+- Open a pull request, from a `release/vX.Y.Z` branch, that bumps the plugin's version and adds its notes to `CHANGELOG.md`, and watch its checks.
+- Wait while the user reviews the PR and merges it.
+- Watch the Tag release workflow (`.github/workflows/tag-release.yml`). The merge of a `release/` branch starts it: it tags the merge commit as `vX.Y.Z`, and runs the Release workflow (`.github/workflows/release.yml`) on the tag.
+- Watch the Release workflow. It verifies the tag, runs every check, and creates the GitHub release with that version's `CHANGELOG.md` section as its notes.
 
 Only a tag makes a GitHub release. CI never does, whatever version the default branch is at.
 
