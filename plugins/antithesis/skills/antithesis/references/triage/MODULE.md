@@ -38,12 +38,12 @@ Also check the run's instrumentation, with `snouty runs modules` and the instrum
 
 Whoever downloads a log reads `references/triage/logs.md` first. In `monitor` and `summary` modes, the subagents download the logs for failing properties: tell each one to read it, and don't read it yourself unless you download a log too, as for an incomplete run. Then:
 
-1. Pick the first failing example and find its moment. If the counterexample has no `moment` (properties that report a value, see `references/triage/properties.md`), the counterexample value is the evidence; skip to "Cross-reference the evidence".
-2. Download the log for that moment and analyze it locally.
-3. Run commands at the failing moment, even if the run has ended. Read `references/debug/MODULE.md` for which run to use.
-4. If you aren't sure what caused the failure, find more moments for the same property with `snouty runs search -n 999` and compare them. Passing examples are useful for finding what differs between success and failure.
-5. **Cross-reference the evidence:** check the log and command output against the source code of the system under test and the workload.
-6. Work out the timeline of events that led up to the failure and its root cause.
+- Pick the first failing example and find its moment. If the counterexample has no `moment` (properties that report a value, see `references/triage/properties.md`), the counterexample value is the evidence; skip to "Cross-reference the evidence".
+- Download the log for that moment and analyze it locally.
+- Run commands at the failing moment, even if the run has ended. Read `references/debug/MODULE.md` for which run to use.
+- If you aren't sure what caused the failure, find more moments for the same property with `snouty runs search -n 999` and compare them. Passing examples are useful for finding what differs between success and failure.
+- **Cross-reference the evidence:** check the log and command output against the source code of the system under test and the workload.
+- Work out the timeline of events that led up to the failure and its root cause.
 
 The property status and assertion text alone are not enough. Download and read the logs before concluding on any failure that has moments. If its assertion has details, use them: its author chose those fields to show the system's state at the failure.
 
@@ -51,8 +51,8 @@ The property status and assertion text alone are not enough. Download and read t
 
 An incomplete run can still have property results. Read them as for any run, and triage any failing properties as usual. Then:
 
-1. If `snouty runs show <run_id>` gives a failure moment, download its log (`references/triage/logs.md`). Use its failure reason, if any, as a lead.
-2. Look for errors in `snouty runs build-logs <run_id>`, especially if there is no failure moment.
+- If `snouty runs show <run_id>` gives a failure moment, download its log (`references/triage/logs.md`). Use its failure reason, if any, as a lead.
+- Look for errors in `snouty runs build-logs <run_id>`, especially if there is no failure moment.
 
 ## Report
 

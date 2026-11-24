@@ -9,7 +9,8 @@ It also checks section references, a heading or a list item's bold label in doub
 such as "Starting up" in `references/workload/driver.md`: each must name a heading or label
 on the page it points at, or a table row's first cell. An image placeholder such as
 `<Rust build image>` must name a row of the skill's image table. Steps are referred to by name, so a step number such as "step 2"
-fails, since reordering a list would silently change what it points at.
+fails, since reordering a list would silently change what it points at. For the same reason,
+steps are a bulleted list, so an ordered list fails too: inserting a step would renumber the rest.
 """
 
 import re
@@ -21,6 +22,7 @@ from skills import (
     IMAGES_PAGE,
     image_placeholders,
     is_internal,
+    ordered_list_items,
     references,
     section_names,
     section_references,
@@ -30,7 +32,7 @@ from skills import (
 
 
 def check_sections(skill: Path, source: Path, by_name: dict[str, Path]) -> int:
-    """Check each section reference and step number on one page."""
+    """Check each section reference, step number and ordered list on one page."""
     problems = 0
     text = source.read_text()
     # A shipped skill's install holds only its own plugin, so it may point only at its own
@@ -87,6 +89,14 @@ def check_sections(skill: Path, source: Path, by_name: dict[str, Path]) -> int:
         error(
             "check-references",
             f'"{match}" refers to a step by number: name it by its heading or bold label instead',
+            source,
+            line,
+        )
+        problems += 1
+    for line in ordered_list_items(text):
+        error(
+            "check-references",
+            "numbered list: write steps as a bulleted list, in order",
             source,
             line,
         )

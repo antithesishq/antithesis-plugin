@@ -46,8 +46,8 @@ As soon as the local loop proves inconclusive, stop iterating locally and go on 
 
 Launch a short run as `references/workload/run-loop.md` describes, and read it with the triage module. Then check each guarantee you added or changed:
 
-1. Trace the exploration assertions on the situations leading up to it, and confirm each one passes: the run reached that situation.
-2. Confirm the guarantee's own assertions pass.
+- Trace the exploration assertions on the situations leading up to it, and confirm each one passes: the run reached that situation.
+- Confirm the guarantee's own assertions pass.
 
 If the run never reaches the guarantee, it hasn't tested it. Launch a longer run, or change the workload so it reaches those situations more often, and check again.
 
@@ -59,10 +59,10 @@ Input: a source of guarantees, such as a property catalog for this kind of syste
 
 Work in batches of up to 10 guarantees, unless the request says otherwise.
 
-1. List the guarantees the source states or implies that apply to this system. For a past bug, confirm its cause from the fix, not only the report.
-2. Show the user the most important batch, and ask which to add, unless the request already says which.
-3. Define each chosen guarantee by following "Make it checkable", "Add the check" and "Check it locally", then check them all in one short run, as "Check it in a short run" says.
-4. If the source has more, say so in the report, and offer to import the next batch.
+- List the guarantees the source states or implies that apply to this system. For a past bug, confirm its cause from the fix, not only the report.
+- Show the user the most important batch, and ask which to add, unless the request already says which.
+- Define each chosen guarantee by following "Make it checkable", "Add the check" and "Check it locally", then check them all in one short run, as "Check it in a short run" says.
+- If the source has more, say so in the report, and offer to import the next batch.
 
 ### Template property catalogs
 

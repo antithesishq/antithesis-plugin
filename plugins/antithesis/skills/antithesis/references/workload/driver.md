@@ -8,14 +8,14 @@ This page describes the driver in hegel's terms, which every language shares. Th
 
 `main` does this, in order:
 
-1. **Initialize the Antithesis SDK,** if the language's SDK has an init call.
-2. **Wait until every node is up:** it answers requests, even if only to say the cluster isn't formed yet. An open port isn't enough.
-3. **Run admin setup, if any:** creating the cluster, a schema, users, buckets or topics, when that's easier here than in the system's containers. Retry each until it succeeds, and treat "already exists" as success, since a retried request may have taken effect.
-4. **Wait until the system serves the workload's requests:** a read answers, the cluster has a leader, all members joined.
-5. **Report setup complete** with the SDK's lifecycle call. Antithesis takes the first setup complete from any process, so remove any other reporter, such as one in the system's containers.
-6. **Wait for `/workload-active`,** polling every 100 ms; this wait is outside the state machine, so a sleep loop is fine. The driver container's `first_` command creates it (`references/workload/harness.md`).
-7. **Mark the start** with a `assert_reachable` assertion, "the workload starts".
-8. **Run the state machine** forever.
+- **Initialize the Antithesis SDK,** if the language's SDK has an init call.
+- **Wait until every node is up:** it answers requests, even if only to say the cluster isn't formed yet. An open port isn't enough.
+- **Run admin setup, if any:** creating the cluster, a schema, users, buckets or topics, when that's easier here than in the system's containers. Retry each until it succeeds, and treat "already exists" as success, since a retried request may have taken effect.
+- **Wait until the system serves the workload's requests:** a read answers, the cluster has a leader, all members joined.
+- **Report setup complete** with the SDK's lifecycle call. Antithesis takes the first setup complete from any process, so remove any other reporter, such as one in the system's containers.
+- **Wait for `/workload-active`,** polling every 100 ms; this wait is outside the state machine, so a sleep loop is fine. The driver container's `first_` command creates it (`references/workload/harness.md`).
+- **Mark the start** with a `assert_reachable` assertion, "the workload starts".
+- **Run the state machine** forever.
 
 A pattern you adopted (`references/patterns/MODULE.md`) may add to these steps.
 
@@ -94,8 +94,8 @@ A quiescent check pauses faults, waits for the system to recover, and asserts th
 
 Write it as a sampled invariant with hegel's pause-faults flag. Hegel pauses faults, through the program `ANTITHESIS_FAULT_CONTROL` names, just before each run of the invariant, and resumes them just after, even when it fails. Outside Antithesis the flag does nothing. Never make it always-run: faults would pause every round and never last. The invariant:
 
-1. Waits, up to a deadline, until every node serves requests again. Restarted containers take a while to come back. The "Wait until every node is up" step can share this per-node check.
-2. Logs that its assertions start, then asserts that the system recovered, and asserts each guarantee that must hold once faults stop ("After faults stop" in `references/properties/checks.md`). Each assertion becomes a property in the run.
+- Waits, up to a deadline, until every node serves requests again. Restarted containers take a while to come back. The "Wait until every node is up" step can share this per-node check.
+- Logs that its assertions start, then asserts that the system recovered, and asserts each guarantee that must hold once faults stop ("After faults stop" in `references/properties/checks.md`). Each assertion becomes a property in the run.
 
 An invariant runs between rounds, so no rule runs during it, but background threads do, such as blocking operations a rule started. Decide from what it asserts whether they may keep acting, or whether the check must wait for them first.
 
