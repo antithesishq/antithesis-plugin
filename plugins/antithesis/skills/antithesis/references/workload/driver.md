@@ -99,6 +99,6 @@ Write it as a sampled invariant with hegel's pause-faults flag. Hegel pauses fau
 
 An invariant runs between rounds, so no rule runs during it, but background threads do, such as blocking operations a rule started. Decide from what it asserts whether they may keep acting, or whether the check must wait for them first.
 
-Leave the system as the check found it, so the workload can go on. If a check must change or damage the system, such as shutting nodes down to compare their data files, log that it's ending the timeline after its assertions, then exit the driver with status 0. Once the driver exits, the timeline goes idle, and Antithesis stops spending fuzzing effort on it, which ends it in effect.
+Leave the system as the check found it, so the workload can go on. If a check must change or damage the system, such as shutting nodes down to compare their data files, make its other assertions on every run, and do that part only when a rare weighted boolean draw passes, so timelines still reach deep states. After it, log that it's ending the timeline, then exit the driver with status 0. Once the driver exits, the timeline goes idle, and Antithesis stops spending fuzzing effort on it, which ends it in effect. For the local loop, give the driver two environment variables: one that skips that part, and one that makes its draw always pass.
 
 For the rest of hegel's API, follow the links on the language page. <https://hegel.dev/> explains how hegel works.

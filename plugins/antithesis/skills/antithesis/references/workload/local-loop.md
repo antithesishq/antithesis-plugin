@@ -16,7 +16,7 @@ In `docker-compose.coverage.yaml`, also set `ANTITHESIS_SDK_LOCAL_OUTPUT` on the
       ANTITHESIS_SDK_LOCAL_OUTPUT: /tmp/sdk.jsonl
 ```
 
-The driver's SDK then writes its assertions and its setup-complete event, `{"antithesis_setup": {"status": "complete", ...}}`, to that file. If the SUT's code has assertions (`references/properties/assertions.md`), set it on each of those services too, as `/coverage/<service>/sdk.jsonl`, and copy each file out as `sdk-<service>.jsonl` next to the driver's.
+If a quiescent check can end the timeline, also set the driver's variable that skips that part ("Quiescent checks" in `references/workload/driver.md`), so the driver doesn't exit partway through the run. The driver's SDK then writes its assertions and its setup-complete event, `{"antithesis_setup": {"status": "complete", ...}}`, to that file. If the SUT's code has assertions (`references/properties/assertions.md`), set it on each of those services too, as `/coverage/<service>/sdk.jsonl`, and copy each file out as `sdk-<service>.jsonl` next to the driver's.
 
 Nothing runs test commands locally, so run the driver's first command yourself right after `up`, which also checks it. Running it before setup complete is fine.
 
@@ -52,7 +52,7 @@ If setup complete never arrives, the driver stopped in its startup. `docker comp
   ```
 
   Any other unmet `assert_sometimes` or `assert_reachable` means the workload doesn't reach that situation or code: change the actions or their mix.
-- **Quiescent checks.** Each one logged that its assertions start, more than once, and its assertions pass. Faults don't pause locally, so this checks only that it runs and that its checks hold on a healthy system. A check that ends the timeline exits the driver with status 0 (`docker compose ps -a`) at its first run; `docker compose cp` still copies `sdk.jsonl` from the stopped container.
+- **Quiescent checks.** Each one logged that its assertions start, more than once, and its assertions pass. Faults don't pause locally, so this checks only that it runs and that its checks hold on a healthy system. For a check that can end the timeline, run once more with the variable that makes its draw always pass. The driver logs that it's ending the timeline, then exits with status 0 (`docker compose ps -a`), and the check's assertions pass. `docker compose cp` still copies `sdk.jsonl` from the stopped container.
 - **Shutdown.** `docker stop` on a system container shuts its process down cleanly, without a kill.
 - **Debug tools.** Each debug tool ("Debug tools" in `references/workload/harness.md`) runs in its container. Check them in the session above, before `docker compose stop`, such as `docker compose exec -T <service> jq --version`.
 - **Patterns.** Each pattern you adopted passes its own local checks.
