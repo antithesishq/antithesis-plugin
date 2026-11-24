@@ -18,12 +18,14 @@ from report import ROOT, error, say
 
 PAGE = ROOT / "plugins/antithesis/skills/antithesis/references/workload/images.md"
 DEBIAN_RELEASE = "https://deb.debian.org/debian/dists/stable/Release"
-# Each role's image, from the Debian stable codename (trixie) and major version (13).
+# Each role's image, from the Debian stable codename (trixie) and major version (13). The agent
+# fills in a `<placeholder>` from the language page, such as the Python minor version that the
+# driver's packages publish wheels for; the check looks up the tag without it.
 ROLES = [
     ("Runtime image", "debian:{codename}-slim"),
     ("Rust build image", "rust:1-{codename}"),
     ("Go build image", "golang:1-{codename}"),
-    ("Python image", "python:3-slim-{codename}"),
+    ("Python image", "python:3.<minor>-slim-{codename}"),
     ("OCaml build image", "ocaml/opam:debian-{major}"),
 ]
 START, END = "<!-- images:start -->", "<!-- images:end -->"
@@ -42,7 +44,7 @@ def debian_stable() -> tuple[str, str]:
 
 
 def tag_exists(image: str) -> bool:
-    repository, tag = image.split(":")
+    repository, tag = re.sub(r"\.?<\w+>", "", image).split(":")
     if "/" not in repository:
         repository = f"library/{repository}"
     try:

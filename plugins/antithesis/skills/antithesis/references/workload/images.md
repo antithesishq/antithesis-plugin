@@ -5,11 +5,11 @@ Use these images when you have to choose one, such as for the driver or a build 
 <!-- images:start -->
 Debian stable: 13 (trixie)
 
-| Role              | Image                  |
-| ----------------- | ---------------------- |
-| Runtime image     | `debian:trixie-slim`   |
-| Rust build image  | `rust:1-trixie`        |
-| Go build image    | `golang:1-trixie`      |
-| Python image      | `python:3-slim-trixie` |
-| OCaml build image | `ocaml/opam:debian-13` |
+| Role              | Image                          |
+| ----------------- | ------------------------------ |
+| Runtime image     | `debian:trixie-slim`           |
+| Rust build image  | `rust:1-trixie`                |
+| Go build image    | `golang:1-trixie`              |
+| Python image      | `python:3.<minor>-slim-trixie` |
+| OCaml build image | `ocaml/opam:debian-13`         |
 <!-- images:end -->

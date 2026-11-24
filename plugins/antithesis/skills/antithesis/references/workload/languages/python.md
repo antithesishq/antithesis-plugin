@@ -23,7 +23,8 @@ Use `coverage.py`.
 ## Hegel driver
 
 - **Package:** `hegeltest` on PyPI, imported as `hegel`.
-- **Latest version:** `curl -s https://pypi.org/pypi/hegeltest/json | jq -r '.info.version, .info.requires_python'`, which also prints the Python versions it supports.
+- **Latest version:** `curl -s https://pypi.org/pypi/hegeltest/json | jq -r .info.version`.
+- **Python version:** `curl -s https://pypi.org/pypi/hegeltest/json | jq -r '[.urls[].filename | capture("-cp3(?<m>[0-9]+)-.*manylinux") | .m | tonumber] | max'` prints the newest Python 3 minor version that `hegeltest` publishes Linux wheels for. On a newer Python, `pip` builds it from source, which needs a Rust toolchain.
 - **Docs:** <https://hegel.readthedocs.io>. Read `Run tests on Antithesis`, the stateful testing tutorial and reference, and the how-to on threads.
 - **Example workload:** <https://github.com/hegeldev/hegel/tree/main/frontends/python/examples/sqlite_bank>, a concurrent bank workload run from `@hegel.main`.
 
@@ -41,4 +42,4 @@ Use `coverage.py`.
 - Rules run on worker threads. Requests overlap while they wait on the network, but Python code itself runs one thread at a time, so keep the model's checks cheap.
 - Hegel doesn't run `async` functions. Write rules as plain functions, with a blocking client.
 
-Image: Python needs no build stage. Base the driver image on the "Python image" row in `references/workload/images.md`, install the latest `hegeltest` and `antithesis` with `pip`, and run the script as `CMD`.
+Image: Python needs no build stage. Base the driver image on the "Python image" row in `references/workload/images.md`, with `<minor>` from "Python version", install the latest `hegeltest` and `antithesis` with `pip`, and run the script as `CMD`.
