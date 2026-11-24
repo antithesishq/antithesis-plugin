@@ -6,5 +6,6 @@ Input: a failing property or anomaly in the run, named in the request. If none i
 2. Run commands at the failing moment and around it. See `references/debug/MODULE.md`.
 3. If this run can't answer it, launch a targeted run that can, for example with more logging around the suspect code, or a workload that drives the failing path harder. If that logging is too verbose for a normal run, add it temporarily with the pattern "Retroactive logging" in `references/patterns/MODULE.md`. Launch it with `references/launch/MODULE.md`, with the original run's launcher and flags, from the command that launched it or the workload's harness (`snouty runs show` doesn't list every parameter). Then investigate the same property in that run.
 4. Stop once evidence from a run shows the cause, not only the code.
+5. Check whether the cause is already known, with the search in "Duplicates" in `references/triage/issues.md`.
 
 Report the cause as "Report" in `references/triage/MODULE.md` describes.

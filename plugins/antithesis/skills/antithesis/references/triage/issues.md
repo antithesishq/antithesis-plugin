@@ -37,9 +37,19 @@ Put a reproducer in `{reproducer}`: code the maintainer can run to reproduce the
 
 If a reproducer would be too hard to write, silently leave out the Reproduction section.
 
+## Find the tracker
+
+Known issues live in the project's issue tracker, which may not be the destination. Find it from:
+
+- the git remote, such as `github.com/{owner}/{repo}`
+- the links in `README` and `CONTRIBUTING`
+- `<issueManagement>` in `pom.xml`, or `bugs` in `package.json`
+
+Apache projects track issues in JIRA, at `issues.apache.org/jira`: search by project key, such as `ZOOKEEPER`, and the keys of the dependencies the failure involves, such as `CURATOR`.
+
 ## Duplicates
 
-Search the destination for existing issues before reporting.
+Search the tracker and the destination for existing issues before reporting. Check open and closed issues.
 
 If the bug already exists, edit the issue to add a bullet point to its `{duplicate_details}`.
 
