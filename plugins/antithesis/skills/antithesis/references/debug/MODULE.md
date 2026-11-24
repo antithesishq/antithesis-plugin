@@ -16,11 +16,15 @@ Any ready run can execute commands, but a run that already has the moment warm s
 
 - Prefer a ready run that has already rewarmed the moment. Check with `snouty runs search <run_id> --count 'filter(ev => ev.moment.input_hash == "<hash>")'`; non-zero means every moment of that branch is warm.
 - Prefer reusing a ready run over starting a new one.
-- If no run is ready, start a debugging session with `snouty debug`, once it fits in the compute budget ("Compute budget" in `references/launch/MODULE.md`). Always pass the shortest `--duration` that fits the investigation, such as `30m`.
+- If no run is ready, start a debugging session with `snouty debug`. Always pass a `--duration`: booting a session and rewarming a deep moment can take 20 to 30 minutes, so pass at least `1h` for a moment past vtime 100 or of unknown depth.
 
 When an example or counterexample appears in a run still in progress, the moment is warm there, so run commands in that run. Once the run ends, pick a run with the policy above. A new debugging session takes minutes to get ready, so don't block on it: wait with `snouty runs wait --until ready` in the background, and meanwhile read the timeline's logs with `snouty runs logs` and start on a reproducer.
 
 Executing commands doesn't keep a run alive. If the run exits while you debug, pick a new one with this policy and continue.
+
+## Compute budget
+
+A debugging session started with `snouty debug` spends the task's compute budget for as long as it stays available, up to its `--duration`. Before you start one, check that it fits, as "Compute budget" in `references/launch/MODULE.md` says.
 
 ## Executing commands
 
@@ -61,4 +65,4 @@ sha256sum -c --quiet parts.sha256 && cat part.* | gunzip > data.db
 
 ## When you're done
 
-A debugging session started with `snouty debug` spends the compute budget ("Compute budget" in `references/launch/MODULE.md`) for as long as it stays available, up to its `--duration`. As soon as you have what you need, cancel each debugging session you started with `snouty runs cancel <run_id>`. A subagent reports the debugging sessions it started and leaves them running, because another subagent may be using them. The agent that launched the subagents cancels those sessions once they have all finished. Never cancel a run that you or your subagents didn't start.
+As soon as you have what you need, cancel each debugging session you started with `snouty runs cancel <run_id>`. A subagent reports the debugging sessions it started and leaves them running, because another subagent may be using them. The agent that launched the subagents cancels those sessions once they have all finished. Never cancel a run that you or your subagents didn't start.

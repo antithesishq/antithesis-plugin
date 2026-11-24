@@ -14,7 +14,7 @@ Input: a workload to run in Antithesis, and optionally the launcher, compute bud
 
 ## Compute budget
 
-The task's compute budget, from the user or the default in `SKILL.md`, covers every test run and debugging session that you or your subagents start for the task, and "your" below counts both. A debugging session bills about 48 compute hours for each hour it stays available. Before you launch a run or start a debugging session, add up:
+The task's compute budget, from the user or the default in `SKILL.md`, covers every test run and debugging session that you or your subagents start for the task. In the sum below, your runs and sessions include those your subagents started. A debugging session bills about 48 compute hours for each hour it stays available. Before you launch a run or start a debugging session, add up:
 
 - the compute hours of your runs and sessions that have ended, from `snouty runs usage --after <when the task started>`. It lists every run on the tenant, so count only the run IDs of yours ("Finding your runs");
 - the `--max-compute-hours` of your runs still going, and 48 per hour of the `--duration` of your open sessions, which `runs usage` doesn't list until they end;
