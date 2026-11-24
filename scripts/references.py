@@ -10,7 +10,8 @@ such as "Starting up" in `references/workload/driver.md`: each must name a headi
 on the page it points at, or a table row's first cell. An image placeholder such as
 `<Rust build image>` must name a row of the skill's image table. Steps are referred to by name, so a step number such as "step 2"
 fails, since reordering a list would silently change what it points at. For the same reason,
-steps are a bulleted list, so an ordered list fails too: inserting a step would renumber the rest.
+steps are a bulleted list and headings carry no number, so an ordered list or a numbered
+heading fails too: inserting a step or a section would renumber the rest.
 """
 
 import re
@@ -22,6 +23,7 @@ from skills import (
     IMAGES_PAGE,
     image_placeholders,
     is_internal,
+    numbered_headings,
     ordered_list_items,
     references,
     section_names,
@@ -32,7 +34,7 @@ from skills import (
 
 
 def check_sections(skill: Path, source: Path, by_name: dict[str, Path]) -> int:
-    """Check each section reference, step number and ordered list on one page."""
+    """Check each section reference, step number, ordered list and numbered heading on one page."""
     problems = 0
     text = source.read_text()
     # A shipped skill's install holds only its own plugin, so it may point only at its own
@@ -97,6 +99,14 @@ def check_sections(skill: Path, source: Path, by_name: dict[str, Path]) -> int:
         error(
             "check-references",
             "numbered list: write steps as a bulleted list, in order",
+            source,
+            line,
+        )
+        problems += 1
+    for line in numbered_headings(text):
+        error(
+            "check-references",
+            "numbered heading: drop the number, and name the section by its heading",
             source,
             line,
         )

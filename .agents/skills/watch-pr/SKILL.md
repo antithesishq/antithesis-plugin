@@ -9,7 +9,7 @@ Watch one or more pull requests until every one of them merges or closes. The in
 
 The `release` skill watches its PR with this skill too, and adds its own rules for one.
 
-## 1. Start the watcher
+## Start the watcher
 
 The user often opens a PR and reviews it a day later. Watch so that you wake only when there's something to do, never on a timer.
 
@@ -56,7 +56,7 @@ gh failed: <message>
 
 Every line names its PR, so one watcher covers several PRs.
 
-## 2. Read the event lines
+## Read the event lines
 
 An event line carries only metadata. Read the full comment, review or log through the API before you act on it.
 
@@ -78,7 +78,7 @@ Never pass `--paginate` to `gh api`. Behind a proxy set as gh's host, the first 
 
 **State.** When the watcher can't write its state, it prints `cannot save state` and exits with status 2 before it prints an event. Start it again with `--state-dir <dir>`, where `<dir>` is a writable directory that only this watch uses, and pass the same `--state-dir` on each later run.
 
-## 3. React to each event
+## React to each event
 
 - **Review or comment**: decide whether it's valid. A bot's comment can be wrong. If it asks for a valid change, check out that PR's branch, make the change, run `mise run fix` and `mise run check`, update the description ("Keep the description current"), and push. Reply with the commit hash, or with why you didn't make the change. Leave the thread open: the reviewer resolves it. If the comment is unclear, ask on the thread instead of guessing.
 
@@ -120,7 +120,7 @@ Push every change as a new commit, and bring in the PR's base branch with a merg
 
 Don't merge a PR yourself. After you react to a batch, tell the user in a line or two what came in and what you did, then start the watcher again.
 
-## 4. Keep the description current
+## Keep the description current
 
 Reviewers read the PR description, and the squash commit on `main` takes the PR's title. Keep both true for the branch as it is now.
 

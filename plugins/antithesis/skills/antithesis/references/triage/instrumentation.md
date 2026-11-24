@@ -2,7 +2,7 @@
 
 Use this guide to verify that the system under test (SUT) and its client programs are instrumented and that their symbols are registered. Without instrumentation and symbols, Antithesis cannot do coverage-guided fuzzing or thread pausing. This limits how much of the system Antithesis can test. Treat missing instrumentation as a setup problem.
 
-## Step 1: list the run's modules
+## List the run's modules
 
 ```bash
 snouty runs modules "${RUN_ID}" --detail
@@ -12,7 +12,7 @@ Each row is one instrumented module that a program loaded, in one container: its
 
 SYMBOLS is `yes` when Antithesis has a symbol catalog for the module, which maps its locations to functions. It doesn't mean the catalog has source files and lines: a binary built without debug information shows `yes` too.
 
-## Step 2: check the setup properties
+## Check the setup properties
 
 ```bash
 snouty runs properties "${RUN_ID}" --detail --name "every instrumented module has symbols"
@@ -22,7 +22,7 @@ It fails when a module loaded without its symbols, or a file in a `/symbols` dir
 
 For code in `/opt/antithesis/catalog/` (Java, .NET, JavaScript and Python), also check the properties whose names contain `paths found` and `invalid paths`. `Paths found for Antithesis instrumentation` lists each image's catalog directories by language, and `No invalid paths found during Antithesis instrumentation` fails on a symlink to a symlink there. See `snouty docs show /docs/reference/default_properties/`.
 
-## Step 3: compare against the expected components
+## Compare against the expected components
 
 The setup normally instruments the SUT binaries, including any client programs that run the system's client library. Whether the workload's own binaries are instrumented depends on its build. A workload built with this skill instruments its driver too, when the driver's language allows. Build the expected list from the source code when you have access to it — the harness and build files show which components the setup instruments. For each, note the module ID where its build provides one, or else its name and container ("Instrumentation" in `references/workload/languages/<language>.md`), and whether its process runs from the start of every timeline, or starts only when something triggers it, such as a CLI tool, a repair job or a rarely used helper. Without source access, infer the list from the user's request, the run description, and the containers in the run.
 

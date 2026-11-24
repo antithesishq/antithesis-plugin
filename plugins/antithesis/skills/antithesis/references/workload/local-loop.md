@@ -1,12 +1,12 @@
 # Iterate locally
 
-## 1. Build the system for coverage
+## Build the system for coverage
 
 Antithesis instrumentation records nothing locally, so measure local coverage with the language's own tool. Add a `docker-compose.coverage.yaml` that overrides each system service with a coverage Dockerfile and a shared `coverage` volume, one directory per service. Client containers, if a pattern adds them, count as system services: the client library is code under test.
 
 Build each service as "Local coverage" in `references/workload/languages/<language>.md` says, for its language. Check that the data survives `docker compose stop` and a container restart before trusting it.
 
-## 2. Run the workload
+## Run the workload
 
 In `docker-compose.coverage.yaml`, also set `ANTITHESIS_SDK_LOCAL_OUTPUT` on the driver:
 
@@ -38,7 +38,7 @@ Copy each run's logs and `sdk.jsonl` files into a fresh directory, outside the c
 
 If setup complete never arrives, the driver stopped in its startup. `docker compose logs driver`, with the same `COMPOSE_FILE`, shows what it was waiting for or which request failed.
 
-## 3. Check the behavior
+## Check the behavior
 
 - **Startup.** `the workload starts` was reached.
 - **Actions.** Every action reaches its intended outcome sometimes, and none is routinely slow.
@@ -57,13 +57,13 @@ If setup complete never arrives, the driver stopped in its startup. `docker comp
 - **Debug tools.** Each debug tool ("Debug tools" in `references/workload/harness.md`) runs in its container. Check them in the session above, before `docker compose stop`, such as `docker compose exec -T <service> jq --version`.
 - **Patterns.** Each pattern you adopted passes its own local checks.
 
-## 4. Read the coverage
+## Read the coverage
 
 After the system stops, run the language's coverage tool on the `coverage` volume, and list the functions in the system's own source that never ran.
 
 Error-handling and recovery code looks unreached without faults. Don't chase it locally: put exploration assertions on it ("Exploration assertions" in `references/properties/assertions.md`), and check them in the Antithesis runs (`references/workload/run-loop.md`).
 
-## 5. Close the gaps
+## Close the gaps
 
 - **A request the workload never sends:** add it to the driver.
 - **A rare condition** (an error path or race): act only if a different action mix would make it common.

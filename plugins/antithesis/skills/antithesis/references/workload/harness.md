@@ -2,7 +2,7 @@
 
 `docker-compose.yaml` lives in `config/` (`references/workload/layout.md`). Every service needs an explicit `image:`. snouty rejects services without one.
 
-## 1. The driver container
+## The driver container
 
 Build the driver into its own image, and add it to `docker-compose.yaml` as a service named `driver`. The driver program is the container's main process (`references/workload/driver.md`). Give it no `restart:` policy: a quiescent check that changes the system ends its timeline by exiting the driver with status 0.
 
@@ -33,7 +33,7 @@ RUN chmod 755 /opt/antithesis/test/v1/main/first_start_workload
 CMD ["/usr/local/bin/driver"]
 ```
 
-## 2. The test template
+## The test template
 
 The driver image's test template, `/opt/antithesis/test/v1/main/`, holds exactly one test command, `first_start_workload`. No other container has a test template. The directory name `main` is the test name; any name works.
 
@@ -48,7 +48,7 @@ Antithesis runs the first command once at the start of every timeline, after set
 
 Test commands must be executable, which the Dockerfile's `chmod` ensures. `snouty validate` reports any that aren't.
 
-## 3. Shared volumes
+## Shared volumes
 
 For out-of-band facts ("Shared volumes for out-of-band facts" in `references/workload/driver.md`), mount one named volume in the node that writes and in the driver:
 
@@ -63,7 +63,7 @@ volumes:
 
 A new volume takes the ownership of its mount point in the image. If the node runs as a non-root user, create the mount point owned by that user in its Dockerfile, for example `RUN mkdir /shared && chown 999:999 /shared`; otherwise Docker creates it owned by root, and the node can't write there.
 
-## 4. Pick the faults, and exclude the driver
+## Pick the faults, and exclude the driver
 
 Launch every run of the workload with the `basic_test` launcher, unless the user names another, following `references/launch/MODULE.md`, and these flags:
 
@@ -76,7 +76,7 @@ Launch every run of the workload with the `basic_test` launcher, unless the user
 
 `--fault-exclusions` is a regex matched against container names, so `^driver$` relies on the driver's `container_name: driver` (section 1); without it, Compose names the container `<project>-driver-1` and the regex matches nothing. Exclude only the driver.
 
-## 5. Debug tools
+## Debug tools
 
 To debug a failure, you run commands at a moment in a container with `snouty runs exec` (`references/debug/MODULE.md`). In the Antithesis environment, exec can only access tools included in the image. So ensure that workload images contain useful debugging tools such as `curl`, `jq`, and the SUT's admin or inspection CLI, such as `fdbcli`, `etcdctl`, or `psql`.
 
