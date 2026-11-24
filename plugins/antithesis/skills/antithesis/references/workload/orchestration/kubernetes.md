@@ -61,25 +61,23 @@ Build each image with `docker build` under its full name, then run `snouty valid
 
 Use a k3d cluster of your own, with its own kubeconfig, so the user's current `kubectl` context never changes. Never deploy to a cluster you didn't create without asking the user. Delete the cluster when you're done with it. An export lasts only for the shell it runs in, so start every command that runs `kubectl` or `kapp` with `export KUBECONFIG=$HOME/.config/k3d/kubeconfig-<workload>.yaml`, or kapp and kubectl act on the user's own cluster. Use that path, not `$(k3d kubeconfig write <workload>)`: if the file is missing, they fail instead of falling back to the user's kubeconfig. Pass `-n <namespace>` to every `kubectl`, since the context's namespace doesn't survive a rewrite of the file.
 
-```bash
-k3d cluster create <workload> --no-lb --kubeconfig-update-default=false \
-  --k3s-arg '--disable=traefik,servicelb,metrics-server@server:0'
-k3d kubeconfig write <workload> --output $HOME/.config/k3d/kubeconfig-<workload>.yaml
-```
-
 Write the coverage build as a Kustomize overlay outside `config/`, such as `coverage/kustomization.yaml`, that lists each file in `config/manifests/` as a resource, swaps in each system service's coverage image, mounts a `coverage` claim at `/coverage` in every pod, with one directory per pod, such as `/coverage/$(POD_NAME)` from the downward API, created before the process starts, and sets the local-loop variables on the driver ("Run the workload" in `references/workload/local-loop.md`). Write the driver's SDK output to the claim, `ANTITHESIS_SDK_LOCAL_OUTPUT=/coverage/driver/sdk.jsonl`, so it survives the driver's exit.
 
-Rebuild each image you changed, under a new tag, before every run. kapp keeps its app record in `-n default`, since the workload's namespace exists only once kapp creates it. If an operator runs the SUT, scale the operator to 0 first in the stop, or it brings the pods back. Run this as one command:
+Rebuild each image you changed, under a new tag, before every run. Each run starts on a new cluster, so nothing carries over from the last one, such as its coverage or an operator's finalizers. kapp keeps its app record in `-n default`, since the workload's namespace exists only once kapp creates it. Run this as one command:
 
 ```bash
-export KUBECONFIG=$HOME/.config/k3d/kubeconfig-<workload>.yaml
+k3d cluster delete <workload>; k3d cluster create <workload> --no-lb --kubeconfig-update-default=false \
+  --k3s-arg '--disable=traefik,servicelb,metrics-server@server:0' &&
+k3d kubeconfig write <workload> --output $HOME/.config/k3d/kubeconfig-<workload>.yaml &&
+export KUBECONFIG=$HOME/.config/k3d/kubeconfig-<workload>.yaml &&
 k3d image import -c <workload> <every image the overlay names> &&
-kapp delete -n default -a <workload> --yes && kubectl kustomize --load-restrictor LoadRestrictionsNone coverage | kapp deploy -n default -a <workload> -f - --yes &&
+kubectl kustomize --load-restrictor LoadRestrictionsNone coverage | kapp deploy -n default -a <workload> -f - --yes &&
 kubectl -n <namespace> exec driver -- /opt/antithesis/test/v1/main/first_start_workload &&
 timeout 600 sh -c 'until kubectl -n <namespace> exec <a pod that mounts the claim> -- grep -qs antithesis_setup /coverage/driver/sdk.jsonl; do sleep 5; done' &&
 sleep 300
-kubectl -n <namespace> scale statefulset,deployment --all --replicas 0   # stops the system gracefully
-kubectl -n <namespace> wait --for=delete pod -l <SUT pod label> --timeout 2m &&   # copy only once every process has exited
+# Stop the system gracefully: the controllers, an operator among them, then any pod they leave.
+kubectl -n <namespace> scale statefulset,deployment --all --replicas 0
+kubectl -n <namespace> delete pod -l <SUT pod label> --timeout 2m &&   # copy only once every process has exited
 docker exec k3d-<workload>-server-0 sh -c 'cd /var/lib/rancher/k3s/storage/*_<namespace>_coverage && tar -c .' | tar -x -C <run directory>
 ```
 
