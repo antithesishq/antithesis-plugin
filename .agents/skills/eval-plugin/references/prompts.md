@@ -12,10 +12,11 @@ For a 300 compute-hour eval of one target on the standard tier:
 | Triage root-cause, each round | 10 | Often uses one short run, or nothing. Eval 2's used 6.1. |
 | Debug | 10 | With one session at a time there's no other ready run to borrow, so the session starts its own debugging session. That bills about 48 compute hours per hour of wall time, so 10 buys about 12 minutes. Eval 3's billed 14.5 for 18 minutes. |
 | Monitor run | 24 | You launch it for the monitor task; plain-language triage uses it too. |
-| Properties | 30 | |
+| Properties | 20 | Eval 3's used 13. |
 | Patterns | 125 | The long run alone needs about 100: 2 hours of fuzzing on 48 cores is 96, plus setup. |
+| Instrumentation fixture run | 13 | Once per eval. You launch it at a 12 cap, and let it complete, so its setup properties are reported. |
 
-These caps add up to 289, counting root-cause twice, which leaves 11 for billing over each cap (see **Budget** in `SKILL.md`), so ask each session to count that overrun against its budget. Summary, monitor and the plain-language triage launch nothing themselves. Scale the split to the user's budget and the target's setup time.
+These caps add up to 292, counting root-cause twice, which leaves 8 for billing over each cap (see **Budget** in `SKILL.md`), so ask each session to count that overrun against its budget. Summary, monitor and the plain-language triage launch nothing themselves. Scale the split to the user's budget and the target's setup time.
 
 ## Templates
 
@@ -106,3 +107,13 @@ Look at the patterns the antithesis skill offers, adopt the ones that actually f
 
 You have up to [patterns budget] compute hours on Antithesis for all of this, including the long run. Work autonomously. When you're done, tell me what you changed and why, which patterns you adopted or rejected, the runs you launched with their compute hours, and what the long run showed.
 ```
+
+### triage-instrumentation
+
+Run twice on the fixture's run: once in `~/src/shop`, the fixture exported by `fixture.py export`, and once in an empty directory.
+
+```text
+/antithesis triage summary [run id]
+```
+
+The prompt doesn't mention instrumentation: the test is whether summary mode checks it unprompted, as the triage module says to.
