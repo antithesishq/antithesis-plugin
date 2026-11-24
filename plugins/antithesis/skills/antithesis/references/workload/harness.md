@@ -54,7 +54,7 @@ sleep 30
 exit 0
 ```
 
-It only keeps a test command running, so test composer keeps the timeline going. Without it, most timelines stop about 20 seconds in, however long the driver runs, unless Antithesis finds them interesting enough to extend.
+This driver keeps the timeline running as long as Antithesis finds it interesting. Without it, most timelines stop after about 20 seconds of fuzzing.
 
 Test commands must be executable, which the Dockerfile's `chmod` ensures. `snouty validate` reports any that aren't.
 
