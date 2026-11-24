@@ -55,7 +55,7 @@ Share a volume between pods with one `PersistentVolumeClaim` on `local-path`, `R
 
 ## Build and validate
 
-Build each image with `docker build` under its full name, then run `snouty validate <config_dir>`. For Kubernetes it only checks the manifests, without running them: fix every finding it denies. It warns that the driver is a bare Pod without a readiness probe: that's by design ("The driver"). Then deploy locally ("Run locally") until setup complete arrives, which is the check `snouty validate` gives a Compose workload.
+Build each image with `docker build` under its full name, then run `snouty validate <config_dir>`. For Kubernetes it only checks the manifests, without running them: fix every finding it denies. It warns that the driver is a bare Pod without a readiness probe: that's by design ("The driver"). Then deploy locally ("Run locally") until setup complete arrives, which is the check `snouty validate` gives a Compose workload. A workload without the coverage overlay, such as one you only launch, has no `sdk.jsonl` to read: in the loop, deploy `config/manifests/` in place of the overlay, and stop once `kapp deploy` reports every resource ready, the signal Antithesis itself falls back to.
 
 ## Run locally
 
