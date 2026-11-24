@@ -45,9 +45,10 @@ _PAGE_TARGET = re.compile(r"(?: step| section| row)? (?:in|on|of) (?:the [a-z ]+
 _SKILL_TARGET = re.compile(r"(?: step| section| row)? (?:in|on|of) the `([a-z0-9-]+)` skill")
 _STEP_NUMBER = re.compile(r"\b[Ss]teps? \d+")
 _ORDERED_ITEM = re.compile(r"^\s*\d+[.)]\s")
+_NUMBERED_HEADING = re.compile(r"^#+\s+(?:\d+[.)]|[Ss]tep \d+:?)\s")
 _CODE_SPAN = re.compile(r"`[^`]*`")
-_HEADING = re.compile(r"^#+\s+(?:\d+\.\s+|Step \d+:\s+)?(.+?)\s*$")
-_LIST_LABEL = re.compile(r"^\s*(?:\d+\.|[-*])\s+\*\*(.+?)\*\*")
+_HEADING = re.compile(r"^#+\s+(.+?)\s*$")
+_LIST_LABEL = re.compile(r"^\s*[-*]\s+\*\*(.+?)\*\*")
 _TABLE_ROW = re.compile(r"^\|\s*([^|]+?)\s*\|")
 _TABLE_RULE = re.compile(r"^\|[\s:|-]+\|$")
 # An image placeholder in a Dockerfile, such as `<Rust build image>`, names a row of the
@@ -68,9 +69,8 @@ def prose_lines(text: str) -> Iterator[tuple[int, str, str]]:
 
 
 def section_names(text: str) -> set[str]:
-    """Every name a section reference can point at on a page: its headings, without a leading
-    number such as "2. " or "Step 2: ", the bold label opening each list item, and the first
-    cell of each table row below a table's header."""
+    """Every name a section reference can point at on a page: its headings, the bold label
+    opening each list item, and the first cell of each table row below a table's header."""
     names: set[str] = set()
     header = False
     for _, line, _ in prose_lines(text):
@@ -116,4 +116,11 @@ def ordered_list_items(text: str) -> Iterator[int]:
     """Yield the line number of each ordered list item outside code."""
     for number, line, _ in prose_lines(text):
         if _ORDERED_ITEM.match(line):
+            yield number
+
+
+def numbered_headings(text: str) -> Iterator[int]:
+    """Yield the line number of each heading that opens with a number, such as "2. " or "Step 2: "."""
+    for number, line, _ in prose_lines(text):
+        if _NUMBERED_HEADING.match(line):
             yield number

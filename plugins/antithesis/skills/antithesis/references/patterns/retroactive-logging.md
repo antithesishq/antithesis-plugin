@@ -4,7 +4,7 @@ With retroactive logging, the system logs at a verbose level, such as trace, and
 
 The launch sets the filter, and whoever debugs the run must know to ask for the filtered lines.
 
-## 1. Pick the lines to filter
+## Pick the lines to filter
 
 Turn on verbose logging through the system's own configuration. Then write the filter, an RE2 pattern:
 
@@ -13,11 +13,11 @@ Turn on verbose logging through the system's own configuration. Then write the f
 
 Check the pattern against the system's real lines from the local loop (`references/workload/local-loop.md`). It must leave the lines that triage reads in `snouty runs logs`: the driver's output, and the system's normal-level lines, such as warnings and errors. Filtered lines are absent from it and from `snouty runs search`.
 
-## 2. Launch with the filter
+## Launch with the filter
 
 Pass the filter flag in the workload's launch script (`references/workload/layout.md`), on every launch. `snouty runs show --json` carries the run's launch parameters, so whoever debugs the run can see the filter there. Say in `antithesis/README.md` which lines the filter drops.
 
-## 3. Recover the lines
+## Recover the lines
 
 Execute a command at a moment with `--events --include-filtered-logs` (`references/debug/MODULE.md`). The events include the filtered lines logged while the command runs:
 
