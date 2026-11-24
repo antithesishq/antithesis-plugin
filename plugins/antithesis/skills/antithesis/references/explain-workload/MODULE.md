@@ -10,7 +10,7 @@ Read the driver, the workload's README and the last run. Write for a reader who 
 
 Open with: `Antithesis tests <system> by running this workload against it. Antithesis only tests what this workload does: any action or workflow it doesn't perform goes untested.` Then write these sections:
 
-- **The system under test.** A symmetrically laid out diagram of how the nodes are related with arrows. Don't label the arrows. Show how the driver or equivalent fits into the SUT.
+- **The system under test.** A symmetrically laid out diagram of how the nodes are related with arrows. Don't label the arrows. Show how the driver or equivalent fits into the SUT. Explain the diagram with a sentence or two under it.
 - **The workload.** A diagram of what the driver sends the system and what comes back, and a table or explanation of the starting state of a test.
 - **Actions.** A table of each action, grouped by kind, with what it does and its weight. Say that weights only guide the mix, which varies from test to test because each test turns a random subset of actions off.
 - **One test over time.** A timeline of one test shown horizontally, with actions, faults and the check after faults stop, and a short note on each key moment.
