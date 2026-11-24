@@ -1,6 +1,6 @@
 # Map what the workload must reach
 
-## 1. List the system's whole surface
+## List the system's whole surface
 
 Read the code that receives requests (API definitions and their handlers), not just the docs. List:
 
@@ -14,11 +14,11 @@ Read the code that receives requests (API definitions and their handlers), not j
 
 Prioritize what real clients depend on and the code with the most logic. Cover those deeply before adding rarely used operations.
 
-## 2. Decide coverage, item by item
+## Decide coverage, item by item
 
 For every item, name the action or setup that exercises it, or decide it's out of scope and why.
 
-## 3. Design the deployment to reach it
+## Design the deployment to reach it
 
 - Run multiple nodes or replicas if the system supports them.
 - Make the system's process the container's main process (`exec` it), or run it under a wrapper that passes signals on, so it receives them. Give its containers no restart policy, and don't restart the process in a shell loop: Antithesis restarts killed and stopped containers itself, and a restart policy would bring them back early, cancelling the fault.

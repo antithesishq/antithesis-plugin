@@ -13,13 +13,13 @@ If the request names no guarantee or source, suggest guarantees to import by rea
 
 Input: a guarantee the user wants tested, in their words. For example: "transfers between accounts never change the total balance."
 
-### 1. Make it checkable
+### Make it checkable
 
 Restate the guarantee as one or more conditions checkable in code. Confirm the system promises it, from its docs, its API contract, what its real clients rely on, and its code. A system that copies another's API, such as an S3-compatible store, often promises less than the original. Don't assume the original's guarantees. Ask the user about anything the code can't answer, such as whether the total is ever expected to change, or whether account balances can go negative.
 
 Pick the assertion type for each condition from "Types" in `references/properties/assertions.md`.
 
-### 2. Add the check
+### Add the check
 
 Put the check where it can see the condition, following `references/properties/checks.md`:
 
@@ -30,7 +30,7 @@ Put the check where it can see the condition, following `references/properties/c
 
 Then add exploration assertions on the situations that lead up to the guarantee being tested, such as an account balance reaching zero ("Exploration assertions" in `references/properties/assertions.md`). Don't add one just to show the guarantee's check ran: its assertion already fails if it's never reached.
 
-### 3. Check it locally
+### Check it locally
 
 The local check makes the short run count. It confirms that each assertion is implemented correctly, matches a real guarantee of the system, and should be reachable in Antithesis. Many assertions, such as those that need faults, can't be reached locally, and that's expected.
 
@@ -42,7 +42,7 @@ Run the local loop in `references/workload/local-loop.md`, and check:
 
 As soon as the local loop proves inconclusive, stop iterating locally and go on to a short run.
 
-### 4. Check it in a short run
+### Check it in a short run
 
 Launch a short run as `references/workload/run-loop.md` describes, and read it with the triage module. Then check each guarantee you added or changed:
 
