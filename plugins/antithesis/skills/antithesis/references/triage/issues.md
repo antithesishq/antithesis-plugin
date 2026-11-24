@@ -37,23 +37,11 @@ Put a reproducer in `{reproducer}`: code the maintainer can run to reproduce the
 
 If a reproducer would be too hard to write, silently leave out the Reproduction section.
 
-## Find the tracker
-
-Known issues live in the project's issue tracker, which may not be the destination. Find it from:
-
-- the git remote, such as `github.com/{owner}/{repo}`
-- the links in `README` and `CONTRIBUTING`
-- `<issueManagement>` in `pom.xml`, or `bugs` in `package.json`
-
-Many Apache projects track issues in JIRA, at `issues.apache.org/jira`, and some use GitHub Issues instead: check `README`, `CONTRIBUTING` and `.asf.yaml`. Search JIRA by project key, such as `ZOOKEEPER`, and by the keys of the dependencies the failure involves, such as `CURATOR`.
-
-If you can't find or search a tracker, say so, and report each failure's known status as unchecked, not as new.
-
 ## Duplicates
 
-Search the tracker and the destination for existing issues before reporting. Check open and closed issues.
+Search for existing issues, open and closed, before reporting. The destination may not be the only place the project tracks issues: look for others in the git remote, `README`, `CONTRIBUTING` and package manifests, and search the trackers of the dependencies the failure involves. If you can't find or search a tracker, say so, and report each failure's known status as unchecked, not as new.
 
-If the bug matches an open issue in the destination, edit that issue to add a bullet point to its `{duplicate_details}`. If it matches a closed issue, or one only in the tracker, report it and link that issue, as a possible regression if it's closed. Never edit an issue outside the destination.
+If the bug matches an open issue in the destination, edit that issue to add a bullet point to its `{duplicate_details}`. If it matches a closed issue, or one only in another tracker, report it and link that issue, as a possible regression if it's closed. Never edit an issue outside the destination.
 
 `{duplicate_details}` has the following format:
 
