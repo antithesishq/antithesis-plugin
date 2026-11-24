@@ -14,7 +14,7 @@ Both forms follow the same steps. They differ only in how you read the task in "
 
 A release is not a task: use the `release` skill for one.
 
-## 1. Read the task and branch
+## Read the task and branch
 
 For an issue:
 
@@ -28,7 +28,7 @@ For a plain text prompt:
 
 In both cases, restate the acceptance criteria in one or two sentences before you change anything. If the task is ambiguous, ask the user before you implement.
 
-## 2. Implement
+## Implement
 
 Follow `AGENTS.md`. Commit as you go. Once the PR exists, add commits and merge `origin/main` rather than amend or rebase, so a reviewer can see what changed since they last looked. The squash merge leaves one commit on `main` either way.
 
@@ -39,16 +39,16 @@ Follow `AGENTS.md`. Commit as you go. Once the PR exists, add commits and merge 
 
 Nothing in the repo tests what an agent does with the skill. Only the `eval-plugin` skill does, and it needs a sandbox and spends compute hours, so run it only when the user asks. Say in the PR what you couldn't verify.
 
-## 3. Check before the PR
+## Check before the PR
 
 Read the whole diff once, `git diff origin/main...HEAD`, and check that every command, flag and file path a changed page names exists.
 
 Then run `mise run fix` and `mise run check`, and commit what's left. The Stop hook runs both, but with `CHECK_OFFLINE` set, which skips the link and schema checks, and it doesn't run until you stop.
 
-## 4. Submit the PR
+## Submit the PR
 
 Invoke the `open-pr` skill. It pushes the branch, writes the body, and creates the PR. When the task came from an issue, give it the issue number, so the body carries `fixes #<N>` and the merge closes the issue.
 
-## 5. Watch until it closes
+## Watch until it closes
 
 Invoke the `watch-pr` skill with the new PR's number. It runs the watcher and says how to react to each event. The user merges the PR. Never merge it yourself.
