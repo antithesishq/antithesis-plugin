@@ -28,14 +28,14 @@ FROM <Runtime image>
 COPY --from=build /out/driver /usr/local/bin/
 # Only for an instrumented driver:
 COPY --from=build /symbols /symbols
-COPY driver/first_start_workload /opt/antithesis/test/v1/main/
-RUN chmod 755 /opt/antithesis/test/v1/main/first_start_workload
+COPY driver/first_start_workload driver/serial_driver_wait /opt/antithesis/test/v1/main/
+RUN chmod 755 /opt/antithesis/test/v1/main/*
 CMD ["/usr/local/bin/driver"]
 ```
 
 ## The test template
 
-The driver image's test template, `/opt/antithesis/test/v1/main/`, holds exactly one test command, `first_start_workload`. No other container has a test template. The directory name `main` is the test name; any name works.
+The driver image's test template, `/opt/antithesis/test/v1/main/`, holds exactly two test commands, `first_start_workload` and `serial_driver_wait`. No other container has a test template. The directory name `main` is the test name; any name works.
 
 `driver/first_start_workload`:
 
@@ -45,6 +45,16 @@ touch /workload-active
 ```
 
 Antithesis runs the first command once at the start of every timeline, after setup complete and the root snapshot, in the container that holds it. So the file appears exactly when fuzzing starts, and every timeline starts from a snapshot without it.
+
+`driver/serial_driver_wait`:
+
+```sh
+#!/bin/sh
+sleep 30
+exit 0
+```
+
+This driver keeps the timeline running as long as Antithesis finds it interesting. Without it, most timelines stop after about 20 seconds of fuzzing.
 
 Test commands must be executable, which the Dockerfile's `chmod` ensures. `snouty validate` reports any that aren't.
 

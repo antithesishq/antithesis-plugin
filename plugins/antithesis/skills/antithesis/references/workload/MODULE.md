@@ -14,7 +14,7 @@ Runs launched while working on the workload spend the task's compute budget, fro
 - **Exploration assertions,** in the driver and in the system's own code, which show Antithesis the states worth reaching. Put an assertion on a node's internal state in that node's code, where you can change it, so it fires at the moment the state occurs.
 - **Patterns,** only for systems that need them: running the system's stateful client library in faulted client containers, forwarding the system's logs to the driver, or filtering verbose logs out of the run until they are needed. `references/patterns/MODULE.md` says when each applies.
 
-The driver program is the main process of its own fault-excluded container. It waits for the system, reports setup complete, then waits for `/workload-active`, which the container's one `first_` test command creates when fuzzing starts. Every decision is made in the driver.
+The driver program is the main process of its own fault-excluded container. It waits for the system, reports setup complete, then waits for `/workload-active`, which the container's `first_` test command creates when fuzzing starts. A `serial_driver_` command that only sleeps keeps each timeline going. Every decision is made in the driver.
 
 The SUT and the driver are built with Antithesis coverage instrumentation, wherever their language allows.
 
@@ -27,7 +27,7 @@ The SUT and the driver are built with Antithesis coverage instrumentation, where
 - **Lay out the workload,** its README and its scripts. Follow `references/workload/layout.md`.
 - **Instrument the software.** Follow "Instrument the software" in `references/workload/languages.md`. Add exploration assertions to its code, following "Exploration assertions" in `references/properties/assertions.md`. They are the default way to see a node's internal state.
 - **Write the driver,** including its startup: the waits for the system, admin setup, setup complete and the `/workload-active` wait. Follow `references/workload/driver.md`.
-- **Wire up the harness:** the `driver` container with its `first_` test command, any shared volumes, the fault flags, a container for each external dependency, and debug tools in every image. Follow `references/workload/harness.md`.
+- **Wire up the harness:** the `driver` container with its `first_` and `serial_driver_` test commands, any shared volumes, the fault flags, a container for each external dependency, and debug tools in every image. Follow `references/workload/harness.md`.
 - **Build and validate.** Build the images, run the instrumentation checks, then run `snouty validate <config_dir>`. Commit every file the images build from, and check `git status --ignored`, since ignore rules can drop harness files.
 - **Iterate locally** on coverage and the exploration assertions (`references/properties/assertions.md`). Follow `references/workload/local-loop.md`.
 - **Iterate on Antithesis runs** until a 24-compute-hour run passes its checks. Follow `references/workload/run-loop.md`.
