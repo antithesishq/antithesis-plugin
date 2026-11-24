@@ -45,13 +45,15 @@ Known issues live in the project's issue tracker, which may not be the destinati
 - the links in `README` and `CONTRIBUTING`
 - `<issueManagement>` in `pom.xml`, or `bugs` in `package.json`
 
-Apache projects track issues in JIRA, at `issues.apache.org/jira`: search by project key, such as `ZOOKEEPER`, and the keys of the dependencies the failure involves, such as `CURATOR`.
+Many Apache projects track issues in JIRA, at `issues.apache.org/jira`, and some use GitHub Issues instead: check `README`, `CONTRIBUTING` and `.asf.yaml`. Search JIRA by project key, such as `ZOOKEEPER`, and by the keys of the dependencies the failure involves, such as `CURATOR`.
+
+If you can't find or search a tracker, say so, and report each failure's known status as unchecked, not as new.
 
 ## Duplicates
 
 Search the tracker and the destination for existing issues before reporting. Check open and closed issues.
 
-If the bug already exists, edit the issue to add a bullet point to its `{duplicate_details}`.
+If the bug already exists in the destination, edit that issue to add a bullet point to its `{duplicate_details}`. If it exists only in the tracker, link that issue from your report, and never edit it.
 
 `{duplicate_details}` has the following format:
 
