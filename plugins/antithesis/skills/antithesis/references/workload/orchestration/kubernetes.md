@@ -74,7 +74,7 @@ Rebuild each image you changed, under a new tag, before every run. kapp keeps it
 ```bash
 export KUBECONFIG=$HOME/.config/k3d/kubeconfig-<workload>.yaml
 k3d image import -c <workload> <every image the overlay names> &&
-kapp delete -n default -a <workload> --yes; kubectl kustomize --load-restrictor LoadRestrictionsNone coverage | kapp deploy -n default -a <workload> -f - --yes &&
+kapp delete -n default -a <workload> --yes && kubectl kustomize --load-restrictor LoadRestrictionsNone coverage | kapp deploy -n default -a <workload> -f - --yes &&
 kubectl -n <namespace> exec driver -- /opt/antithesis/test/v1/main/first_start_workload &&
 timeout 600 sh -c 'until kubectl -n <namespace> exec <a pod that mounts the claim> -- grep -qs antithesis_setup /coverage/driver/sdk.jsonl; do sleep 5; done' &&
 sleep 300
