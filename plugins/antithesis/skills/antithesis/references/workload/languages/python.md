@@ -24,7 +24,7 @@ Use `coverage.py`.
 
 - **Package:** `hegeltest` on PyPI, imported as `hegel`.
 - **Latest version:** `curl -s https://pypi.org/pypi/hegeltest/json | jq -r .info.version`.
-- **Python version:** `curl -s https://pypi.org/pypi/hegeltest/json | jq -r '[.urls[].filename | capture("-cp3(?<m>[0-9]+)-.*manylinux") | .m | tonumber] | max'` prints the newest Python 3 minor version that `hegeltest` publishes Linux wheels for. On a newer Python, `pip` builds it from source, which needs a Rust toolchain.
+- **Python version:** `curl -s https://pypi.org/pypi/hegeltest/json | jq -r '[.urls[].filename | capture("-cp3(?<m>[0-9]+)-cp3[0-9]+-manylinux") | .m | tonumber] | max'` prints the newest Python 3 minor version that `hegeltest` publishes Linux wheels for. If it prints `null`, drop `.<minor>` from the image. On a newer Python, `pip` builds `hegeltest` from source, which needs a Rust toolchain.
 - **Docs:** <https://hegel.readthedocs.io>. Read `Run tests on Antithesis`, the stateful testing tutorial and reference, and the how-to on threads.
 - **Example workload:** <https://github.com/hegeldev/hegel/tree/main/frontends/python/examples/sqlite_bank>, a concurrent bank workload run from `@hegel.main`.
 
