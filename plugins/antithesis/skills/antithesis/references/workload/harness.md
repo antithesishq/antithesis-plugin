@@ -78,9 +78,9 @@ Launch every run of the workload with the `basic_test` launcher, unless the user
 
 ## 5. External dependencies
 
-The Antithesis environment has no internet access, so put every external service the system calls ("List the system's whole surface" in `references/workload/surface.md`) in `docker-compose.yaml`. Prefer the real service's container image, then a maintained emulator, then a mock you write. For the catalog and ready-made Compose blocks, run `snouty docs show reference/dependencies`. For S3, use MinIO, not LocalStack: the free LocalStack doesn't persist data to disk.
+The Antithesis environment has no internet access, so put every external service the system calls ("List the system's whole surface" in `references/workload/surface.md`) in `docker-compose.yaml`. Prefer the real service's container image, then a maintained emulator, then a mock you write. For the catalog and ready-made Compose blocks, run `snouty docs show /docs/reference/dependencies/`. For S3, use MinIO, not LocalStack: the free LocalStack doesn't persist data to disk.
 
-Give each dependency its own container, and don't fault-exclude it, so Antithesis faults it independently (`references/antithesis/faults.md`): bugs often live in how the system handles a dependency that is slow, failing or restarting.
+Give each dependency its own container, and don't fault-exclude it, so Antithesis faults it independently (`references/antithesis/faults.md`): bugs often live in how the system handles a dependency that is slow, failing or restarting. Keep each dependency's state on disk, such as in a volume or with the emulator's persistence flag, so a kill doesn't empty it. If it can't persist, don't count its lost state as a system bug.
 
 A mock you write is part of the test. Have it return the real service's errors, throttling and weaker guarantees, so the system's error paths run. Don't write properties that assume more than the real service promises ("Make it checkable" in `references/properties/MODULE.md`).
 
