@@ -28,11 +28,11 @@ Run `scripts/evalctl.py --host HOST --data DATA preflight --plugin-dir PATH`. `D
 
 Then:
 
-1. Check that the toolchains each target's profile names are installed.
-2. Update the plugin checkout to the version under test (`git pull --ff-only` on its default branch, or check out the given ref), and confirm that the `Plugin version` line in `SKILL.md` matches the plugin manifest.
-3. Run `snouty update`, and record the snouty version.
-4. If a check fails, such as the harness not being logged in, snouty failing `snouty doctor`, or no tenant access, stop and tell the user what is missing. Don't fix it yourself.
-5. Run `scripts/evalctl.py ... push`, which copies the session runner to `/opt/cc/` on the sandbox.
+- Check that the toolchains each target's profile names are installed.
+- Update the plugin checkout to the version under test (`git pull --ff-only` on its default branch, or check out the given ref), and confirm that the `Plugin version` line in `SKILL.md` matches the plugin manifest.
+- Run `snouty update`, and record the snouty version.
+- If a check fails, such as the harness not being logged in, snouty failing `snouty doctor`, or no tenant access, stop and tell the user what is missing. Don't fix it yourself.
+- Run `scripts/evalctl.py ... push`, which copies the session runner to `/opt/cc/` on the sandbox.
 
 Write everything you learn in `DATA/notes/observations.md` as you go, starting with this setup: versions, commits, and any confound in the sandbox, such as a global `CLAUDE.md` that mentions Antithesis.
 
@@ -51,25 +51,25 @@ The agents must not know that they're being evaluated, and must attempt each tas
 
 **Run one session at a time,** and start the next only when the last has finished. Sessions at the same time clash on one machine: they share Docker's image store and container names, so one can launch another's images, and Claude Code sessions can find each other with `ListAgents` and talk with `SendMessage`. An agent that notices works around it, which pollutes the eval. For each target, in this order:
 
-1. **Workload:** build a workload for the target end to end with the workload module, validated and with smoke runs, from a fresh clone.
-2. **Triage summary:** `summary` on a completed run from (1).
-3. **Triage root-cause:** `root-cause` on one failing property from (1).
-4. **Debug:** the debug module on a failing moment from (1), asked to prove or disprove a specific theory.
-5. **Triage monitor:** `monitor` needs a run in progress, and no session is running one now. Launch one yourself from the workload's last commit, with the launch command the workload session last used (find it in its transcript) and the monitor budget in `references/prompts.md`. Add it to the run log with `"session": "evaluator"`, and start the monitor session as soon as it launches.
-6. **Triage, plain language:** "how's the latest run?" with no mode, while the run from (5) is still going if you can, in the workload's checkout.
-7. **Properties:** import properties from a catalog and define a new one, then launch runs to validate them, in the workload's checkout.
-8. **Iterate with patterns:** improve the workload with the patterns module, in a new clone at the latest commit of the workload branch, including one run of at least 2 hours of fuzzing.
-9. **Triage summary, round 2:** `summary` on the long run from (8), in the patterns clone.
-10. **Triage root-cause, round 2:** `root-cause` on a failing property that (7) or (8) added, or one that fails differently since then.
+- **Workload:** build a workload for the target end to end with the workload module, validated and with smoke runs, from a fresh clone.
+- **Triage summary:** `summary` on a completed run from "Workload".
+- **Triage root-cause:** `root-cause` on one failing property from "Workload".
+- **Debug:** the debug module on a failing moment from "Workload", asked to prove or disprove a specific theory.
+- **Triage monitor:** `monitor` needs a run in progress, and no session is running one now. Launch one yourself from the workload's last commit, with the launch command the workload session last used (find it in its transcript) and the monitor budget in `references/prompts.md`. Add it to the run log with `"session": "evaluator"`, and start the monitor session as soon as it launches.
+- **Triage, plain language:** "how's the latest run?" with no mode, while the run from "Triage monitor" is still going if you can, in the workload's checkout.
+- **Properties:** import properties from a catalog and define a new one, then launch runs to validate them, in the workload's checkout.
+- **Iterate with patterns:** improve the workload with the patterns module, in a new clone at the latest commit of the workload branch, including one run of at least 2 hours of fuzzing.
+- **Triage summary, round 2:** `summary` on the long run from "Iterate with patterns", in the patterns clone.
+- **Triage root-cause, round 2:** `root-cause` on a failing property that "Properties" or "Iterate with patterns" added, or one that fails differently since then.
 
 The second round of triage tests whether properties and patterns lead to more and better findings than the first workload did. Compare the two rounds in the report.
 
 **Instrumentation triage,** once per eval, before the first target's track: the fixture in `fixtures/instrumentation/` is a deployment of small services, some built correctly and some with an instrumentation problem, under neutral names. Its README says which are which.
 
-1. On the sandbox, run `fixture.py build` and `fixture.py check-local`, then launch it with the README's command. Add the run to the run log with `"session": "evaluator"` and the task `instrumentation`.
-2. Once the run completes, run `fixture.py check-run <run_id>`. If a row is `BAD`, the platform, an SDK or snouty has changed: note it, and score the sessions against what the run shows, not the README.
-3. Hide the answers from the session without source. It will search the machine, so remove everything that shows how the images were built: run `fixture.py hide`, which deletes the images and Docker's build history and cache, whose records hold the build args, and then delete the fixture's directory and any copy of it, such as the sandbox's plugin checkout's `fixtures/instrumentation/`. Then start the instrumentation-triage template in `references/prompts.md` in an empty directory. With `--host local`, skip this session, and note that you did: it would run as you, and your transcript and `DATA` hold the answers.
-4. Run `fixture.py export ~/src/shop` from a fresh copy of the fixture, such as the plugin checkout restored with `git checkout`, and start the same prompt with source, in `~/src/shop`.
+- On the sandbox, run `fixture.py build` and `fixture.py check-local`, then launch it with the README's command. Add the run to the run log with `"session": "evaluator"` and the task `instrumentation`.
+- Once the run completes, run `fixture.py check-run <run_id>`. If a row is `BAD`, the platform, an SDK or snouty has changed: note it, and score the sessions against what the run shows, not the README.
+- Hide the answers from the session without source. It will search the machine, so remove everything that shows how the images were built: run `fixture.py hide`, which deletes the images and Docker's build history and cache, whose records hold the build args, and then delete the fixture's directory and any copy of it, such as the sandbox's plugin checkout's `fixtures/instrumentation/`. Then start the instrumentation-triage template in `references/prompts.md` in an empty directory. With `--host local`, skip this session, and note that you did: it would run as you, and your transcript and `DATA` hold the answers.
+- Run `fixture.py export ~/src/shop` from a fresh copy of the fixture, such as the plugin checkout restored with `git checkout`, and start the same prompt with source, in `~/src/shop`.
 
 Score each session against the README's table: which broken components it reported, and with what evidence, which it missed, and whether it called a healthy one broken.
 
