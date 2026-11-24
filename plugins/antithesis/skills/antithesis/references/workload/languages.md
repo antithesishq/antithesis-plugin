@@ -22,9 +22,9 @@ Use the latest release of the Antithesis SDK, of hegel and of every build tool a
 
 Hegel has one engine, shared by a frontend for each language, so the driver in `references/workload/driver.md` behaves the same in all of them. Pick the first that applies and that "Hegel driver" in `references/workload/languages/<language>.md` supports:
 
-1. The language the user asks for.
-2. The language of the system's client library, so the driver calls the real client in-process.
-3. Rust.
+- The language the user asks for.
+- The language of the system's client library, so the driver calls the real client in-process.
+- Rust.
 
 If the user asks for a language hegel can't write the driver in, tell them why, and use the next that applies. If Antithesis can't instrument the language you pick, tell the user that Antithesis won't see which branches the driver takes, so they can't guide its search.
 

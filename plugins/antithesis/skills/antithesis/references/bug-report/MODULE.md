@@ -6,9 +6,9 @@ To show that a fix resolves a bug instead, follow `references/bug-report/verify-
 
 ## Characterize the failure
 
-1. Find every failing example of the property across timelines with `snouty runs search`, and the passing ones near them. Note what the failing ones share and the passing ones lack: an operation, an active fault, a configuration, a vtime.
-2. Pick one representative failing moment. Rebuild its history from the log (`references/triage/logs.md`): each operation and fault from the timeline's start that touched the state the property checks, with timestamps.
-3. Cross-reference that history with the SUT's and workload's source, as in "Investigate a failing property" in `references/triage/MODULE.md`. If the property itself, or the workload's model of the system, is wrong, it's a workload bug: stop and return that, with the evidence.
+- Find every failing example of the property across timelines with `snouty runs search`, and the passing ones near them. Note what the failing ones share and the passing ones lack: an operation, an active fault, a configuration, a vtime.
+- Pick one representative failing moment. Rebuild its history from the log (`references/triage/logs.md`): each operation and fault from the timeline's start that touched the state the property checks, with timestamps.
+- Cross-reference that history with the SUT's and workload's source, as in "Investigate a failing property" in `references/triage/MODULE.md`. If the property itself, or the workload's model of the system, is wrong, it's a workload bug: stop and return that, with the evidence.
 
 ## Confirm it in Antithesis
 
