@@ -22,7 +22,7 @@ Ask for anything missing before you start:
 - **The target projects:** one or more profiles in `references/targets/`: `references/targets/rqlite.md`, `references/targets/nats-jetstream.md` or `references/targets/zookeeper.md`. Each profile says what to test and what to put in the prompts, and holds cost notes, quirks, and the bugs that earlier evals found. To add a project, copy a profile and fill it in.
 - **Where the final report should be written.**
 
-## 1. Preflight: check, don't set up
+## Preflight: check, don't set up
 
 Run `scripts/evalctl.py --host HOST --data DATA preflight --plugin-dir PATH`. `DATA` is a new local directory for this eval, such as `~/plugin-eval-N-data`. Never reuse an earlier eval's directory.
 
@@ -36,7 +36,7 @@ Then:
 
 Write everything you learn in `DATA/notes/observations.md` as you go, starting with this setup: versions, commits, and any confound in the sandbox, such as a global `CLAUDE.md` that mentions Antithesis.
 
-## 2. Keep the agents blind
+## Keep the agents blind
 
 The agents must not know that they're being evaluated, and must attempt each task as well as they can:
 
@@ -45,7 +45,7 @@ The agents must not know that they're being evaluated, and must attempt each tas
 - **No coaching.** When an agent stops and asks a question, answer as a user would, with `evalctl.py resume`. Don't steer it towards the docs.
 - **Carryover is acceptable.** A later session may find an earlier session's memory or files, as a real user's sessions would. Record it whenever it happens.
 
-## 3. Run the experiments
+## Run the experiments
 
 `references/prompts.md` holds the template for each task and the budget split. Test each target's latest release unless the user names a commit, and record the commit you test. Write each prompt to a file, and start its session with `scripts/evalctl.py ... start NAME CWD FILE --target NAME`. Answer a question, or nudge a session that stopped early, with `resume`.
 
@@ -79,13 +79,13 @@ With several targets, run each target's tasks as one track, one track after anot
 
 **Budget.** Billing runs over the `--max-compute-hours` cap, by about 2.5 compute hours per run, and `snouty runs usage` lists a run an hour or more after it ends. Track your spend from `runs usage` plus the caps of runs not yet listed, and leave slack. If the eval would go over the budget, stop launching sessions and tell the user.
 
-## 4. Watch, and read the raw transcripts
+## Watch, and read the raw transcripts
 
 Every 20 to 30 minutes, and whenever an event lands, run `evalctl.py ... sync` and `evalctl.py ... tail NAME`. When a session finishes, save its final answer with `evalctl.py ... result NAME > DATA/notes/final-NAME.md`, and read its transcript, including its subagents. Don't judge a session by its final summary alone: check its claims against the runs and the tool results.
 
 `references/observe.md` lists what to look for, and the failure modes that earlier evals found. Write each observation in `observations.md` with its time, session, and the evidence that supports it.
 
-## 5. Collect the data
+## Collect the data
 
 Bring everything back to `DATA`:
 
@@ -94,11 +94,11 @@ Bring everything back to `DATA`:
 - `runs/`: the run log `runs.json`, `usage.json` (from `evalctl.py ... usage --since START`, once every run is listed), and each run's `snouty runs show` and `snouty runs properties --failing` output;
 - `repos/`: the branches, diffs and reproducers that the agents produced, such as `git format-patch` of each workload branch and any memory files they wrote.
 
-## 6. Report cost
+## Report cost
 
 Split each session into tasks in `DATA/notes/tasks.json`, with a time window per task, such as "build the workload to the first launch" or "wait for and triage smoke run 2". Then run `scripts/cost_report.py DATA`. It writes `report/cost.md` and `report/cost.json`, with token usage and cost per session, per task and per target, and compute hours and cost per run and in total, at $2.50 per compute hour by default. Check the token prices in its `PRICES` table against the current ones first. Compare each session's token cost with the `total_cost_usd` its harness reported.
 
-## 7. Write the report
+## Write the report
 
 Build a single HTML page, and publish it where the user asked, at a new path that doesn't replace an earlier report. It covers:
 

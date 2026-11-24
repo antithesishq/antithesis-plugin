@@ -20,7 +20,7 @@ An agent reads every word of a page it loads, and pays for it in context. Write 
 - **State each fact once,** on the page that owns it, and name that page elsewhere ("Cross-references").
 - **Say why only when the agent needs it to decide,** such as when to break a rule, and in one clause.
 - **Don't restate snouty.** Name the command, `snouty --help` or the `snouty docs` path, and say only what the docs don't: which flag to use here, and why.
-- **Write steps as a bulleted list** in order, never a numbered one: inserting a step into a numbered list renumbers every step after it. Give a step a bold label when something names it ("Cross-references").
+- **Write steps as a bulleted list** in order, never a numbered one, and never number a heading, as in `## 2. Push the branch`: inserting a step or a section renumbers every one after it. Give a step a bold label when something names it ("Cross-references").
 - **Prefer one concrete example to a paragraph of description,** and cut an example the rule already makes clear.
 - **Cut hedges and asides** that don't change the action: `generally`, `in most cases`, `as mentioned above`.
 - **Read the page as an agent new to it.** Delete a sentence, and if the agent would still act the same, leave it out.
@@ -29,7 +29,7 @@ An agent reads every word of a page it loads, and pays for it in context. Write 
 
 ## Cross-references
 
-A skill page names another file by its path from the skill root, in backticks, such as `references/workload/driver.md`. It names a part of a page by that part's heading, or by the bold label that opens a list item, in double quotes: "Starting up" in `references/workload/driver.md`, the "Wait until every node is up" step in `references/workload/driver.md`, "Write the title and body" in the `open-pr` skill, or just "Report" for a part of the same page. A table row counts as a part too, named by its first cell: the "Go build image" row in `references/workload/images.md`. A Dockerfile names a base image by its row in that table, as `<Go build image>`. Never refer to a step by its number, such as "step 2": reordering the list would silently change what it points at. Give the step a bold label and name that instead. Put any other quoted text that starts with a capital letter in backticks, so it isn't read as a reference. `check:references` fails on a reference that doesn't resolve, on any step number, and on a numbered list in a skill page.
+A skill page names another file by its path from the skill root, in backticks, such as `references/workload/driver.md`. It names a part of a page by that part's heading, or by the bold label that opens a list item, in double quotes: "Starting up" in `references/workload/driver.md`, the "Wait until every node is up" step in `references/workload/driver.md`, "Write the title and body" in the `open-pr` skill, or just "Report" for a part of the same page. A table row counts as a part too, named by its first cell: the "Go build image" row in `references/workload/images.md`. A Dockerfile names a base image by its row in that table, as `<Go build image>`. Never refer to a step by its number, such as "step 2": reordering the list would silently change what it points at. Give the step a bold label and name that instead. Put any other quoted text that starts with a capital letter in backticks, so it isn't read as a reference. `check:references` fails on a reference that doesn't resolve, on any step number, and on a numbered list or numbered heading in a skill page.
 
 ## Scripts
 
