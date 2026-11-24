@@ -51,9 +51,10 @@ Antithesis runs the first command once at the start of every timeline, after set
 ```sh
 #!/bin/sh
 sleep 30
+exit 0
 ```
 
-It does nothing but keep a test command running. A timeline whose template has no driver command to run ends soon after it starts, however long the driver runs.
+It only keeps a test command running, so test composer keeps the timeline going. Without it, most timelines stop about 20 seconds in, however long the driver runs, unless Antithesis finds them interesting enough to extend.
 
 Test commands must be executable, which the Dockerfile's `chmod` ensures. `snouty validate` reports any that aren't.
 
