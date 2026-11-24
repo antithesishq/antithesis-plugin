@@ -44,6 +44,7 @@ _QUOTED = re.compile(r'"([A-Z][^"]{0,80})"')
 _PAGE_TARGET = re.compile(r"(?: step| section| row)? (?:in|on|of) (?:the [a-z ]+ )?`([^`]+\.md)`")
 _SKILL_TARGET = re.compile(r"(?: step| section| row)? (?:in|on|of) the `([a-z0-9-]+)` skill")
 _STEP_NUMBER = re.compile(r"\b[Ss]teps? \d+")
+_ORDERED_ITEM = re.compile(r"^\s*\d+[.)]\s")
 _CODE_SPAN = re.compile(r"`[^`]*`")
 _HEADING = re.compile(r"^#+\s+(?:\d+\.\s+|Step \d+:\s+)?(.+?)\s*$")
 _LIST_LABEL = re.compile(r"^\s*(?:\d+\.|[-*])\s+\*\*(.+?)\*\*")
@@ -109,3 +110,10 @@ def step_numbers(text: str) -> Iterator[tuple[int, str]]:
         if not line.startswith("#"):
             for m in _STEP_NUMBER.finditer(prose):
                 yield number, m.group(0)
+
+
+def ordered_list_items(text: str) -> Iterator[int]:
+    """Yield the line number of each ordered list item outside code."""
+    for number, line, _ in prose_lines(text):
+        if _ORDERED_ITEM.match(line):
+            yield number

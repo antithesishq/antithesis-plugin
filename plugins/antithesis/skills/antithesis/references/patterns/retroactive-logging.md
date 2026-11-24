@@ -31,10 +31,10 @@ The command runs on a new branch from that moment, so it shows what happens next
 
 Retroactive logging also lets you root-cause a hard failure with temporary print statements, even in hot loops, too verbose to log in a normal run:
 
-1. **Add the prints** to the SUT or the workload, around the suspect code, with a marker that the filter matches, such as `DBG`.
-2. **Launch a targeted run** with the filter (`references/triage/root-cause.md`), and wait for the failure.
-3. **Recover the prints** at moments shortly before the failure, as "Recover the lines" says.
-4. **Remove them** once you have the root cause: revert the commit that added them, and drop the filter.
+- **Add the prints** to the SUT or the workload, around the suspect code, with a marker that the filter matches, such as `DBG`.
+- **Launch a targeted run** with the filter (`references/triage/root-cause.md`), and wait for the failure.
+- **Recover the prints** at moments shortly before the failure, as "Recover the lines" says.
+- **Remove them** once you have the root cause: revert the commit that added them, and drop the filter.
 
 ## Checking it
 
