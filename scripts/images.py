@@ -18,14 +18,17 @@ from report import ROOT, error, say
 
 PAGE = ROOT / "plugins/antithesis/skills/antithesis/references/workload/images.md"
 DEBIAN_RELEASE = "https://deb.debian.org/debian/dists/stable/Release"
-# Each role's image, from the Debian stable codename (trixie) and major version (13).
+# Each role's image, from the Debian stable codename (trixie) and major version (13). The agent
+# fills in `<minor>` from "Python version" in `languages/python.md`: the newest Python minor
+# version that hegeltest publishes Linux wheels for. The check fills it in the same way.
 ROLES = [
     ("Runtime image", "debian:{codename}-slim"),
     ("Rust build image", "rust:1-{codename}"),
     ("Go build image", "golang:1-{codename}"),
-    ("Python image", "python:3-slim-{codename}"),
+    ("Python image", "python:3.<minor>-slim-{codename}"),
     ("OCaml build image", "ocaml/opam:debian-{major}"),
 ]
+HEGELTEST = "https://pypi.org/pypi/hegeltest/json"
 START, END = "<!-- images:start -->", "<!-- images:end -->"
 
 
@@ -39,6 +42,13 @@ def debian_stable() -> tuple[str, str]:
     """The codename and major version of the current Debian stable release."""
     fields = dict(line.split(": ", 1) for line in fetch(DEBIAN_RELEASE).decode().splitlines() if ": " in line)
     return fields["Codename"], fields["Version"].split(".")[0]
+
+
+def python_minor() -> str | None:
+    """The newest Python 3 minor version with a version-specific hegeltest manylinux wheel."""
+    files = [u["filename"] for u in json.loads(fetch(HEGELTEST))["urls"]]
+    minors = [int(m[1]) for f in files if (m := re.search(r"-cp3(\d+)-cp3\d+-manylinux", f))]
+    return str(max(minors)) if minors else None
 
 
 def tag_exists(image: str) -> bool:
@@ -74,8 +84,11 @@ def current_table(text: str) -> str:
 def main(write: bool) -> int:
     codename, major = debian_stable()
     say(f"Debian stable is {major} ({codename})")
-    missing = [t.format(codename=codename, major=major) for _, t in ROLES]
-    missing = [image for image in missing if not tag_exists(image)]
+    minor = python_minor()
+    images = [t.format(codename=codename, major=major) for _, t in ROLES]
+    # Without a version-specific wheel, "Python version" falls back to the floating `3` tag.
+    images = [i.replace("<minor>", minor) if minor else i.replace(".<minor>", "") for i in images]
+    missing = [image for image in images if not tag_exists(image)]
     for image in missing:
         error(
             "check-images", f"Docker Hub has no `{image}`; update its template in scripts/images.py", PAGE, 1
