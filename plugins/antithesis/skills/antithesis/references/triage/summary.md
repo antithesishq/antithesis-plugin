@@ -8,4 +8,4 @@
   - anything else that needs a closer look, such as an unusual pass/fail ratio
 - Suggest which failures to look at next in `root-cause` mode.
 
-Unless your caller writes up bugs itself, hand each new likely SUT bug to `references/bug-report/MODULE.md`. Skip a bug already written up in this session.
+Unless your caller writes up bugs itself, hand each likely SUT bug that isn't already known to `references/bug-report/MODULE.md`, including one whose known status is unchecked. Skip a bug already written up in this session.
