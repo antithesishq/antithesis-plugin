@@ -22,7 +22,7 @@ If a reproducer isn't feasible, say why in the report.
 
 ## Draft the report
 
-Use the destination and format the user gave. Look in the SUT's repository for its own bug report guidance, such as an issue template or `CONTRIBUTING.md`, and follow it. Otherwise use `references/bug-report/template.md`.
+Use the format the user gave. Otherwise, follow the format in the SUT's own bug report guidance, such as an issue template or `CONTRIBUTING.md`, or else `references/bug-report/template.md`.
 
 Label each claim **confirmed** (shown by command output, a reproducer or the log), **inferred** (follows from the source or the docs, but not shown), or **open** (unknown).
 
@@ -34,6 +34,6 @@ Fix or relabel each claim it lists. If a fix changes the conclusion, review agai
 
 ## Report and return
 
-Check for an existing report first, as "Duplicates" in `references/bug-report/template.md` says. Then file or print the report.
+Check for an existing report first, as "Duplicates" in `references/bug-report/template.md` says. Then file the report, or edit an existing issue, only at a destination the user gave. Without one, print the report in the session, even if the SUT's guidance names a tracker.
 
 Tell the caller how to keep this bug from hiding others in later runs, such as a workload change that avoids its trigger. Keep the failing assertion, and mark the change with a link to the report so it can be removed once the bug is fixed, as `references/bug-report/verify-fix.md` does.

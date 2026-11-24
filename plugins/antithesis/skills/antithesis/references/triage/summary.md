@@ -1,7 +1,7 @@
 # Summarize a finished run
 
 - Triage each failing property in its own subagent, following "Investigate a failing property" in `references/triage/MODULE.md`.
-- Check which failures are already known, with the search in "Duplicates" in `references/bug-report/template.md`. If you don't know where issues are reported, say that this wasn't checked.
+- Check which failures are already known, with the search in "Duplicates" in `references/bug-report/template.md`.
 - Summarize the run for the user:
   - each failing property, its likely cause, and whether it's new or already known
   - the instrumentation status
