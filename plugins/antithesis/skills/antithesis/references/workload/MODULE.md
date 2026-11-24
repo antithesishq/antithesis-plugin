@@ -27,8 +27,8 @@ The SUT and the driver are built with Antithesis coverage instrumentation, where
 5. **Lay out the workload,** its README and its scripts. Follow `references/workload/layout.md`.
 6. **Instrument the software.** Follow "Instrument the software" in `references/workload/languages.md`. Add exploration assertions to its code, following "Exploration assertions" in `references/properties/assertions.md`. They are the default way to see a node's internal state.
 7. **Write the driver,** including its startup: the waits for the system, admin setup, setup complete and the `/workload-active` wait. Follow `references/workload/driver.md`.
-8. **Wire up the harness:** the `driver` container with its `first_` test command, any shared volumes, the fault flags, and debug tools in every image. Follow `references/workload/harness.md`.
+8. **Wire up the harness:** the `driver` container with its `first_` test command, any shared volumes, the fault flags, a container for each external dependency, and debug tools in every image. Follow `references/workload/harness.md`.
 9. **Build and validate.** Build the images, run the instrumentation checks, then run `snouty validate <config_dir>`. Commit every file the images build from, and check `git status --ignored`, since ignore rules can drop harness files.
 10. **Iterate locally** on coverage and the exploration assertions (`references/properties/assertions.md`). Follow `references/workload/local-loop.md`.
 11. **Iterate on Antithesis runs** until a 24-compute-hour run passes its checks. Follow `references/workload/run-loop.md`.
-12. **Update the README and scripts, and report to the user,** including the driver's language, which patterns you adopted and why, and any step you skipped or changed, and why.
+12. **Update the README and scripts, and report to the user,** including the driver's language, which patterns you adopted and why, what each external dependency became (real service, emulator or mock) and why, and any step you skipped or changed, and why.

@@ -76,7 +76,15 @@ Launch every run of the workload with the `basic_test` launcher, unless the user
 
 `--fault-exclusions` is a regex matched against container names, so `^driver$` relies on the driver's `container_name: driver` (section 1); without it, Compose names the container `<project>-driver-1` and the regex matches nothing. Exclude only the driver.
 
-## 5. Debug tools
+## 5. External dependencies
+
+The Antithesis environment has no internet access, so put every external service the system calls ("List the system's whole surface" in `references/workload/surface.md`) in `docker-compose.yaml`. Prefer the real service's container image, then a maintained emulator, then a mock you write. For the catalog and ready-made Compose blocks, run `snouty docs show reference/dependencies`. For S3, use MinIO, not LocalStack: the free LocalStack doesn't persist data to disk.
+
+Give each dependency its own container, and don't fault-exclude it, so Antithesis faults it independently (`references/antithesis/faults.md`): bugs often live in how the system handles a dependency that is slow, failing or restarting.
+
+A mock you write is part of the test. Have it return the real service's errors, throttling and weaker guarantees, so the system's error paths run. Don't write properties that assume more than the real service promises ("Make it checkable" in `references/properties/MODULE.md`).
+
+## 6. Debug tools
 
 To debug a failure, you run commands at a moment in a container with `snouty runs exec` (`references/debug/MODULE.md`). In the Antithesis environment, exec can only access tools included in the image. So ensure that workload images contain useful debugging tools such as `curl`, `jq`, and the SUT's admin or inspection CLI, such as `fdbcli`, `etcdctl`, or `psql`.
 
