@@ -2,7 +2,7 @@
 
 ## Install snouty
 
-Follow "Install snouty" in the snouty README, <https://github.com/antithesishq/snouty#install-snouty>. Prefer the shell installer script: it installs to `~/.local/bin` and enables `snouty update`.
+Follow `Install snouty` in the snouty README, <https://github.com/antithesishq/snouty#install-snouty>. Prefer the shell installer script: it installs to `~/.local/bin` and enables `snouty update`.
 
 ## Configure snouty
 
