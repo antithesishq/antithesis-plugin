@@ -8,14 +8,14 @@ This page describes the driver in hegel's terms, which every language shares. Th
 
 `main` does this, in order:
 
-1. **Initialize the Antithesis SDK,** if the language's SDK has an init call.
-2. **Wait until every node is up:** it answers requests, even if only to say the cluster isn't formed yet. An open port isn't enough.
-3. **Run admin setup, if any:** creating the cluster, a schema, users, buckets or topics, when that's easier here than in the system's containers. Retry each until it succeeds, and treat "already exists" as success, since a retried request may have taken effect.
-4. **Wait until the system serves the workload's requests:** a read answers, the cluster has a leader, all members joined.
-5. **Report setup complete** with the SDK's lifecycle call. Antithesis takes the first setup complete from any process, so remove any other reporter, such as one in the system's containers.
-6. **Wait for `/workload-active`,** polling every 100 ms; this wait is outside the state machine, so a sleep loop is fine. The driver container's `first_` command creates it (`references/workload/harness.md`).
-7. **Mark the start** with a `assert_reachable` assertion, "the workload starts".
-8. **Run the state machine** forever.
+- **Initialize the Antithesis SDK,** if the language's SDK has an init call.
+- **Wait until every node is up:** it answers requests, even if only to say the cluster isn't formed yet. An open port isn't enough.
+- **Run admin setup, if any:** creating the cluster, a schema, users, buckets or topics, when that's easier here than in the system's containers. Retry each until it succeeds, and treat "already exists" as success, since a retried request may have taken effect.
+- **Wait until the system serves the workload's requests:** a read answers, the cluster has a leader, all members joined.
+- **Report setup complete** with the SDK's lifecycle call. Antithesis takes the first setup complete from any process, so remove any other reporter, such as one in the system's containers.
+- **Wait for `/workload-active`,** polling every 100 ms; this wait is outside the state machine, so a sleep loop is fine. The driver container's `first_` command creates it (`references/workload/harness.md`).
+- **Mark the start** with a `assert_reachable` assertion, "the workload starts".
+- **Run the state machine** forever.
 
 A pattern you adopted (`references/patterns/MODULE.md`) may add to these steps.
 
@@ -94,11 +94,11 @@ An eventually stops faults for good, waits for the system to recover, asserts th
 
 Write it as a normal rule, so swarm testing leaves it out for stretches of a timeline. Leave its weight at the default: the draw below sets how often it fires. Consider adding it to other groups too, so it can also fire while other actions run. The rule returns at once unless a rare weighted boolean draw passes, then calls an `eventually` method. The draw starts eventuallys at varied depths, from right after `/workload-active` to deep into the timeline. The method:
 
-1. Takes a global lock, so no other eventually can start.
-2. Stops faults for good, by running `$ANTITHESIS_STOP_FAULTS <seconds>` for far longer than the rest of the timeline can take, such as an hour. Skip this when `ANTITHESIS_STOP_FAULTS` is unset, as it is in the local loop.
-3. Waits, up to a deadline, until every node serves requests again. Restarted containers take a while to come back. The "Wait until every node is up" step can share this per-node check.
-4. Logs that its assertions start, then asserts that the system recovered, and asserts each guarantee that must hold once faults stop ("After faults stop" in `references/properties/checks.md`). Each assertion becomes a property in the run.
-5. Logs that it's ending the timeline, then exits the driver with status 0. No SDK call ends a timeline the way an `eventually_` test command does. Once the driver exits, the timeline goes idle, and Antithesis stops spending fuzzing effort on it, which ends it in effect.
+- Takes a global lock, so no other eventually can start.
+- Stops faults for good, by running `$ANTITHESIS_STOP_FAULTS <seconds>` for far longer than the rest of the timeline can take, such as an hour. Skip this when `ANTITHESIS_STOP_FAULTS` is unset, as it is in the local loop.
+- Waits, up to a deadline, until every node serves requests again. Restarted containers take a while to come back. The "Wait until every node is up" step can share this per-node check.
+- Logs that its assertions start, then asserts that the system recovered, and asserts each guarantee that must hold once faults stop ("After faults stop" in `references/properties/checks.md`). Each assertion becomes a property in the run.
+- Logs that it's ending the timeline, then exits the driver with status 0. No SDK call ends a timeline the way an `eventually_` test command does. Once the driver exits, the timeline goes idle, and Antithesis stops spending fuzzing effort on it, which ends it in effect.
 
 Decide how an eventually treats the other actions from what it asserts. Some assertions hold while actions continue. Others need a quiet system: the eventually can wait for actions in flight to finish, for example with a lock that every other rule holds while it acts, or interrupt them by cancelling them.
 

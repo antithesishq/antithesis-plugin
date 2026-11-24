@@ -11,11 +11,11 @@ A release PR is different: the `release` skill opens its own.
 
 ## 1. Check the branch
 
-1. The working tree is clean: `git status --porcelain` prints nothing. Commit or stash anything left over first.
-2. The branch is not `main`.
-3. Read what the PR will contain: `git fetch origin && git log --oneline origin/main..HEAD` and `git diff origin/main...HEAD --stat`.
-4. The diff leaves the version alone: `scripts/set-version.py --check` passes, and `CHANGELOG.md` is unchanged. Only a release PR changes them.
-5. `mise run check` passes. The Stop hook runs it with `CHECK_OFFLINE` set, which skips the link and schema checks, so run it yourself before the push.
+- The working tree is clean: `git status --porcelain` prints nothing. Commit or stash anything left over first.
+- The branch is not `main`.
+- Read what the PR will contain: `git fetch origin && git log --oneline origin/main..HEAD` and `git diff origin/main...HEAD --stat`.
+- The diff leaves the version alone: `scripts/set-version.py --check` passes, and `CHANGELOG.md` is unchanged. Only a release PR changes them.
+- `mise run check` passes. The Stop hook runs it with `CHECK_OFFLINE` set, which skips the link and schema checks, so run it yourself before the push.
 
 ## 2. Push the branch
 

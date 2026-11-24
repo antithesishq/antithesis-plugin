@@ -40,15 +40,15 @@ Describe the workload to the user, and ask whether to improve it as it is or bui
 
 Don't translate the old workload command by command. Build a new one:
 
-1. **Learn the SUT,** with `references/workload/surface.md`.
-2. **Learn the old workload:** what it aims to test, its setup, and what each test command does and asserts. Read each command by its type:
-   - `first_`: setup every timeline needs, run without faults. Decide whether it's something to test or vary per timeline, or fixed setup that belongs before setup complete.
-   - `parallel_driver_`: the actions clients take concurrently, the core of what to exercise.
-   - `serial_driver_`: actions that need the system to themselves.
-   - `singleton_driver_`: a whole scenario, once per timeline, often an existing test. One that wraps a unit or integration test framework may not port at all.
-   - `anytime_`: checks meant to hold at any moment, while actions run.
-   - `eventually_`, `finally_`: guarantees that must hold once faults stop and the system recovers.
-3. **Build a hegel driver workload** with "Steps" in `references/workload/MODULE.md`. Draw on the old workload when you pick rules, invariants and assertions, and reuse what you can: its container machinery, setup logic, configuration, actions, checks and assertions. Keep each reused assertion's message, so its property keeps its history.
+- **Learn the SUT,** with `references/workload/surface.md`.
+- **Learn the old workload:** what it aims to test, its setup, and what each test command does and asserts. Read each command by its type:
+  - `first_`: setup every timeline needs, run without faults. Decide whether it's something to test or vary per timeline, or fixed setup that belongs before setup complete.
+  - `parallel_driver_`: the actions clients take concurrently, the core of what to exercise.
+  - `serial_driver_`: actions that need the system to themselves.
+  - `singleton_driver_`: a whole scenario, once per timeline, often an existing test. One that wraps a unit or integration test framework may not port at all.
+  - `anytime_`: checks meant to hold at any moment, while actions run.
+  - `eventually_`, `finally_`: guarantees that must hold once faults stop and the system recovers.
+- **Build a hegel driver workload** with "Steps" in `references/workload/MODULE.md`. Draw on the old workload when you pick rules, invariants and assertions, and reuse what you can: its container machinery, setup logic, configuration, actions, checks and assertions. Keep each reused assertion's message, so its property keeps its history.
 
 Setup complete comes only from the driver. Turn off every other reporter in the new workload only, such as with an environment variable its deployment sets, so the old workload still starts.
 
