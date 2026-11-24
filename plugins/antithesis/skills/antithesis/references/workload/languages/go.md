@@ -49,6 +49,7 @@ With a `-default-no-op` SDK, put all build tags in `GOFLAGS`, as `GOFLAGS=-tags=
 | Rule                     | a method named `Rule...` on the machine; an invariant is named `Invariant...` |
 | Groups                   | `hegel.WithRuleGroup("g", "RuleA", "RuleB")`                                  |
 | Always-run invariant     | `hegel.WithAlwaysCheckInvariants("InvariantA")`                               |
+| Pause-faults flag        | `hegel.WithPauseFaultsInvariants("InvariantB")`                               |
 | Unbounded step count     | `hegel.WithStatefulStepCount(math.MaxInt)`                                    |
 | Generate only            | `hegel.WithPhases(hegel.PhaseGenerate)`, as an option to `hegel.Workload`     |
 | Weighted boolean draw    | `hegel.Draw(tc, hegel.WeightedBooleans(p))`                                   |

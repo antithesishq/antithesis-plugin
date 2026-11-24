@@ -47,7 +47,7 @@ Don't translate the old workload command by command. Build a new one:
    - `serial_driver_`: actions that need the system to themselves.
    - `singleton_driver_`: a whole scenario, once per timeline, often an existing test. One that wraps a unit or integration test framework may not port at all.
    - `anytime_`: checks meant to hold at any moment, while actions run.
-   - `eventually_`, `finally_`: guarantees that must hold once faults stop and the system recovers.
+   - `eventually_`, `finally_`: guarantees that must hold once faults stop and the system recovers. In the driver, these become quiescent checks.
 3. **Build a hegel driver workload** with "Steps" in `references/workload/MODULE.md`. Draw on the old workload when you pick rules, invariants and assertions, and reuse what you can: its container machinery, setup logic, configuration, actions, checks and assertions. Keep each reused assertion's message, so its property keeps its history.
 
 Setup complete comes only from the driver. Turn off every other reporter in the new workload only, such as with an environment variable its deployment sets, so the old workload still starts.

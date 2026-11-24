@@ -63,4 +63,4 @@ The log records no event for thread pausing or CPU modulation.
 - No new faults start.
 - Faults resume on their own when the time is up. A pause can't end early, and overlapping pauses merge into the longest.
 
-An `eventually_` or `finally_` test command also pauses faults, and ends its timeline after it runs.
+A hegel invariant with the pause-faults flag pauses faults while it runs ("Quiescent checks" in `references/workload/driver.md`). An `eventually_` or `finally_` test command also pauses faults, and ends its timeline after it runs.
