@@ -6,7 +6,7 @@ argument-hint: "[triage|debug|workload|launch|properties] <prompt>"
 
 # Antithesis
 
-Plugin version: `0.2.1`
+Plugin version: `0.2.2`
 
 ## Before starting
 
