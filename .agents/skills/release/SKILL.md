@@ -20,7 +20,7 @@ The Release PR workflow (`.github/workflows/release-pr.yml`) opens a release PR 
 
 A release is `X.Y.Z`. A release candidate is `X.Y.Z-rc.N`, and follows the same steps: its PR bumps the default branch to the candidate, so every user gets it too, and its GitHub release is a pre-release. Below, `X.Y.Z` stands for the whole version, with its `-rc.N` for a candidate.
 
-## 1. Pick and check the version
+## Pick and check the version
 
 Get the current version from `plugins/antithesis/plugin.json`. If the user gave a version, strip any leading `v`. Otherwise, pick the next one once you've read the changes in "Write the notes": bump the minor version if any change is breaking, and the patch version otherwise. When the user asks for a release candidate, the next one after `X.Y.Z-rc.N` is `X.Y.Z-rc.N+1`, and the first is `-rc.1` of the version you'd pick. Releasing a candidate's `X.Y.Z` drops the suffix. Say which you picked and why in the PR, so the user can change it in review.
 
@@ -33,7 +33,7 @@ Before changing anything, check:
 
 If a check fails, tell the user and stop.
 
-## 2. Write the notes
+## Write the notes
 
 Write the notes from what changed, not from PR descriptions. A description can show an approach that changed in review, and a later PR can change the behavior again.
 
@@ -58,11 +58,11 @@ Put the notes in `CHANGELOG.md` under `# Version X.Y.Z (YYYY-MM-DD)` with today'
 
 `CHANGELOG.md` holds at most one candidate's section, at the top. A new candidate replaces the previous candidate's section, heading and notes, with its own. A release replaces it with the release's section. `check:changelog` fails otherwise. Then check that `scripts/changelog-section.py X.Y.Z` prints them: the release workflow uses the same script.
 
-## 3. Bump the version
+## Bump the version
 
 Run `scripts/set-version.py X.Y.Z`, then `scripts/set-version.py --check`. This sets the version in every manifest, and in the skill's `SKILL.md`, where agents read it.
 
-## 4. Open the PR
+## Open the PR
 
 ```bash
 git switch -c release/vX.Y.Z
@@ -78,7 +78,7 @@ In the body, say which version this releases and which release the notes start f
 
 Don't merge the PR yourself. Give the user the PR's URL.
 
-## 5. Watch the PR until it merges
+## Watch the PR until it merges
 
 Invoke the `watch-pr` skill with the PR's number. It runs the watcher, and says how to read each event, whose comments to act on, and how to reply. The user asks for changes in comments, and review bots comment too.
 
@@ -88,7 +88,7 @@ For a release PR, also:
 - If someone who can write to the repository asks to abort the release, close the PR and stop.
 - When the watcher prints `merged`, go on to "Watch the tag and the release". When it prints `closed without merge`, stop.
 
-## 6. Watch the tag and the release
+## Watch the tag and the release
 
 Get the commit that the PR's merge put on the default branch, `gh pr view N --json mergeCommit --jq .mergeCommit.oid`. Tag release tags that commit, never the branch's head: another PR can land right after this one, and it must not be released. Before it tags, it runs `scripts/verify-release.py vX.Y.Z <merge commit> origin/main`, which reads the files at the commit, and checks that it is on the default branch, that every manifest has the version, that `CHANGELOG.md` has its notes, and that the tag isn't taken or released.
 

@@ -39,9 +39,9 @@ If a reproducer would be too hard to write, silently leave out the Reproduction 
 
 ## Duplicates
 
-Search the destination for existing issues before reporting.
+Search for existing issues, open and closed, before reporting. The destination may not be the only place the project tracks issues: look for others in the git remote, `README`, `CONTRIBUTING` and package manifests, and search the trackers of the dependencies the failure involves. If you can't find or search a tracker, say so, and report each failure's known status as unchecked, not as new.
 
-If the bug already exists, edit the issue to add a bullet point to its `{duplicate_details}`.
+If the bug matches an open issue in the destination, edit that issue to add a bullet point to its `{duplicate_details}`. If it matches a closed issue, or one only in another tracker, report it and link that issue, as a possible regression if it's closed. Never edit an issue outside the destination.
 
 `{duplicate_details}` has the following format:
 

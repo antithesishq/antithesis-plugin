@@ -9,7 +9,7 @@ Push the current branch and open a pull request for it. The branch already holds
 
 A release PR is different: the `release` skill opens its own.
 
-## 1. Check the branch
+## Check the branch
 
 - The working tree is clean: `git status --porcelain` prints nothing. Commit or stash anything left over first.
 - The branch is not `main`.
@@ -17,13 +17,13 @@ A release PR is different: the `release` skill opens its own.
 - The diff leaves the version alone: `scripts/set-version.py --check` passes, and `CHANGELOG.md` is unchanged. Only a release PR changes them.
 - `mise run check` passes. The Stop hook runs it with `CHECK_OFFLINE` set, which skips the link and schema checks, so run it yourself before the push.
 
-## 2. Push the branch
+## Push the branch
 
 ```bash
 git push -u origin <branch>
 ```
 
-## 3. Write the title and body
+## Write the title and body
 
 Write the body to a file outside the checkout, such as `/tmp/pr-body-<branch>.md`, so the shell never mangles it and the repo's checks never lint or commit it.
 
@@ -37,7 +37,7 @@ When the work closes an issue, put `fixes #<N>` on its own line, one line per is
 
 The title is one line in the voice of the subjects in `git log --oneline origin/main`, such as `Triage runs live instead of waiting for them to finish`. The repo squash-merges, so the title becomes the commit subject on `main`, and GitHub adds the `(#N)`.
 
-## 4. Create the PR
+## Create the PR
 
 ```bash
 gh pr create --title "<title>" --body-file /tmp/pr-body-<branch>.md --base main
@@ -53,6 +53,6 @@ gh api -X POST repos/{owner}/{repo}/pulls \
 
 Delete the body file once the PR exists, and give the user the PR's number and URL. Don't merge the PR yourself.
 
-## 5. Watch it
+## Watch it
 
 A larger workflow, such as the `work-on-task` skill, watches the PR in its own step. When nothing else does, because the user asked only for a PR, watch it with the `watch-pr` skill.

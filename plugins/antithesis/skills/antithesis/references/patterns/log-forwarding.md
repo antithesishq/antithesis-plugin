@@ -4,7 +4,7 @@ A system's logs show what each node believes: who is leader, which term it's in,
 
 Assertions that one node can check, from its own state or the messages it handles, belong in that node's code, not here, if you can change that code ("Exploration assertions" in `references/properties/assertions.md`).
 
-## 1. Find the log lines
+## Find the log lines
 
 Find the log lines, at any level, that show the state the assertions and rules need. Turn on that level through the system's own configuration, only for the module or logger that writes those lines, never globally. Every line costs the system CPU in Antithesis.
 
@@ -16,7 +16,7 @@ The forwarder sends lines over a Unix socket in a shared volume. Antithesis neve
 
 A pause delays a container's lines rather than losing them. The forwarder pauses with the system, and the lines arrive late, all at once. So lines that announce a change work as well as lines that state current values, as long as the driver resets a container's state on each new boot.
 
-## 2. Forward the logs
+## Forward the logs
 
 Add a forwarder, `driver/log-forward/`, to the harness: a small Rust binary that
 
@@ -68,7 +68,7 @@ volumes:
   logs:
 ```
 
-## 3. Parse the lines
+## Parse the lines
 
 Start the receiver in `main` before the "Report setup complete" step in `references/workload/driver.md`, so node states learned during setup are in the root snapshot. It binds `/logs/driver.sock`, after removing a stale one, and makes it writable by any user, since forwarders may run as any user. The kernel queues only a few datagrams, so one thread does nothing but receive, and hands each datagram over a bounded channel, of about 1000, to a thread that parses and records it. A full channel drops the datagram, which shows up as a `seq` gap.
 
@@ -82,7 +82,7 @@ record(line):
     forget this container's state               # a new process
   if the line parses as a raft-state:
     assert_reachable                    "the driver reads a node's state from its logs"
-    guarantee checks on node state go here      # see section 4
+    guarantee checks on node state go here      # see "Check guarantees on node state"
     store it as the container's latest state
     once active, exploration assertions over every container's latest state:
       assert_sometimes two nodes believe they lead at once
@@ -93,11 +93,11 @@ The exploration assertions wait for the `active` flag, set once `main` sees `/wo
 
 `the driver receives every forwarded log line` fails when a queue overflowed, or the forwarder dropped a line too long for a datagram. That is a problem in the workload, not the system: forward fewer lines, or make `record` cheaper.
 
-## 4. Check guarantees on node state
+## Check guarantees on node state
 
 Guarantee checks on node state, such as at most one leader per term, go in `record` as each line arrives: see "Node state, from forwarded logs" in `references/properties/checks.md`.
 
-## 5. Rules
+## Rules
 
 - **Handle lines as they arrive,** in the receiving thread, not in rules. A rule runs late and misses short-lived states.
 - **Keep only current state.** Keep each node's latest state and what the checks need, never the lines or a history of states, so memory stays bounded however long the run. To assert on a transition, keep the previous value.

@@ -2,13 +2,13 @@
 
 Run the commands in "Run locally" in `references/workload/orchestration/<orchestration>.md`.
 
-## 1. Build the system for coverage
+## Build the system for coverage
 
 Antithesis instrumentation records nothing locally, so measure local coverage with the language's own tool. Add a coverage variant of the deployment that builds each system service with a coverage Dockerfile and mounts a shared `coverage` volume, one directory per service. Client containers, if a pattern adds them, count as system services: the client library is code under test.
 
 Build each service as "Local coverage" in `references/workload/languages/<language>.md` says, for its language. Check that the data survives a stop and a restart of the container before trusting it.
 
-## 2. Run the workload
+## Run the workload
 
 In the coverage variant, also set `ANTITHESIS_SDK_LOCAL_OUTPUT` on the driver, and the driver's variable that turns the eventually off ("Eventually" in `references/workload/driver.md`), so the driver doesn't exit partway through the run. The driver's SDK then writes its assertions and its setup-complete event, `{"antithesis_setup": {"status": "complete", ...}}`, to that file. If the SUT's code has assertions (`references/properties/assertions.md`), set the variable on each of those services too, as `/coverage/<service>/sdk.jsonl`, and copy each file out as `sdk-<service>.jsonl` next to the driver's.
 
@@ -18,7 +18,7 @@ Start the coverage build from scratch, wait for setup complete, let the workload
 
 If setup complete never arrives, the driver stopped in its startup. Its logs show what it was waiting for or which request failed.
 
-## 3. Check the behavior
+## Check the behavior
 
 - **Startup.** `the workload starts` was reached.
 - **Actions.** Every action reaches its intended outcome sometimes, and none is routinely slow.
@@ -37,13 +37,13 @@ If setup complete never arrives, the driver stopped in its startup. Its logs sho
 - **Debug tools.** Each debug tool ("Debug tools" in `references/workload/harness.md`) runs in its container, such as `jq --version`. Check them while the system runs.
 - **Patterns.** Each pattern you adopted passes its own local checks.
 
-## 4. Read the coverage
+## Read the coverage
 
 After the system stops, run the language's coverage tool on the `coverage` volume, and list the functions in the system's own source that never ran.
 
 Error-handling and recovery code looks unreached without faults. Don't chase it locally: put exploration assertions on it ("Exploration assertions" in `references/properties/assertions.md`), and check them in the Antithesis runs (`references/workload/run-loop.md`).
 
-## 5. Close the gaps
+## Close the gaps
 
 - **A request the workload never sends:** add it to the driver.
 - **A rare condition** (an error path or race): act only if a different action mix would make it common.
