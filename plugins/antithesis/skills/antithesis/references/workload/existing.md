@@ -4,7 +4,7 @@
 
 Read the workload's deployment, a `docker-compose.yaml` or Kubernetes manifests, and the images it builds, and classify it:
 
-- **Hegel driver:** one container runs a driver that depends on hegel ("Hegel driver" in its language's page under `references/workload/languages/`), and its test template holds a `first_` command, and maybe a `serial_driver_` that only sleeps.
+- **Hegel driver:** one container runs a driver that depends on hegel ("Hegel driver" in its language's page under `references/workload/languages/`), and its test template holds a `first_` command, and a `serial_driver_` that only sleeps, which older workloads lack.
 - **Test composer:** test templates, `/opt/antithesis/test/v1/<test>/`, hold commands such as `parallel_driver_` and `eventually_`, and Antithesis picks which runs when.
 - **Unknown:** anything else.
 
@@ -24,7 +24,7 @@ Fix workload bugs first, then the gaps real clients depend on most.
 
 ## Hegel driver
 
-Follow only the "Steps" in `references/workload/MODULE.md` that the gaps need, then build, validate and run both loops. Keep the layout, language and patterns unless a gap needs a change.
+Follow only the "Steps" in `references/workload/MODULE.md` that the gaps need, then build, validate and run both loops. Keep the layout, language and patterns unless a gap needs a change. If the test template lacks the sleeping `serial_driver_`, add it, as "The test template" in `references/workload/harness.md` shows.
 
 ## Test composer
 
