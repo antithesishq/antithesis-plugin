@@ -37,7 +37,7 @@ When you cannot build an expected list, report what `snouty runs modules` and th
 
 ## If snouty runs modules doesn't work
 
-An older snouty has no `runs modules`, and a run created before release 67 has no module list. Read the modules from the examples of this property instead, then follow "check the setup properties" and "compare against the expected components":
+An older snouty has no `runs modules`, and a run created before release 67 has no module list. Read the modules from the examples of this property instead, then follow "Check the setup properties" and "Compare against the expected components":
 
 ```bash
 snouty runs properties "${RUN_ID}" --detail --name "software was instrumented"
