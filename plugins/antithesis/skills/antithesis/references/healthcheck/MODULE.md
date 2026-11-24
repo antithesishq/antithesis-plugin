@@ -6,17 +6,17 @@ This module checks how the workload spends a run's compute: CPU, log volume, mem
 
 ## Gather the evidence
 
-1. **Read the efficiency properties** with `snouty runs properties <run_id> --detail --name <name>`, for each of `Virtual time per wall time`, `Test ran with full parallelism`, `Peak memory usage`, `Customer output volume` and `Logging output was limited`. They report values, not moments (`references/triage/properties.md`).
-2. **List the containers** from the workload's `docker-compose.yaml`.
-3. **Sample a moment deep in a timeline.** Pick a moment of the run at a vtime well past the workload's start, such as a sampled example of an action's exploration assertion. Choose a run to execute in as `references/debug/MODULE.md` says. In the guest, without `--container`, run `top` over 30 s of vtime, with `--events` to also capture what every container logs meanwhile:
+- **Read the efficiency properties** with `snouty runs properties <run_id> --detail --name <name>`, for each of `Virtual time per wall time`, `Test ran with full parallelism`, `Peak memory usage`, `Customer output volume` and `Logging output was limited`. They report values, not moments (`references/triage/properties.md`).
+- **List the containers** from the workload's `docker-compose.yaml`.
+- **Sample a moment deep in a timeline.** Pick a moment of the run at a vtime well past the workload's start, such as a sampled example of an action's exploration assertion. Choose a run to execute in as `references/debug/MODULE.md` says. In the guest, without `--container`, run `top` over 30 s of vtime, with `--events` to also capture what every container logs meanwhile:
 
-   ```bash
-   mkdir -p /tmp/healthcheck
-   snouty runs exec "$RUN_ID" --events --timeout 5m "$INPUT_HASH" "$VTIME" \
-     'top -b -c -w 200 -d 30 -n 2' > /tmp/healthcheck/sample.log
-   ```
+  ```bash
+  mkdir -p /tmp/healthcheck
+  snouty runs exec "$RUN_ID" --events --timeout 5m "$INPUT_HASH" "$VTIME" \
+    'top -b -c -w 200 -d 30 -n 2' > /tmp/healthcheck/sample.log
+  ```
 
-   The second `top` snapshot shows each process's share of CPU over the 30 s.
+  The second `top` snapshot shows each process's share of CPU over the 30 s.
 
 ## Known issues
 
