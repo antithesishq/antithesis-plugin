@@ -25,6 +25,7 @@ Use the standard coverage tool for OCaml.
 | Concurrent state machine    | `module%hegel_concurrent_state_machine`, or `Stateful.run_concurrent` |
 | Rule, its groups and weight | `[@@rule { groups = [ "g" ]; weight = 6 }]`                           |
 | Always-run invariant        | `[@@invariant { always_check = true }]`                               |
+| Pause-faults flag           | `[@@invariant { pause_faults = true }]`                               |
 | Unbounded step count        | `~step_count:max_int`                                                 |
 | Generate only               | the setting `phases = [ Generate ]`, in `[@@settings { ... }]`        |
 | Weighted boolean draw       | `draw tc (booleans ~p ())`                                            |

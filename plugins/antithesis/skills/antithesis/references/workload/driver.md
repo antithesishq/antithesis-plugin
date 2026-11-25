@@ -65,13 +65,13 @@ Exploration assertions on the rules mark what's worth reaching, such as a read t
 ## Keep rules fast
 
 - Use short timeouts. Give operations that are slow by design their own.
-- Don't sleep or poll in a rule. Record what you expect, and check it in a later rule. The one exception is an eventually, which waits for recovery on purpose.
+- Don't sleep or poll in a rule. Record what you expect, and check it in a later rule. The one exception is a quiescent check, which waits for recovery on purpose.
 - Keep long-lived interactions (streams, sessions, transactions) in the driver's state, across rules.
 - Run blocking operations (watches, long-polls, blocking pops) on a background thread. Record the result in the driver's state, and check it in a later rule. Bounded retries that mirror a real client's are fine inside a rule.
 
 **Weight actions toward what's hard to reach,** so options and rare interactions happen many times across timelines.
 
-**Make every invariant always-run.** With an unbounded step count, a sampled invariant effectively never runs. An always-run invariant runs after every round, while no rules run, and every round waits for it.
+**Make an invariant always-run, unless it pauses faults.** An always-run invariant runs after every round, while no rules run, and every round waits for it. A sampled invariant runs after about 1% of rounds: use that only for a quiescent check ("Quiescent checks").
 
 ## Guiding exploration
 
@@ -88,20 +88,17 @@ Add exploration assertions to the driver, following "Exploration assertions" in 
 
 Put a rare action in the main group behind a rare draw. A group of its own would get as many rounds as any other.
 
-## Eventually
+## Quiescent checks
 
-An eventually stops faults for good, waits for the system to recover, asserts the guarantees that must hold once faults stop, like every node serving again or acknowledged writes being readable, and then ends its timeline. It is the driver's version of an Antithesis `eventually_` test command.
+A quiescent check pauses faults, waits for the system to recover, and asserts the guarantees that must hold once faults stop, like every node serving again or acknowledged writes being readable. Faults then resume and the workload goes on, so one timeline can run many quiescent checks, at varied depths.
 
-Write it as a normal rule, so swarm testing leaves it out for stretches of a timeline. Leave its weight at the default: the draw below sets how often it fires. Consider adding it to other groups too, so it can also fire while other actions run. The rule returns at once unless a rare weighted boolean draw passes, then calls an `eventually` method. The draw starts eventuallys at varied depths, from right after `/workload-active` to deep into the timeline. The method:
+Write it as a sampled invariant with hegel's pause-faults flag. Hegel pauses faults, through the program `ANTITHESIS_FAULT_CONTROL` names, just before each run of the invariant, and resumes them just after, even when it fails. Outside Antithesis the flag does nothing. Never make it always-run: faults would pause every round and never last. The invariant:
 
-- Takes a global lock, so no other eventually can start.
-- Stops faults for good, by running `$ANTITHESIS_STOP_FAULTS <seconds>` for far longer than the rest of the timeline can take, such as an hour. Skip this when `ANTITHESIS_STOP_FAULTS` is unset, as it is in the local loop.
 - Waits, up to a deadline, until every node serves requests again. Restarted containers take a while to come back. The "Wait until every node is up" step can share this per-node check.
 - Logs that its assertions start, then asserts that the system recovered, and asserts each guarantee that must hold once faults stop ("After faults stop" in `references/properties/checks.md`). Each assertion becomes a property in the run.
-- Logs that it's ending the timeline, then exits the driver with status 0. No SDK call ends a timeline the way an `eventually_` test command does. Once the driver exits, the timeline goes idle, and Antithesis stops spending fuzzing effort on it, which ends it in effect.
 
-Decide how an eventually treats the other actions from what it asserts. Some assertions hold while actions continue. Others need a quiet system: the eventually can wait for actions in flight to finish, for example with a lock that every other rule holds while it acts, or interrupt them by cancelling them.
+An invariant runs between rounds, so no rule runs during it, but background threads do, such as blocking operations a rule started. Decide from what it asserts whether they may keep acting, or whether the check must wait for them first.
 
-For the local loop, give the driver two environment variables: one that turns the eventually rule off, and one that calls the `eventually` method directly after a given number of seconds of workload, whatever swarm testing and the draw decide.
+Leave the system as the check found it, so the workload can go on. If a check must change or damage the system, such as shutting nodes down to compare their data files, make its other assertions on every run, and do that part only when a rare weighted boolean draw passes, so timelines still reach deep states. After it, log that it's ending the timeline, then exit the driver with status 0. Once the driver exits, the timeline goes idle, and Antithesis stops spending fuzzing effort on it, which ends it in effect. For the local loop, give the driver two environment variables: one that skips that part, and one that makes its draw always pass.
 
 For the rest of hegel's API, follow the links on the language page. <https://hegel.dev/> explains how hegel works.

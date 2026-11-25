@@ -34,6 +34,7 @@ Use `coverage.py`.
 | Concurrent state machine    | a `hegel.StateMachine` subclass, run with `hegel.run_state_machine` |
 | Rule, its groups and weight | `@hegel.rule(groups=["g"], weight=6)`                               |
 | Always-run invariant        | `@hegel.invariant(always_run=True)`                                 |
+| Pause-faults flag           | `@hegel.invariant(pause_faults=True)`                               |
 | Unbounded step count        | `steps=2**63 - 1`, with `max_concurrency` above 1                   |
 | Generate only               | `@hegel.main(phases=[hegel.Phase.generate])`                        |
 | Weighted boolean draw       | `tc.draw(gs.weighted_booleans(p))`                                  |
