@@ -27,7 +27,7 @@ If you are completely stuck on something outside the user's control, tell the us
 
 ## Modules
 
-If the first argument names a module, read only that module's `MODULE.md`.
+If the first argument names a module, or the request text does, as `/antithesis <module>`, read only that module's `MODULE.md`.
 
 | Argument     | Module                            | Use when                                                      |
 | ------------ | --------------------------------- | ------------------------------------------------------------- |
