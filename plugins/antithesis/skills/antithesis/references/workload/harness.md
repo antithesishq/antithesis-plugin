@@ -82,15 +82,15 @@ Launch every run of the workload with the `basic_test` launcher, unless the user
 --fault-exclusions '^driver$'
 ```
 
-`--fault-tolerance` picks the fault profile (`references/antithesis/faults.md`). `high_availability` kills, stops and partitions containers. Use `resilient` only for a system that isn't meant to survive losing a node or a partition, such as a single-node system; it pauses containers and degrades the network, but never kills or partitions them.
+`--fault-tolerance` picks the fault profile (`references/antithesis/faults.md`). `high_availability` kills, stops and partitions containers. Use `resilient` only for a system that isn't meant to survive losing a node or a partition, such as a single-node system, or one with a dependency that can't persist its state ("External dependencies"); it pauses containers and degrades the network, but never kills or partitions them.
 
 `--fault-exclusions` is a regex matched against container names, so `^driver$` relies on the driver's `container_name: driver` ("The driver container"); without it, Compose names the container `<project>-driver-1` and the regex matches nothing. Exclude only the driver.
 
 ## External dependencies
 
-The Antithesis environment has no internet access, so put every external service the system calls ("List the system's whole surface" in `references/workload/surface.md`) in `docker-compose.yaml`. Prefer the real service's container image, then a maintained emulator, then a mock you write. For the catalog and ready-made Compose blocks, run `snouty docs show /docs/reference/dependencies/`. For S3, use MinIO, not LocalStack: the free LocalStack doesn't persist data to disk.
+The Antithesis environment has no internet access, so put every external service the system calls ("List the system's whole surface" in `references/workload/surface.md`) in `docker-compose.yaml`. Prefer the real service's container image, then a maintained emulator, then a mock you write. For the catalog and ready-made Compose blocks, run `snouty docs show /docs/reference/dependencies/`.
 
-Give each dependency its own container, and don't fault-exclude it, so Antithesis faults it independently (`references/antithesis/faults.md`): bugs often live in how the system handles a dependency that is slow, failing or restarting. Keep each dependency's state on disk, such as in a volume or with the emulator's persistence flag, so a kill doesn't empty it. If it can't persist, don't count its lost state as a system bug.
+Give each dependency its own container, and don't fault-exclude it, so Antithesis faults it independently (`references/antithesis/faults.md`): bugs often live in how the system handles a dependency that is slow, failing or restarting. Keep each dependency's state on disk, so a kill doesn't empty it: use a volume or the emulator's persistence flag, and back a mock you write with SQLite or an embedded key-value store. If a dependency can't persist its state, launch with `--fault-tolerance resilient`, which never kills a container.
 
 A mock you write is part of the test. Have it return the real service's errors, throttling and weaker guarantees, so the system's error paths run. Don't write properties that assume more than the real service promises ("Make it checkable" in `references/properties/MODULE.md`).
 
