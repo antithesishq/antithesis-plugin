@@ -2,22 +2,7 @@
 
 ## Install snouty
 
-Install with the installer script (preferred). It installs to `~/.local/bin` and enables `snouty update`:
-
-```bash
-curl --proto '=https' --tlsv1.2 -LsSf https://github.com/antithesishq/snouty/releases/latest/download/snouty-installer.sh | sh
-```
-
-Alternatively you can install snouty via `npm` or `cargo`:
-
-```bash
-npm install -g snouty
-npx snouty
-cargo binstall snouty
-cargo install snouty
-```
-
-Source: <https://github.com/antithesishq/snouty>.
+Follow `Install snouty` in the snouty README, <https://github.com/antithesishq/snouty#install-snouty>. Prefer the shell installer script: it installs to `~/.local/bin` and enables `snouty update`.
 
 ## Configure snouty
 
