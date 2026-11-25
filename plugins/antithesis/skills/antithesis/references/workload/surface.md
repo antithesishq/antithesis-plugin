@@ -9,6 +9,7 @@ Read the code that receives requests (API definitions and their handlers), not j
 - **Background work** the system does on its own.
 - **Configuration that changes behavior.**
 - **The real clients**, and the request shapes they send. Prefer those over a generic use of the API. Note also what the client library does between requests: retries, sessions, transactions, cached routing. This decides whether the workload needs the stateful-clients pattern (`references/patterns/MODULE.md`).
+- **External dependencies:** every database, queue, cloud API and SaaS service the system calls. Each needs a container in the harness ("External dependencies" in `references/workload/harness.md`).
 - **Setup that must exist before any action:** a formed cluster, a schema, users, buckets. Name where it runs: in the system's own containers, or in the driver before setup complete ("Starting up" in `references/workload/driver.md`). The driver is the easier place when the setup needs the client protocol or admin API anyway.
 
 Prioritize what real clients depend on and the code with the most logic. Cover those deeply before adding rarely used operations.

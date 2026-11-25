@@ -18,6 +18,7 @@ Iterating closes gaps between what the workload reaches and what it should, with
 
 - **The surface:** each in-scope item from `references/workload/surface.md` that the workload never exercises.
 - **Recent runs,** read with the triage module: failing properties, unreached assertions, slow setup.
+- **Dependencies:** each external service the workload mocks with a stub that always succeeds, or fault-excludes. The system's handling of that service's failures goes untested.
 - **Coverage:** the system's code that a local loop, run before any change, never reaches.
 
 Fix workload bugs first, then the gaps real clients depend on most.
