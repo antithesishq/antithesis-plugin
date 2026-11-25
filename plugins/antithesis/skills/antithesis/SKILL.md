@@ -1,7 +1,7 @@
 ---
 name: antithesis
 description: Entry point to Antithesis. Use for any task that involves Antithesis.
-argument-hint: "[triage|debug|workload|launch|properties] <prompt>"
+argument-hint: "[triage|debug|bug-report|workload|launch|properties] <prompt>"
 ---
 
 # Antithesis
@@ -33,6 +33,7 @@ If the first argument names a module, or the request text does, as `/antithesis 
 | ------------ | --------------------------------- | ------------------------------------------------------------- |
 | `triage`     | `references/triage/MODULE.md`     | Analyze a run for failures, monitor an in progress run.       |
 | `debug`      | `references/debug/MODULE.md`      | Execute commands at a moment of any run, even an ended one.   |
+| `bug-report` | `references/bug-report/MODULE.md` | Confirm and write up a SUT bug, or verify its fix.            |
 | `workload`   | `references/workload/MODULE.md`   | Building or iterating on a workload.                          |
 | `launch`     | `references/launch/MODULE.md`     | Launching a new run of a workload with `snouty launch`.       |
 | `properties` | `references/properties/MODULE.md` | Importing the SUT's guarantees or defining a new one.         |
