@@ -2,7 +2,7 @@
 
 ## Install or update snouty
 
-Don't install or update snouty yourself. If `snouty` is missing or older than 0.11.0, ask the user to install or update it, following `Install snouty` in the snouty README, <https://github.com/antithesishq/snouty#install-snouty>. Wait until they have, then run `snouty doctor` again.
+Ask the user to install or update snouty, following `Install snouty` in the snouty README, <https://github.com/antithesishq/snouty#install-snouty>. Wait until they have, then run `snouty doctor` again.
 
 ## Configure snouty
 
