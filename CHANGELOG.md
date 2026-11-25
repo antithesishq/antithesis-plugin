@@ -1,6 +1,11 @@
 <!-- Each version is a top-level `# Version` section, newest first, below these comments. -->
 <!-- markdownlint-disable-file MD025 -->
 
+# Version 0.2.4 (2026-11-25)
+
+- **Breaking**: **You install and update snouty**: the agent no longer installs snouty or runs `snouty update`. When snouty is missing or older than the version the skill needs, it asks you to install or update it from the snouty README, waits, and runs `snouty doctor` again. On a platform where the agent used to install snouty for you, install the latest version where the agent runs: the Cursor, Devin and Replit setup docs now include this step. On Replit, install the official snouty in the App and put `$HOME/.local/bin` first on the PATH, because Replit's preinstalled `/repl/tools/bin/snouty` ignores your tenant's secrets. ([#164](https://github.com/antithesishq/antithesis-plugin/pull/164))
+- **Platform notes move to the setup docs**: the skill no longer has Devin and Replit pages. Their guidance is in `docs/devin.md` and `docs/replit.md`: on Devin, name the module in the request text, and on Replit, run requests from an App that has the secrets, not from a chat. On any platform, an `/antithesis <module>` in the request text now picks the module when no argument names one. ([#164](https://github.com/antithesishq/antithesis-plugin/pull/164))
+
 # Version 0.2.3 (2026-11-24)
 
 - **Snouty install**: the agent now installs snouty by following "Install snouty" in the snouty README, instead of commands copied into the skill, so it picks up every install option the README lists, such as Nix. It still prefers the shell installer script, which enables `snouty update`. ([#162](https://github.com/antithesishq/antithesis-plugin/pull/162))
