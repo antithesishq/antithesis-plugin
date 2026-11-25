@@ -1,6 +1,10 @@
 <!-- Each version is a top-level `# Version` section, newest first, below these comments. -->
 <!-- markdownlint-disable-file MD025 -->
 
+# Version 0.2.3 (2026-11-24)
+
+- **Snouty install**: the agent now installs snouty by following "Install snouty" in the snouty README, instead of commands copied into the skill, so it picks up every install option the README lists, such as Nix. It still prefers the shell installer script, which enables `snouty update`. ([#162](https://github.com/antithesishq/antithesis-plugin/pull/162))
+
 # Version 0.2.2 (2026-11-24)
 
 - **Compute budget covers debugging sessions**: the agent now counts debugging sessions against the task's compute budget, at about 48 compute hours for each hour a session stays available. Before it launches a run or starts a session, it adds the open sessions' cost to the sum, and it gives each subagent that may start runs or sessions its share of what's left. ([#148](https://github.com/antithesishq/antithesis-plugin/pull/148))
