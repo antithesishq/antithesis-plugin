@@ -10,9 +10,6 @@ Plugin version: `0.2.3`
 
 ## Before starting
 
-- If you are running on one of these platforms, read its notes:
-  - Devin: `references/platforms/devin.md`
-  - Replit: `references/platforms/replit.md`
 - Read `references/antithesis/explainer.md`.
 - Run `snouty doctor`. If it reports a problem, follow `references/antithesis/snouty-setup.md`.
 
@@ -20,7 +17,7 @@ Plugin version: `0.2.3`
 
 Every module needs:
 
-- **snouty 0.11.0 or later.** If it's missing, follow `references/antithesis/snouty-setup.md`. If it's older, run `snouty update`, or reinstall it if it wasn't installed with the installer script
+- **snouty 0.11.0 or later.** If it's missing or older, follow "Install or update snouty" in `references/antithesis/snouty-setup.md`.
 - **Docker or Podman, with Docker Compose**
 - **jq**
 
@@ -30,7 +27,7 @@ If you are completely stuck on something outside the user's control, tell the us
 
 ## Modules
 
-If the first argument names a module, read only that module's `MODULE.md`.
+If the first argument names a module, or the request text does, as `/antithesis <module>`, read only that module's `MODULE.md`.
 
 | Argument     | Module                            | Use when                                                      |
 | ------------ | --------------------------------- | ------------------------------------------------------------- |
