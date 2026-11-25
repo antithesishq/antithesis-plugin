@@ -8,7 +8,7 @@
 - **Init:** none.
 - **Setup complete:** `lifecycle.SetupComplete(details)`.
 - **Assertions:** functions in the `assert` package, such as `assert.Always`, `assert.Sometimes`, `assert.Reachable` and `assert.SometimesGreaterThan`.
-- **Cataloging:** build with the SDK's `antithesis-go-toolexec`, which catalogs the assertions, so one that's never reached still fails. Its package is `github.com/antithesishq/antithesis-sdk-go/tools/antithesis-go-toolexec`. Install it in the build stage, and pass `-toolexec=antithesis-go-toolexec` to `go build`.
+- **Cataloging:** build with the SDK's `antithesis-go-toolexec`, which catalogs the assertions, so one that's never reached still fails. Install the latest with `go install github.com/antithesishq/antithesis-sdk-go/tools/antithesis-go-toolexec@latest`, and pass `-toolexec=antithesis-go-toolexec` to `go build`.
 - **Cgo:** build with cgo enabled, `CGO_ENABLED=1`, and a C compiler in the build image. Without cgo, the SDK still reports assertions, but Antithesis gets no coverage from the binary.
 
 ## Instrumentation
@@ -20,7 +20,7 @@ A build stage, on the "Go build image" row in `references/workload/images.md`, t
 ```dockerfile
 FROM <Go build image> AS build
 WORKDIR /src
-# Install antithesis-go-toolexec here.
+RUN go install github.com/antithesishq/antithesis-sdk-go/tools/antithesis-go-toolexec@latest
 COPY driver/ .
 RUN go build -toolexec=antithesis-go-toolexec -o /out/driver .
 ```
