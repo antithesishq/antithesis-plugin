@@ -1,6 +1,6 @@
 # Task prompts and budget
 
-Each prompt reads like a message from a user who knows the project but not the plugin. Fill the bracketed parts from the target's profile in `references/targets/`, the budget split below, and the eval so far, and keep the rest of the wording as it is, so evals stay comparable.
+Each prompt reads like a message from a user who knows the project but not the plugin. Fill the bracketed parts from the target's profile in `references/targets/` (`[deployment]` is the sentence its **Deployment** line gives, after a space, or nothing), the budget split below, and the eval so far, and keep the rest of the wording as it is, so evals stay comparable.
 
 ## Budget split
 
@@ -27,7 +27,7 @@ Run in a fresh clone of the target's latest release, and record the commit in `n
 ```text
 /antithesis workload
 
-I want to start testing [project] (this repo) with Antithesis. Please build a workload for it end to end, and get it to the point where it's validated on Antithesis and we've had a couple of smoke runs that look healthy. I mostly care about [focus].
+I want to start testing [project] (this repo) with Antithesis. Please build a workload for it end to end, and get it to the point where it's validated on Antithesis and we've had a couple of smoke runs that look healthy. I mostly care about [focus].[deployment]
 
 You have a total budget of [workload budget] compute hours on Antithesis for this. That covers both validating the workload and the smoke runs. Keep track of what you spend and don't go over it.
 

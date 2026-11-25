@@ -35,7 +35,7 @@ snouty runs exec "$RUN_ID" --container client1 --timeout 5m -1469731053185852001
 ```
 
 - **With `--container <name>`,** the command runs in that container and can use the tools available in its image. You cannot install additional tools, as access to the internet is blocked in the Antithesis environment.
-- **Without `--container`,** it runs in the guest: the virtual machine in Antithesis's deterministic hypervisor that runs every container or Kubernetes manifest. You can't change its tools, but it has the basics, such as bash and the usual shell commands, `podman` and `kubectl`. Use it for Kubernetes pods, which `--container` doesn't support.
+- **Without `--container`,** it runs in the guest: the virtual machine in Antithesis's deterministic hypervisor that runs every container or Kubernetes manifest. You can't change its tools, but it has the basics, such as bash and the usual shell commands, `podman` and `kubectl`. Use it for Kubernetes pods, which `--container` doesn't support: `kubectl exec -n <namespace> <pod> -- <command>`.
 - If a tool is missing in either place, process the output on your machine.
 - Rewarming a deep moment takes longer: a moment at vtime 10 rewarms faster than one at vtime 100.
 - If the moment comes from a run that filtered logs, which shows in that run's `parameters` in `snouty runs show --json`, add `--events --include-filtered-logs` to get the dropped lines logged while the command runs, the command's own included. The filter goes with the moment, not with the run that executes the command, so check the run each moment comes from.
@@ -60,7 +60,8 @@ sha256sum -c --quiet parts.sha256 && cat part.* | gunzip > data.db
 - **Encode with base64 in 1 MB lines.** Raw binary arrives corrupted, a line over about 9 MB is dropped, and short lines are slow.
 - **Check every part.** An exec can drop output lines and still exit 0.
 - **Download parts of about 10 MB, 20 at a time.** That was fastest: 200 MB in under a minute, where one exec streams only a few hundred KB/s. The parts exist only on the first exec's branch.
-- **Freeze writers first,** so the file doesn't change under you: `kill -STOP <pid>` in the first exec, or run it in the guest, without `--container`, starting with `podman pause db1 && podman cp db1:/var/lib/db/data.db /tmp/f`. The guest has `gzip` and `split` even when the image lacks them. Execs run on throwaway branches, so this changes nothing else.
+- **Freeze writers first,** so the file doesn't change under you, then read it in place: no copy needed. In the first exec, `kill -STOP` the processes that write it. `kill -KILL` works too, except on the container's main process or the command a wrapper such as `forward-logs` runs: its death stops the container, and the downloads with it. Or, from the guest, `podman pause` the container, or `kill -STOP` a pod's process, then read the file as `/proc/<pid>/root/<path>`, write the parts in the guest, and download them without `--container`.
+- **Use the guest's tools** when the image lacks them: the guest has `gzip` and `split`. Execs run on throwaway branches, so nothing you do there changes anything else.
 - The file must exist at the moment you run at. Run any command that writes it in the first exec.
 
 ## When you're done

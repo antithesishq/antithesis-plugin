@@ -5,10 +5,9 @@ Input: a workload to run in Antithesis, and optionally the launcher, compute bud
 ## Steps
 
 - **Pick the workload.** Work out from context which workload to launch and where its config directory is. If it's unclear, ask.
-- **Check the config directory.** `snouty launch` copies all of it into the config image, so it should only contain a docker-compose.yaml (or Kubernetes manifest), any files referenced in mounts, and any environment files (like .env). Consider using a `.dockerignore` if you can't restructure the config directory.
-- **Build it.** For a Docker Compose workload, run `docker compose build` in the config directory.
-- **Validate it.** Run `snouty validate <config_dir>` and continue only once it passes.
-- **Pick the launcher.** Use `basic_test` for Docker Compose and `basic_k8s_test` for Kubernetes, unless the user names another.
+- **Check the config directory.** `snouty launch` copies all of it into the config image, so it should only contain a `docker-compose.yaml` or a `manifests/` directory, any files they mount, and any environment files (like .env). Consider using a `.dockerignore` if you can't restructure the config directory. `docker-compose.yaml` means Docker Compose, and `manifests/` Kubernetes: read only that orchestration's page, `references/workload/orchestration/compose.md` or `references/workload/orchestration/kubernetes.md`.
+- **Build and validate it,** following "Build and validate" in `references/workload/orchestration/<orchestration>.md`. Continue only once it passes.
+- **Pick the launcher** from "Launch" in `references/workload/orchestration/<orchestration>.md`, unless the user names another, and do what it says before a launch.
 - **Pick the flags.** Use the flags from context, such as the workload's harness. Pick the faults with `--fault-tolerance`, and keep containers out of them with `--fault-exclusions`, rather than with `--param`. Always pass `--max-compute-hours`, rather than relying on the server's default. For the faults, compute budget and tier, see `--fault-tolerance`, `--fault-exclusions`, `--max-compute-hours` and `--performance-tier` in `snouty launch --help`. Add `--param attrs.plugin_version=<version>` with the plugin version from `SKILL.md`.
 - **Launch it** with `snouty launch` and report the run ID from its output to the user.
 

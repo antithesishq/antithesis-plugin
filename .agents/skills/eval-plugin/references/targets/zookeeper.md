@@ -3,6 +3,7 @@
 Apache ZooKeeper, a coordination service in Java. It replicates with ZAB, not Raft, and documents a precise contract: linearizable writes, FIFO order per client, sequentially consistent reads, one-shot ordered watches, and sessions with ephemeral nodes. It's the JVM target, and its consensus protocol keeps triage from leaning on Raft knowledge.
 
 - **Repository:** <https://github.com/apache/zookeeper>. The sandbox needs a JDK and Maven.
+- **Deployment:** Docker Compose, the plugin's default. Leave `[deployment]` out of the workload prompt.
 - **Focus:** the core coordination guarantees: a 3-server ensemble, creating, updating and conditionally setting znodes, reads with and without sync, watches, sessions and ephemeral nodes, and surviving leader elections and server failures.
 - **Catalog:** key-value property catalog.
 - **Property to define:** "an ephemeral znode disappears only when its owner's session ends, and once that session has expired, no server still serves the znode." Why: we use ephemeral nodes for leader election and service discovery, so a znode that outlives its session means two leaders.

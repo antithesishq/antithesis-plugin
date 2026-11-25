@@ -17,9 +17,9 @@ Ask for anything missing before you start:
 - **The harness under test**, installed and logged in on the sandbox, such as Claude Code. `scripts/sandbox_session.py` drives `claude`, or `codex exec` when you pass `--harness codex` to `preflight` and `start`. Codex has no `/antithesis` command, so its prompts start with `$antithesis` instead, and `start --env CODEX_MODEL=M` picks its model. For another harness, add a branch to `harness_cmd`.
 - **snouty**, installed and logged in to a tenant on the sandbox, with the credentials in the login environment (for example `~/.localrc`).
 - **The plugin**, installed into the harness from a checkout on the sandbox, such as a skill symlink into `~/.claude/skills`.
-- **Docker**, jq and the toolchains the target project needs.
+- **Docker**, jq and the toolchains the target project needs. A Kubernetes target also needs `kubectl`, `k3d`, `kapp` and `helm`.
 - **The compute budget** for the whole eval, in compute hours.
-- **The target projects:** one or more profiles in `references/targets/`: `references/targets/rqlite.md`, `references/targets/nats-jetstream.md` or `references/targets/zookeeper.md`. Each profile says what to test and what to put in the prompts, and holds cost notes, quirks, and the bugs that earlier evals found. To add a project, copy a profile and fill it in.
+- **The target projects:** one or more profiles in `references/targets/`: `references/targets/rqlite.md`, `references/targets/nats-jetstream.md` or `references/targets/zookeeper.md` run on Docker Compose, and `references/targets/rqlite-k8s.md` runs rqlite on Kubernetes. To test both orchestrations, run `rqlite` and `rqlite-k8s` as two tracks, and compare them. Each profile says what to test and what to put in the prompts, and holds cost notes, quirks, and the bugs that earlier evals found. To add a project, copy a profile and fill it in.
 - **Where the final report should be written.**
 
 ## Preflight: check, don't set up

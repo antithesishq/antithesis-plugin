@@ -8,7 +8,7 @@ Read the workload's deployment, a `docker-compose.yaml` or Kubernetes manifests,
 - **Test composer:** test templates, `/opt/antithesis/test/v1/<test>/`, hold commands such as `parallel_driver_` and `eventually_`, and Antithesis picks which runs when.
 - **Unknown:** anything else.
 
-On Kubernetes, the same classes hold, with pods in place of containers. Keep it on Kubernetes, and adapt this module's Compose commands with `snouty docs show /docs/setup/kubernetes/`.
+On Kubernetes, the same classes hold, with pods in place of containers. Keep the workload's orchestration, and read only its page: `references/workload/orchestration/compose.md` or `references/workload/orchestration/kubernetes.md`.
 
 Tell the user the class, the deployment, and the evidence. Never convert a workload to another class unless the user asks. To convert one, follow "Convert a test composer workload".
 

@@ -3,6 +3,7 @@
 A distributed SQLite database on hashicorp/raft, in Go. Its HTTP API offers reads at several consistency levels and forwards writes from followers to the leader, which makes linearizability and durability easy to check.
 
 - **Repository:** <https://github.com/rqlite/rqlite>. Agents in both evals wrote the driver in Rust, so the sandbox needs Go and Cargo.
+- **Deployment:** Docker Compose, the plugin's default. Leave `[deployment]` out of the workload prompt.
 - **Focus:** the core distributed behavior: a 3-node cluster, writes, reads at the different consistency levels, and surviving leader changes and node failures.
 - **Catalog:** key-value property catalog.
 - **Property to define:** "once faults stop, a node that reports itself ready on /readyz serves reads at level none that are no more than a few seconds behind the leader." Why: our recent runs suggest a node can look healthy while its Raft is stuck, and I want that caught as its own property. Eval 1 defined "every write that rqlite acknowledges is applied exactly once, including writes a follower forwards to the leader" instead, which caught the double-apply bug below 46 times in one short run.

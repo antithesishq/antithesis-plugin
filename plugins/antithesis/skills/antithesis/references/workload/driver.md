@@ -27,7 +27,7 @@ Nothing before "Run the state machine" draws from hegel: every timeline branches
 
 When the driver can't tell over the network that a node is ready, or needs something a node generates (credentials, certificates, a node ID, a "migration done" marker), share a named volume between that node's container and the driver, and have the node write a file there (wiring in `references/workload/harness.md`). Never use it to observe what the workload tests: a volume isn't subject to network faults. A marker survives container restarts, so it can be stale after one; check a node's recovery over the network, never by its marker.
 
-You can also use a shared volume to help setup the system. A oneshot service that writes configuration files, credentials, etc to a shared volume, which all the other services depend on can replace the need to do everything statically in Dockerfiles.
+You can also use a shared volume to help setup the system. A one-shot service that writes configuration files or credentials to a shared volume before the other services start can replace doing everything statically in Dockerfiles.
 
 ## Example: a replicated key-value store
 
