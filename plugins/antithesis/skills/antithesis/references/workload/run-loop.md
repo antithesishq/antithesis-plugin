@@ -18,6 +18,7 @@ Check them as they arrive, not once the run ends. A result that is final on an `
 - **The workload starts.** `the workload starts` passes. If it fails, the first command didn't run, or the driver didn't see `/workload-active`. `snouty runs events <run_id> first_start_workload` shows whether the first command ran.
 - **Behavior that needs faults.** The exploration assertions on situations and code that need faults, in the driver and in the SUT ("Exploration assertions" in `references/properties/assertions.md`), are reached, and eventuallys fire and find the system recovered.
 - **Patterns.** Each pattern you adopted passes its own run checks.
+- **Health.** `references/healthcheck/MODULE.md` finds no known issue.
 
 ## Conclude before the next run
 
