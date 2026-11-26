@@ -39,7 +39,7 @@ A debugging session is a run that takes a source run and moment as input and rew
 
 snouty's run commands work on any ready run: status `in_progress:ready` in `snouty runs show`, or wait with `snouty runs wait --until ready`.
 
-All except `snouty runs exec` also work on completed runs. Their moments stay debuggable: exec at them in another ready run with `--source-run-id`, or start a debugging session with `snouty debug` (`references/debug/MODULE.md`). Never fall back to logs alone because a run has ended.
+All except `snouty runs exec` also work on completed runs. Their moments stay debuggable: exec at them in another ready run on the same performance tier with `--source-run-id`, or start a debugging session with `snouty debug` (`references/debug/MODULE.md`). Never fall back to logs alone because a run has ended.
 
 ## snouty
 
