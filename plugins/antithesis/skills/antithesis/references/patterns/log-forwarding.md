@@ -64,11 +64,11 @@ kv1:
     LOG_FORWARD_MATCH: msg=raft-state
 ```
 
-On Kubernetes, `LOG_FORWARD_ADDR` names the driver's Service, and the fault exclusion matches the driver's pod name, such as `^driver-0$` for a StatefulSet.
+On Kubernetes, `LOG_FORWARD_ADDR` names the driver's Service, which must list port 7400 with `protocol: UDP` or be headless (`clusterIP: None`): a Service port is TCP by default, and the forwarder never sees the lost datagrams, and the fault exclusion matches the driver's pod name, such as `^driver-0$` for a StatefulSet.
 
 ## Parse the lines
 
-Start the receiver in `main` before the "Report setup complete" step in `references/workload/driver.md`, so node states learned during setup are in the root snapshot. It binds UDP port 7400 on all interfaces, and raises `SO_RCVBUF`, such as to 4 MiB, since the default buffer overflows under a burst. One thread does nothing but receive, and hands each datagram over a bounded channel, of about 1000, to a thread that parses and records it. A full channel drops the datagram, which shows up as a `seq` gap.
+Start the receiver in `main` before the "Report setup complete" step in `references/workload/driver.md`, so node states learned during setup are in the root snapshot. It binds UDP port 7400 on all interfaces, and raises `SO_RCVBUF`, such as to 4 MiB, since the default buffer overflows under a burst. Linux silently caps it at `net.core.rmem_max`, so read the size back and log it. One thread does nothing but receive, and hands each datagram over a bounded channel, of about 1000, to a thread that parses and records it. A full channel drops the datagram, which shows up as a `seq` gap.
 
 The node states, `NodeStates`, hold each container's last `boot` and `seq`, and its current boot's latest state. For the key-value store in `references/workload/driver.md`, if its nodes log `msg=raft-state term=3 role=leader commit=42`:
 
