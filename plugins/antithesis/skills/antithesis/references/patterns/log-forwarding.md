@@ -64,7 +64,7 @@ kv1:
     LOG_FORWARD_MATCH: msg=raft-state
 ```
 
-On Kubernetes, `LOG_FORWARD_ADDR` names the driver's Service, which must list port 7400 with `protocol: UDP` or be headless (`clusterIP: None`): a Service port is TCP by default, and the forwarder never sees the lost datagrams, and the fault exclusion matches the driver's pod name, such as `^driver-0$` for a StatefulSet.
+On Kubernetes, `LOG_FORWARD_ADDR` names the driver's Service, which must list port 7400 with `protocol: UDP` or be headless (`clusterIP: None`): a Service port is TCP by default, and the forwarder never sees the lost datagrams. The fault exclusion matches the driver's pod name, such as `^driver-0$` for a StatefulSet.
 
 ## Parse the lines
 
