@@ -2,7 +2,7 @@
 
 Antithesis can run scripts at any Moment in the Multiverse. Start by choosing the moment(s) and run(s) to investigate.
 
-Running commands shows the system's real state, so always do it when investigating any kind of failure. Use an existing ready run if one exists, even from an unrelated source. Otherwise, start a debugging session.
+Running commands shows the system's real state, so always do it when investigating any kind of failure. Use an existing ready run on the moment's performance tier if one exists, even from an unrelated source. Otherwise, start a debugging session.
 
 A run that has ended can't execute commands, but its moments can: pull them into another ready run with `--source-run-id`, or start a debugging session on them. If `snouty runs exec` fails because the run has ended, pick another run with the policy below, and keep running commands.
 
@@ -12,7 +12,7 @@ For a property failure, find its passing and failing moments with `snouty runs s
 
 ## Choosing a run to execute commands in
 
-Any ready run can execute commands, but a run that already has the moment warm saves rewarming time:
+Any ready run on the same performance tier as the moment's run can execute commands; on another tier, `snouty runs exec` fails. Read a run's tier with `snouty runs show <run_id> --json | jq -r '.parameters["antithesis.performance_tier"]'`, and skip ready runs on another tier. A run that already has the moment warm saves rewarming time:
 
 - Prefer a ready run that has already rewarmed the moment. Check with `snouty runs search <run_id> --count 'filter(ev => ev.moment.input_hash == "<hash>")'`; non-zero means every moment of that branch is warm.
 - Prefer reusing a ready run over starting a new one.
