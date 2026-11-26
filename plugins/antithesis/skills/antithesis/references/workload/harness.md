@@ -60,7 +60,7 @@ Test commands must be executable, which the Dockerfile's `chmod` ensures. `snout
 
 ## Shared volumes
 
-For out-of-band facts ("Shared volumes for out-of-band facts" in `references/workload/driver.md`), mount one named volume in the node that writes and in the driver:
+Use a shared volume only when containers need to share files, such as for out-of-band facts ("Shared volumes for out-of-band facts" in `references/workload/driver.md`). Mount one named volume in the node that writes and in the driver:
 
 ```yaml
 kv1:
@@ -84,10 +84,10 @@ Launch every run of the workload with the `basic_test` launcher, unless the user
 
 `--fault-tolerance` picks the fault profile (`references/antithesis/faults.md`). `high_availability` kills, stops and partitions containers. Use `resilient` only for a system that isn't meant to survive losing a node or a partition, such as a single-node system; it pauses containers and degrades the network, but never kills or partitions them.
 
-`--fault-exclusions` is a regex matched against container names, so `^driver$` relies on the driver's `container_name: driver` (section 1); without it, Compose names the container `<project>-driver-1` and the regex matches nothing. Exclude only the driver.
+`--fault-exclusions` is a regex matched against container names, so `^driver$` relies on the driver's `container_name: driver` ("The driver container"); without it, Compose names the container `<project>-driver-1` and the regex matches nothing. Exclude only the driver. The exclusion also keeps all of the driver's connections unfaulted, which `references/patterns/stateful-clients.md` and `references/patterns/log-forwarding.md` rely on, so a regex that misses the driver silently faults them.
 
 ## Debug tools
 
 To debug a failure, you run commands at a moment in a container with `snouty runs exec` (`references/debug/MODULE.md`). In the Antithesis environment, exec can only access tools included in the image. So ensure that workload images contain useful debugging tools such as `curl`, `jq`, and the SUT's admin or inspection CLI, such as `fdbcli`, `etcdctl`, or `psql`.
 
-A pattern you adopted (`references/patterns/MODULE.md`) may add services, volumes and environment variables.
+A pattern you adopted (`references/patterns/MODULE.md`) may add services and environment variables.

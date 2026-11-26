@@ -6,13 +6,13 @@ Assertions that one node can check, from its own state or the messages it handle
 
 ## Find the log lines
 
-Find the log lines, at any level, that show the state the assertions and rules need. Turn on that level through the system's own configuration in `docker-compose.yaml`, only for the module or logger that writes those lines, never globally. Every line costs the system CPU in Antithesis.
+Find the log lines, at any level, that show the state the assertions and rules need. Turn on that level through the system's own configuration in `docker-compose.yaml`, only for the module or logger that writes those lines, never globally. Every line costs the system CPU in Antithesis, and each forwarded line also passes through the fault injector as a packet.
 
-The forwarder sends lines over a Unix socket in a shared volume. Antithesis never faults it, and it delivers one container's lines in order. Within one boot of a container, the driver sees every line, except:
+The forwarder sends each line as a UDP datagram to the driver. Excluding the driver from faults keeps network faults off these datagrams ("Excluding containers" in `references/antithesis/faults.md`), and one container's lines arrive in order. Within one boot of a container, the driver sees every line, except:
 
-- **lines written before the driver bound its socket.** A node can log before the driver starts, so don't rely on its first lines;
+- **lines written before the driver started listening.** A node can log before the driver starts, so don't rely on its first lines;
 - **the last lines before a kill,** which die with the container. The next line has a new `boot`;
-- **lines the forwarder or the driver dropped,** because a queue was full or the line was too long, which leave a gap in `seq`.
+- **lines the forwarder, the driver or the driver's kernel dropped,** because a queue or buffer was full or the line was too long, which leave a gap in `seq`.
 
 A pause delays a container's lines rather than losing them. The forwarder pauses with the system, and the lines arrive late, all at once. So lines that announce a change work as well as lines that state current values, as long as the driver resets a container's state on each new boot.
 
@@ -21,11 +21,12 @@ A pause delays a container's lines rather than losing them. The forwarder pauses
 Add a forwarder, `driver/log-forward/`, to the harness: a small Rust binary that
 
 - copies stdin to stdout, flushing each line;
-- sends each line that contains one of the substrings in `LOG_FORWARD_MATCH` (comma-separated), such as `msg=raft-state`, to the Unix datagram socket at `LOG_FORWARD_SOCKET`, as `{"container": <$HOSTNAME>, "boot": <id>, "seq": <n>, "line": <text>}`. It skips other lines;
+- sends each line that contains one of the substrings in `LOG_FORWARD_MATCH` (comma-separated), such as `msg=raft-state`, as a UDP datagram to `LOG_FORWARD_ADDR`, as `{"container": <$HOSTNAME>, "boot": <id>, "seq": <n>, "line": <text>}`. It skips other lines;
 - takes `container` from `$HOSTNAME`, which the harness sets to the container name;
 - takes `boot` from the clock at startup, since the PID is the same on every container restart;
 - counts `seq` from 0, over every matching line, sent or not, so a dropped line leaves a gap;
-- sends each line once, with a non-blocking `send_to`, and drops it on any error, such as a full queue or a socket the driver hasn't bound yet. It never queues, retries, blocks or exits on a send error, so a slow driver can't slow the system;
+- resolves `LOG_FORWARD_ADDR` on a background thread, retrying until it succeeds, and drops lines until then. It never resolves on the send path: a DNS lookup can block, and on Kubernetes it goes over the faulted network. The driver never restarts, so one address lasts;
+- sends each line once, with a non-blocking `send_to` on an unconnected UDP socket, and drops it on any error. It never queues, retries, blocks or exits on a send error, so a slow driver can't slow the system;
 - keeps each datagram within 16 KiB: it truncates the line to 15 KiB, at a character boundary, to leave room for the JSON wrapper, and drops a line that escaping still pushes past 16 KiB.
 
 Run the system's command through a wrapper, `driver/forward-logs`, which:
@@ -52,25 +53,22 @@ ENTRYPOINT ["forward-logs", "kv-server"]
 
 Put the wrapper in front of whatever the image ran before. If the base image has its own `ENTRYPOINT`, keep it after `forward-logs`, and restate the base image's `CMD`, which setting `ENTRYPOINT` drops. For a base with `ENTRYPOINT ["docker-entrypoint.sh"]` and `CMD ["postgres"]`, use `ENTRYPOINT ["forward-logs", "docker-entrypoint.sh"]` and `CMD ["postgres"]`. Forward a client container's logs (`references/patterns/stateful-clients.md`) the same way.
 
-In `docker-compose.yaml`, mount a `logs` volume in the driver and in every container that forwards, and set the forwarder's variables on each forwarding service. Give each one a `hostname` equal to its `container_name`, as the harness does for the driver:
+In `docker-compose.yaml`, set the forwarder's variables on each forwarding service. Give each one a `hostname` equal to its `container_name`, as the harness does for the driver:
 
 ```yaml
 kv1:
   container_name: kv1
   hostname: kv1
   environment:
-    LOG_FORWARD_SOCKET: /logs/driver.sock
+    LOG_FORWARD_ADDR: driver:7400
     LOG_FORWARD_MATCH: msg=raft-state
-  volumes: [logs:/logs]
-driver:
-  volumes: [logs:/logs]
-volumes:
-  logs:
 ```
+
+On Kubernetes, `LOG_FORWARD_ADDR` names the driver's Service, and the fault exclusion matches the driver's pod name, such as `^driver-0$` for a StatefulSet.
 
 ## Parse the lines
 
-Start the receiver in `main` before the "Report setup complete" step in `references/workload/driver.md`, so node states learned during setup are in the root snapshot. It binds `/logs/driver.sock`, after removing a stale one, and makes it writable by any user, since forwarders may run as any user. The kernel queues only a few datagrams, so one thread does nothing but receive, and hands each datagram over a bounded channel, of about 1000, to a thread that parses and records it. A full channel drops the datagram, which shows up as a `seq` gap.
+Start the receiver in `main` before the "Report setup complete" step in `references/workload/driver.md`, so node states learned during setup are in the root snapshot. It binds UDP port 7400 on all interfaces, and raises `SO_RCVBUF`, such as to 4 MiB, since the default buffer overflows under a burst. One thread does nothing but receive, and hands each datagram over a bounded channel, of about 1000, to a thread that parses and records it. A full channel drops the datagram, which shows up as a `seq` gap.
 
 The node states, `NodeStates`, hold each container's last `boot` and `seq`, and its current boot's latest state. For the key-value store in `references/workload/driver.md`, if its nodes log `msg=raft-state term=3 role=leader commit=42`:
 
@@ -91,7 +89,7 @@ record(line):
 
 The exploration assertions wait for the `active` flag, set once `main` sees `/workload-active`, so that setup can't satisfy them. No one node sees these states: a deposed leader doesn't know about the new one, and a partitioned follower doesn't hear the leader's commit.
 
-`the driver receives every forwarded log line` fails when a queue overflowed, or the forwarder dropped a line too long for a datagram. That is a problem in the workload, not the system: forward fewer lines, or make `record` cheaper.
+`the driver receives every forwarded log line` fails when a queue or buffer overflowed, or the forwarder dropped a line too long for a datagram. That is a problem in the workload, not the system: forward fewer lines, or make `record` cheaper.
 
 ## Check guarantees on node state
 
