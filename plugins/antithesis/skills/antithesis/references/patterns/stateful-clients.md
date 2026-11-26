@@ -5,12 +5,12 @@ Client libraries often hold part of the protocol: retry numbering, sessions, lea
 ## How it fits together
 
 - **A client program in each client container.** It is a small, long-running program in the library's language. It holds one client and runs the operations the driver sends it.
-- **A Unix socket in a shared volume.** The driver and every client container mount one volume, `/clients`. Each client program listens on `/clients/<hostname>.sock`, and the driver connects to each.
-- **The socket is never faulted.** Antithesis doesn't fault Unix sockets in shared volumes, so the driver can always reach a running client, however heavily the client is faulted. A paused client answers late. The driver never closes a connection, so a connection closes only when the client's process exits. The faults still land where they should: on the client's connections to the servers, and on its process.
+- **A TCP port on each client.** Each client program listens on one port, such as 7000, on all interfaces, and the driver connects to `<client>:<port>`.
+- **The connection is never network-faulted.** Excluding the driver from faults also excludes all of its connections ("Excluding containers" in `references/antithesis/faults.md`), so the driver can always reach a running client, however heavily the client is faulted. A paused client answers late. The driver never closes a connection, so a connection closes only when the client's process exits, even on a kill. The faults still land where they should: on the client's connections to the servers, and on its process.
 
 ## The protocol
 
-The driver and the client exchange [JSON-RPC 2.0](https://www.jsonrpc.org/specification) messages over the socket, one JSON object per line. Every language has JSON and Unix sockets, so no library is needed.
+The driver and the client exchange [JSON-RPC 2.0](https://www.jsonrpc.org/specification) messages over the connection, one JSON object per line. Every language has JSON and TCP, so no library is needed.
 
 The driver sends one request per operation. The client answers each request on the same connection when its operation completes, in the order operations complete, not the order they arrived:
 
@@ -37,7 +37,8 @@ A JSON-RPC `error`, instead of a `result`, means the client couldn't run the req
 
 A small program in the library's language:
 
-- **Bind the socket first,** removing any stale socket file a killed process left behind, then accept connections in a loop. Build the library's client on first use, so `health` answers before the servers are ready: the driver waits for `health` before admin setup creates what an eager client may need.
+- **Listen on the port first,** then accept connections in a loop. Build the library's client on first use, so `health` answers before the servers are ready: the driver waits for `health` before admin setup creates what an eager client may need.
+- **Set `TCP_NODELAY` on every accepted connection,** and write each line in one call. Otherwise Nagle's algorithm and delayed ACKs stall each pipelined line by about 40 ms, which pushes operations past the driver's `TIMEOUT`.
 - **Run each request concurrently** on one shared client, so batching and pipelining happen, and write each response when its operation completes, one whole line at a time.
 - **Turn every library result into an outcome.** Read the params before calling the library, so a missing param is a protocol error and an error the library raises is an outcome. Convert returned values to plain JSON, and if one still can't be encoded, answer with a protocol error rather than not at all. Every request gets an answer, however late.
 - **Configure the library as production users would,** including its own timeouts. Randomness and checks belong in the driver.
@@ -45,21 +46,21 @@ A small program in the library's language:
 - **Run it with no restart policy,** like every container: Antithesis restarts killed and stopped containers itself, and a policy would bring them back early, cancelling the fault. Run several client containers, since many bugs sit between clients.
 - **Add exploration assertions to the library's code,** for states inside a single library call ("Exploration assertions" in `references/properties/assertions.md`).
 - **Instrument the program** ("Instrument the software" in `references/workload/languages.md`). Client containers count as system services for local coverage (`references/workload/local-loop.md`).
-- **Add `socat` or another JSON-RPC tool to the image,** so a debugging session (`references/debug/MODULE.md`) can drive the client from a shell. Its connection is new and can't use the driver's handles, so create any handle it needs first.
+- **Add `socat` or another JSON-RPC tool to the image,** so a debugging session (`references/debug/MODULE.md`) can drive the client from its own shell or any container, such as with `socat - TCP:localhost:7000`. Its connection is new and can't use the driver's handles, so create any handle it needs first.
 
 ## The driver
 
 Antithesis searches for the timings that break a workload, so it will find a client that hangs for longer than any fixed timeout: paused for minutes, or stuck inside one library call indefinitely. So the driver treats every client as flaky, and follows one rule: **a fixed timeout may make the driver check less, but never stall it or cause a false failure.**
 
 - **A rule never blocks on a client.** It waits for an answer only up to `TIMEOUT`, to pace itself. Requests go out through a writer thread per connection, so a paused client blocks only its own writer.
-- **The driver never closes a connection.** The socket is never faulted, so a connection closes only when the client's process exits. A closed connection is how the driver learns a client restarted, and the only time it gives up on that client's operations.
+- **The driver never closes a connection.** The connection is never faulted, so a connection closes only when the client's process exits. A closed connection is how the driver learns a client restarted, and the only time it gives up on that client's operations.
 - **Each client has at most `MAX_IN_FLIGHT` operations outstanding,** for example 16. A full client, whether paused, slow or hung, gets no more work until it answers. Rules keep driving the other clients.
 
-The driver keeps one connection to each client in `CLIENTS` (`client1,client2`), made on first use, and gives each connection a new generation number. A rule records an operation in the model as sent, then calls:
+The driver keeps one connection to each client in `CLIENTS` (`client1,client2`), on `CLIENT_PORT`, and gives each connection a new generation number. A background thread per client makes the connection, and remakes it after a close, so a rule never waits on a DNS lookup or a connect. It resolves the hostname on every attempt, never caching the IP, and gives each connect attempt a timeout of about 2 s before it retries, clearing it once connected, since a read timeout would look like a restart: a restarted client can come back with a new IP, and on Kubernetes its name can take a few seconds to point at it, while a connect to the old IP would otherwise wait minutes. Set `TCP_NODELAY` on each connection. A rule records an operation in the model as sent, then calls:
 
 ```text
 call(client, generation?, op):
-  conn = the client's connection, connecting if there is none
+  conn = the client's connection, if its thread has made one
   if no conn, or generation given and conn's differs, or conn has MAX_IN_FLIGHT outstanding:
     model.not_sent(op); return NotSent
   add op to conn's outstanding; queue its request line on conn's writer
@@ -96,7 +97,7 @@ Never hold a model lock while sending or waiting.
 
 ## The harness
 
-Add one service per client container to `docker-compose.yaml` (`references/workload/harness.md`), and mount the `clients` volume in each and in the driver:
+Add one service per client container to `docker-compose.yaml` (`references/workload/harness.md`), and give the driver their names and port:
 
 ```yaml
 client1:
@@ -109,16 +110,13 @@ client1:
   image: client:latest
   environment:
     KV_URLS: http://kv1:8000,http://kv2:8000
-  volumes: [clients:/clients]
 driver:
   environment:
     CLIENTS: client1,client2
-  volumes: [clients:/clients]
-volumes:
-  clients:
+    CLIENT_PORT: 7000
 ```
 
-The driver keeps `KV_URLS` for its readiness checks, admin setup and eventually reads. If a client program runs as a non-root user, create `/clients` owned by that user in its Dockerfile, as for any shared volume. Exclude only the driver from faults: the client containers are there to be faulted.
+The driver keeps `KV_URLS` for its readiness checks, admin setup and eventually reads. Exclude only the driver from faults: the client containers are there to be faulted, and the exclusion is what keeps the driver's client connections unfaulted. On Kubernetes, `CLIENTS` holds the clients' Service names, and the exclusion matches the driver's pod name, such as `^driver-0$` for a StatefulSet.
 
 ## Checking it
 

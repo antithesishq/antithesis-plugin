@@ -53,7 +53,7 @@ The log records no event for thread pausing or CPU modulation.
 
 ## Excluding containers
 
-`--fault-exclusions` is a regex over container or pod names. An excluded container gets no faults of its own, but thread pausing, CPU modulation and clock skips still reach it, and the nodes it talks to are still faulted. Unix sockets in a volume that containers share are never faulted.
+`--fault-exclusions` is a regex over container or pod names. An excluded container gets no faults of its own, and no network fault touches its connections to other containers. Faults on the other end still reach them: a paused or killed peer stops answering. Thread pausing, CPU modulation and clock skips still reach it.
 
 ## Pausing faults
 
