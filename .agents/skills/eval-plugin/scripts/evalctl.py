@@ -452,7 +452,9 @@ def cmd_watch(a) -> None:
             seen_runs |= runs
             seen_done |= done
             state.parent.mkdir(parents=True, exist_ok=True)
-            state.write_text(json.dumps({"runs": sorted(seen_runs), "done": sorted(seen_done)}, indent=2) + "\n")
+            state.write_text(
+                json.dumps({"runs": sorted(seen_runs), "done": sorted(seen_done)}, indent=2) + "\n"
+            )
         time.sleep(60)
 
 
