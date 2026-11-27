@@ -30,14 +30,19 @@ REMOTE = "/opt/cc"  # where `push` puts sandbox_session.py; sessions log to REMO
 CREDENTIALS = "[ -f ~/.localrc ] && . ~/.localrc"
 
 
-def ssh(host: str, cmd: str, check: bool = True) -> str:
-    """Run cmd on the sandbox, with the snouty credentials loaded."""
+def ssh_run(host: str, cmd: str) -> subprocess.CompletedProcess[str]:
+    """Run cmd on the sandbox, with the snouty credentials loaded, and return its result."""
     argv = (
         ["bash", "-c", f"{CREDENTIALS}; {cmd}"]
         if host == "local"
         else ["ssh", "-o", "ConnectTimeout=15", host, f"{CREDENTIALS}; {cmd}"]
     )
-    r = subprocess.run(argv, check=False, capture_output=True, text=True)
+    return subprocess.run(argv, check=False, capture_output=True, text=True)
+
+
+def ssh(host: str, cmd: str, check: bool = True) -> str:
+    """Run cmd on the sandbox, with the snouty credentials loaded."""
+    r = ssh_run(host, cmd)
     if check and r.returncode != 0:
         sys.exit(f"ssh {host}: {cmd!r} failed ({r.returncode}):\n{r.stderr.strip()}")
     return r.stdout
@@ -358,19 +363,22 @@ def list_runs(a) -> list[dict]:
 
 
 # A debugging session has no --max-compute-hours. It bills about this many compute hours per
-# hour it's available, measured on the standard tier, so its --duration bounds its cost.
-DEBUG_CH_PER_HOUR = {"standard": 48}
+# hour it's available, measured on the standard tier, so its --duration bounds its cost. No
+# other tier has been measured, so they get the standard rate too.
+DEBUG_CH_PER_HOUR = 48
 
 
 def cap_of(r: dict) -> float | None:
-    """A run's cap from `snouty runs list`, or a debugging session's estimate from its duration."""
+    """A run's cap from `snouty runs list`, a debugging session's estimate, or None."""
     p = r.get("parameters") or {}
-    if cap := p.get("antithesis.max_compute_hours"):
-        return float(cap)
-    rate = DEBUG_CH_PER_HOUR.get(p.get("antithesis.performance_tier", ""))
-    minutes = p.get("antithesis.debugging.duration")
-    if r.get("launcher") == "debugging" and rate and minutes:
-        return rate * float(minutes) / 60
+    try:
+        if cap := p.get("antithesis.max_compute_hours"):
+            return float(cap)
+        minutes = p.get("antithesis.debugging.duration")
+        if r.get("launcher") == "debugging" and minutes:
+            return DEBUG_CH_PER_HOUR * float(minutes) / 60
+    except ValueError:
+        pass
     return None
 
 
@@ -383,9 +391,10 @@ def fill_caps(data: Path, runs: list[dict]) -> None:
     log = json.loads(path.read_text()) if path.exists() else {}
     changed = False
     for r in runs:
-        cap = cap_of(r)
         entry = log.get(r.get("run_id"))
-        if entry is not None and not entry.get("cap") and cap:
+        if entry is None or entry.get("cap"):
+            continue
+        if cap := cap_of(r):
             entry["cap"] = round(cap)
             if r.get("launcher") == "debugging":
                 entry["cap_estimated"] = True
@@ -464,17 +473,25 @@ def cmd_usage(a) -> None:
     snouty 0.10 dropped -n and takes run IDs instead, which --after can't be combined
     with, so --since is ignored. It syncs first, so runs launched since the last sync are
     in the run log. snouty prints every billed run, then exits 1 for one it hasn't billed
-    yet; that run is left out and named.
+    yet; that run is left out and named. Any other failure leaves usage.json as it was.
     """
     sync(a)
     ids = list(runlog(a.data))
+    if not ids:
+        sys.exit("no runs in the run log")
     quoted = " ".join(shlex.quote(i) for i in ids)
-    raw = ssh(a.host, f"snouty runs usage --json {quoted}", check=False) if ids else ""
-    rows = list(read_jsonl(raw.splitlines()))
+    r = ssh_run(a.host, f"snouty runs usage --json {quoted}")
+    if r.returncode != 0 and "no usage found for" not in r.stderr:
+        sys.exit(f"snouty runs usage failed ({r.returncode}), usage.json unchanged:\n{r.stderr.strip()}")
+    rows = list(read_jsonl(r.stdout.splitlines()))
     out = a.data / "runs" / "usage.json"
     out.parent.mkdir(parents=True, exist_ok=True)
+    # Keep rows saved earlier for runs this call didn't return.
+    old = json.loads(out.read_text()) if out.exists() else []
+    billed = {row.get("run_id") for row in rows}
+    rows += [row for row in old if row.get("run_id") not in billed]
     out.write_text(json.dumps(rows, indent=2) + "\n")
-    billed = {r.get("run_id") for r in rows}
+    billed = {row.get("run_id") for row in rows}
     unbilled = [i for i in ids if i not in billed]
     print(f"{len(rows)} runs -> {out}")
     if unbilled:
