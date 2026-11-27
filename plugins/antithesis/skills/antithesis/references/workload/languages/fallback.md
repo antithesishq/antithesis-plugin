@@ -7,7 +7,7 @@ For a language without a page of its own.
 None. Write assertions and setup complete as JSON lines:
 
 - **Schema:** `snouty docs show /docs/reference/sdk/fallback/schema/`.
-- **Assertions:** `snouty docs show /docs/reference/sdk/fallback/assert/`. Each assertion needs two lines in `$ANTITHESIS_OUTPUT_DIR/sdk.jsonl`: its catalog entry at startup, so one that's never reached still fails, and one each time it's evaluated.
+- **Assertions:** `snouty docs show /docs/reference/sdk/fallback/assert/`. Each assertion needs two lines in `$ANTITHESIS_OUTPUT_DIR/sdk.jsonl`: its catalog entry at startup, so one that's never reached still fails, and one for its first true and its first false evaluation in each process, as the page recommends.
 - **Setup complete:** `snouty docs show /docs/reference/sdk/fallback/lifecycle/`.
 
 Put this in one small module, with a function for each assertion type the code uses, and honor `ANTITHESIS_SDK_LOCAL_OUTPUT` as the SDKs do, so the local loop can read the assertions (`references/workload/local-loop.md`).
