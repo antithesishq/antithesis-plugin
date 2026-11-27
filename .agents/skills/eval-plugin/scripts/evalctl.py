@@ -30,14 +30,19 @@ REMOTE = "/opt/cc"  # where `push` puts sandbox_session.py; sessions log to REMO
 CREDENTIALS = "[ -f ~/.localrc ] && . ~/.localrc"
 
 
-def ssh(host: str, cmd: str, check: bool = True) -> str:
-    """Run cmd on the sandbox, with the snouty credentials loaded."""
+def ssh_run(host: str, cmd: str) -> subprocess.CompletedProcess[str]:
+    """Run cmd on the sandbox, with the snouty credentials loaded, and return its result."""
     argv = (
         ["bash", "-c", f"{CREDENTIALS}; {cmd}"]
         if host == "local"
         else ["ssh", "-o", "ConnectTimeout=15", host, f"{CREDENTIALS}; {cmd}"]
     )
-    r = subprocess.run(argv, check=False, capture_output=True, text=True)
+    return subprocess.run(argv, check=False, capture_output=True, text=True)
+
+
+def ssh(host: str, cmd: str, check: bool = True) -> str:
+    """Run cmd on the sandbox, with the snouty credentials loaded."""
+    r = ssh_run(host, cmd)
     if check and r.returncode != 0:
         sys.exit(f"ssh {host}: {cmd!r} failed ({r.returncode}):\n{r.stderr.strip()}")
     return r.stdout
@@ -357,16 +362,42 @@ def list_runs(a) -> list[dict]:
     )
 
 
+# A debugging session has no --max-compute-hours. It bills about this many compute hours per
+# hour it's available, measured on the standard tier, so its --duration bounds its cost. No
+# other tier has been measured, so they get the standard rate too.
+DEBUG_CH_PER_HOUR = 48
+
+
+def cap_of(r: dict) -> float | None:
+    """A run's cap from `snouty runs list`, a debugging session's estimate, or None."""
+    p = r.get("parameters") or {}
+    try:
+        if cap := p.get("antithesis.max_compute_hours"):
+            return float(cap)
+        minutes = p.get("antithesis.debugging.duration")
+        if r.get("launcher") == "debugging" and minutes:
+            return DEBUG_CH_PER_HOUR * float(minutes) / 60
+    except ValueError:
+        pass
+    return None
+
+
 def fill_caps(data: Path, runs: list[dict]) -> None:
-    """Set the cap of each logged run that has none, such as a wrapper's, from snouty."""
+    """Set the cap of each logged run that has none, such as a wrapper's, from snouty.
+
+    A debugging session gets the most it can bill in its duration, marked "cap_estimated".
+    """
     path = data / "runs" / "runs.json"
     log = json.loads(path.read_text()) if path.exists() else {}
     changed = False
     for r in runs:
-        cap = (r.get("parameters") or {}).get("antithesis.max_compute_hours")
         entry = log.get(r.get("run_id"))
-        if entry is not None and not entry.get("cap") and cap:
-            entry["cap"] = int(float(cap))
+        if entry is None or entry.get("cap"):
+            continue
+        if cap := cap_of(r):
+            entry["cap"] = round(cap)
+            if r.get("launcher") == "debugging":
+                entry["cap_estimated"] = True
             changed = True
     if changed:
         path.write_text(json.dumps(log, indent=2) + "\n")
@@ -380,12 +411,12 @@ def cmd_runlog(a) -> None:
         print(f"{rid}  {r.get('session', '')}  cap={r.get('cap', '?')}  {r.get('purpose', '')}")
 
 
-def poll(a) -> tuple[set[str], set[str]]:
-    """The eval's runs, from its run log, and the finished sessions; nothing if the sync fails."""
+def poll(a) -> tuple[set[str], set[str]] | None:
+    """The eval's runs, from its run log, and the finished sessions; None if the sync fails."""
     # Transcripts change while sessions run, so a sync can fail now and then. Skip this
     # poll rather than exit, so the watch keeps going.
     if not sync(a):
-        return set(), set()
+        return None
     ids = set(runlog(a.data))
     raw = ssh(
         a.host,
@@ -402,39 +433,69 @@ def poll(a) -> tuple[set[str], set[str]]:
             continue
         p = r.get("parameters", {})
         desc = (r.get("description") or p.get("antithesis.test_name") or "").splitlines()
-        cap = p.get("antithesis.max_compute_hours", "?")
+        cap = cap_of(r)
+        cap = "?" if cap is None else f"{cap:g}"
         runs.add(f"{r['run_id']} {r['status']} {r.get('launcher')} mch={cap} {desc[0] if desc else ''}")
     return runs, set(done_part.splitlines()) - {""}
 
 
 def cmd_watch(a) -> None:
-    seen_runs, seen_done = poll(a)
+    """Print each change since the last report, of this watch or an earlier one.
+
+    What it last reported is kept in runs/watch.json, so a watch that a Monitor restarts
+    reports what changed while it was down, and nothing it already reported.
+    """
+    state = a.data / "runs" / "watch.json"
+    seen = json.loads(state.read_text()) if state.exists() else {"runs": [], "done": []}
+    seen_runs, seen_done = set(seen["runs"]), set(seen["done"])
     while True:
+        polled = poll(a)
+        if polled is not None:
+            runs, done = polled
+            for r in sorted(runs - seen_runs):
+                print("RUN:", r, flush=True)
+            for d in sorted(done - seen_done):
+                print("SESSION DONE:", d, flush=True)
+            # A run that drops out of `snouty runs list` keeps its last line, so it isn't
+            # reported again if it comes back.
+            seen_runs |= runs
+            seen_done |= done
+            state.parent.mkdir(parents=True, exist_ok=True)
+            state.write_text(
+                json.dumps({"runs": sorted(seen_runs), "done": sorted(seen_done)}, indent=2) + "\n"
+            )
         time.sleep(60)
-        runs, done = poll(a)
-        for r in sorted(runs - seen_runs):
-            print("RUN:", r, flush=True)
-        for d in sorted(done - seen_done):
-            print("SESSION DONE:", d, flush=True)
-        # Keep the last good view when a poll fails.
-        seen_runs, seen_done = runs or seen_runs, done or seen_done
 
 
 def cmd_usage(a) -> None:
     """Save billed compute hours for the runs in the run log.
 
     snouty 0.10 dropped -n and takes run IDs instead, which --after can't be combined
-    with, so --since is ignored. A run that hasn't been billed yet is left out. It syncs
-    first, so runs launched since the last sync are in the run log.
+    with, so --since is ignored. It syncs first, so runs launched since the last sync are
+    in the run log. snouty prints every billed run, then exits 1 for one it hasn't billed
+    yet; that run is left out and named. Any other failure leaves usage.json as it was.
     """
     sync(a)
-    ids = " ".join(shlex.quote(i) for i in runlog(a.data))
-    raw = ssh(a.host, f"snouty runs usage --json {ids}") if ids else ""
-    rows = list(read_jsonl(raw.splitlines()))
+    ids = list(runlog(a.data))
+    if not ids:
+        sys.exit("no runs in the run log")
+    quoted = " ".join(shlex.quote(i) for i in ids)
+    r = ssh_run(a.host, f"snouty runs usage --json {quoted}")
+    if r.returncode != 0 and "no usage found for" not in r.stderr:
+        sys.exit(f"snouty runs usage failed ({r.returncode}), usage.json unchanged:\n{r.stderr.strip()}")
+    rows = list(read_jsonl(r.stdout.splitlines()))
     out = a.data / "runs" / "usage.json"
     out.parent.mkdir(parents=True, exist_ok=True)
+    # Keep rows saved earlier for runs this call didn't return.
+    old = json.loads(out.read_text()) if out.exists() else []
+    billed = {row.get("run_id") for row in rows}
+    rows += [row for row in old if row.get("run_id") not in billed]
     out.write_text(json.dumps(rows, indent=2) + "\n")
+    billed = {row.get("run_id") for row in rows}
+    unbilled = [i for i in ids if i not in billed]
     print(f"{len(rows)} runs -> {out}")
+    if unbilled:
+        print(f"not billed yet, run usage again later: {' '.join(unbilled)}")
 
 
 def main() -> None:
