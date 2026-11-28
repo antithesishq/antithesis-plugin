@@ -12,7 +12,7 @@ For a property failure, find its passing and failing moments with `snouty runs s
 
 ## Choosing a run to execute commands in
 
-Any ready run on the same performance tier as the moment's run can execute commands; on another tier, `snouty runs exec` fails. Read a run's tier with `snouty runs show <run_id> --json | jq -r '.parameters["antithesis.performance_tier"]'`, and skip ready runs on another tier. A run that already has the moment warm saves rewarming time:
+Any ready run on the same performance tier as the moment's run can execute commands; on another tier, `snouty runs exec` fails. Read a run's tier with `snouty runs show <run_id> --json | jq -r '.parameters["antithesis.performance_tier"]'`, and skip ready runs on another tier. A debugging session (launcher `debugging`) runs on the tier of the run it debugs, which its `antithesis.debugging.run_id` parameter names; its own `antithesis.performance_tier` can be wrong, so read the tier from that run. A run that already has the moment warm saves rewarming time:
 
 - Prefer a ready run that has already rewarmed the moment. Check with `snouty runs search <run_id> --count 'filter(ev => ev.moment.input_hash == "<hash>")'`; non-zero means every moment of that branch is warm.
 - Prefer reusing a ready run over starting a new one.
